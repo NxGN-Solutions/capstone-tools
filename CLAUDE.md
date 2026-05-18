@@ -1,0 +1,68 @@
+# Capstone Tooling For Claude
+
+This repository is the binary distribution and documentation hub for Capstone's Claude-facing tools:
+
+- `cap` - Capstone CLI for Claude Code, terminals, scripts, and deterministic JSON workflows.
+- `capstone-mcp` - MCP server for Claude Desktop.
+
+The Capstone source repository is private. This repository is intended for clients, implementers, and agents who need the tools and operating guidance, not source code.
+
+## Recommended Claude Setup
+
+Use Claude Desktop with the MCP server when the user wants conversational exploration over their Capstone tenant. Use Claude Code with the CLI when the work involves files, repeatable commands, bulk JSON payloads, or implementation handoff.
+
+For best results, provide Claude with:
+
+- This root `CLAUDE.md`.
+- `AGENTS.md`.
+- `skills/capstone-cli/SKILL.md` when using the CLI.
+- `skills/capstone-mcp/SKILL.md` when using MCP.
+- Relevant recipes under `docs/cli/recipes/` or `docs/mcp/recipes/`.
+
+## CLI Bootstrap
+
+1. Download the right `capstone-cli-{rid}.zip` from the latest release.
+2. Extract it to a stable folder.
+3. Configure the API URL:
+
+```bash
+./cap config set api-url <capstone-api-url>
+```
+
+4. Authenticate:
+
+```bash
+./cap auth login
+```
+
+5. Discover the available command surface:
+
+```bash
+./cap schema --json
+./cap concepts --json
+./cap workflows list --json
+```
+
+Windows users run `.\cap.exe` instead of `./cap`.
+
+## MCP Bootstrap
+
+1. Download the right `capstone-mcp-{rid}.zip` from the latest release.
+2. Extract it to a stable folder.
+3. Add the binary path and `CAPSTONE_API_URL` to Claude Desktop's MCP configuration.
+4. Restart Claude Desktop.
+5. Ask Claude to log in to Capstone.
+
+See `docs/mcp/setup.md` for complete configuration examples.
+
+## Operating Notes
+
+- Always ask which Capstone API URL to use unless it is already configured.
+- Authentication is per user and per machine.
+- Tenant access is controlled by the Capstone API, not by the binary download.
+- Prefer JSON output from the CLI for agent reasoning.
+- Prefer MCP prompts/resources for Claude Desktop discovery.
+
+Current release: `0.4.63` (`stable`)
+
+Last updated: `2026-05-18T08:51:34Z`

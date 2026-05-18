@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Capstone Tools Support
+    url: https://github.com/NxGN-Solutions/capstone-tools/blob/main/SUPPORT.md
+    about: Use the support guidance before sharing logs or environment details.
+  - name: Security Reporting
+    url: https://github.com/NxGN-Solutions/capstone-tools/blob/main/SECURITY.md
+    about: Do not report vulnerabilities or credentials in public issues.

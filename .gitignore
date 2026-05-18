@@ -1,0 +1,6 @@
+dist/
+artifacts/
+*.zip
+*.zip.sha256
+*.tmp
+.DS_Store

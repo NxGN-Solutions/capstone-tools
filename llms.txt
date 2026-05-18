@@ -1,0 +1,29 @@
+# Capstone Tooling
+
+> Binary downloads, installation docs, and agent guidance for the Capstone CLI and MCP server.
+
+## Core
+
+- [README](README.md): Download matrix, setup overview, versioning, and security model.
+- [AGENTS](AGENTS.md): Cross-agent operating instructions for CLI and MCP usage.
+- [CLAUDE](CLAUDE.md): Claude Code and Claude Desktop bootstrap guidance.
+- [Manifest](manifest.json): Latest tooling version, release channel, assets, and checksums.
+
+## Skills
+
+- [Capstone CLI Skill](skills/capstone-cli/SKILL.md): Agent workflow guidance for `cap`.
+- [Capstone MCP Skill](skills/capstone-mcp/SKILL.md): Agent workflow guidance for `capstone-mcp`.
+
+## CLI Documentation
+
+- [CLI Docs](docs/cli/): CLI usage guide, recipes, and reference documentation.
+- [CLI Commands](docs/cli/reference/commands.md): Command reference.
+- [CLI Platform Guide](docs/cli/reference/platform-guide.md): Cross-shell syntax and platform notes.
+
+## MCP Documentation
+
+- [MCP Docs](docs/mcp/): MCP setup, recipes, and reference documentation.
+- [MCP Setup](docs/mcp/setup.md): Claude Desktop configuration.
+- [MCP Tools](docs/mcp/reference/tools.md): MCP tool reference.
+- [MCP Resources](docs/mcp/reference/resources.md): MCP resource reference.
+- [MCP Prompts](docs/mcp/reference/prompts.md): MCP prompt reference.

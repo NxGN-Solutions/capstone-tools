@@ -1,0 +1,41 @@
+{
+  "version": "0.4.63",
+  "latestVersion": "0.4.63",
+  "channel": "stable",
+  "createdUtc": "2026-05-18T00:00:00Z",
+  "releaseUrl": "https://github.com/NxGN-Solutions/capstone-tools/releases/tag/0.4.63",
+  "tools": {
+    "cli": {
+      "artifacts": [
+        {
+          "rid": "linux-x64",
+          "fileName": "capstone-cli-linux-x64.zip",
+          "sha256": "<hex>"
+        }
+      ]
+    },
+    "mcp": {
+      "artifacts": [
+        {
+          "rid": "linux-x64",
+          "fileName": "capstone-mcp-linux-x64.zip",
+          "sha256": "<hex>"
+        }
+      ]
+    }
+  },
+  "artifacts": [
+    {
+      "tool": "cli",
+      "rid": "linux-x64",
+      "fileName": "capstone-cli-linux-x64.zip",
+      "sha256": "<hex>"
+    },
+    {
+      "tool": "mcp",
+      "rid": "linux-x64",
+      "fileName": "capstone-mcp-linux-x64.zip",
+      "sha256": "<hex>"
+    }
+  ]
+}
