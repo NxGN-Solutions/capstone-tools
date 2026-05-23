@@ -59,10 +59,10 @@ Get leaf nodes (where data is entered). Cross-reference: expected data points = 
 
 ```
 data_computedValues_list({
-  templateId: "<report-template-guid>",
+  templateId: "<report-template-id>",
   timePeriodNames: "Q1 FY 25",
   dataInterval: 3,
-  orgNodeIds: "<scoped-org-node-guid>"
+  orgNodeIds: "<scoped-org-node-id>"
 })
 ```
 

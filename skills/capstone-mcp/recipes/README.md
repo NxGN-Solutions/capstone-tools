@@ -64,7 +64,7 @@ When the user's request doesn't map to a specific prompt, use this table to pick
 
 ## Recipes Not Available in MCP v1
 
-These CLI recipes don't have MCP equivalents yet. Use the [CLI](../../cli/recipes/README.md) for these workflows.
+These CLI recipes don't have MCP equivalents yet. Use the [CLI](../../capstone-cli/recipes/README.md) for these workflows.
 
 | CLI Recipe | Why Not in MCP |
 |------------|---------------|
@@ -83,4 +83,4 @@ These CLI recipes don't have MCP equivalents yet. Use the [CLI](../../cli/recipe
 - [SKILL.md](../SKILL.md) — Quick prompt routing table
 - [Glossary](../reference/glossary.md) — Term definitions with MCP tool references
 - [Prompts Reference](../reference/prompts.md) — Prompt arguments and tool orchestration
-- [CLI Recipes](../../cli/recipes/README.md) — CLI recipe equivalents
+- [CLI Recipes](../../capstone-cli/recipes/README.md) — CLI recipe equivalents

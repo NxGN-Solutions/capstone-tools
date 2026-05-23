@@ -48,7 +48,7 @@ cap templates dashboard-templates get <id> --json
 **Response (nested hierarchy):**
 ```json
 {
-  "tenant": "Tharisa",
+  "tenant": "Example Tenant",
   "id": "abc-123",
   "name": "ESG Executive Dashboard",
   "useTabSheet": true,
@@ -136,7 +136,7 @@ cap templates widget-templates get-bulk -i <wt-id-1>,<wt-id-2>,<wt-id-3> --json
 **Response:**
 ```json
 {
-  "tenant": "Tharisa",
+  "tenant": "Example Tenant",
   "widgets": [
     {
       "id": "wt-emissions-123",

@@ -128,8 +128,8 @@ This is the most important file. Write observations, not just data. Examples of 
 Last updated: 2026-02-13
 
 ## Org Structure
-- 4 org nodes: Enterprise → Site1, Site2, Site3
-- Enterprise ID: 019c27be-1601-...
+- 4 org nodes: Enterprise → Example Site 1, Example Site 2, Example Site 3
+- Enterprise ID: <id>
 
 ## Key Metrics
 - 14 inputs (production volumes, costs, revenues)
@@ -143,7 +143,7 @@ Last updated: 2026-02-13
 ## Observations
 - Weekly periods start on Mondays, format: "(W6) Feb 2 2026"
 - GM% calculation uses AfterAgg phase — don't set orgAgg/timeAgg
-- Site3 has no data for January (MQTT feed started Feb 1)
+- Example Site 3 has no data for January (MQTT feed started Feb 1)
 
 ## Session Log
 - 2026-02-13: Initial setup, cached model. User explored D1 dashboard data.
@@ -200,7 +200,7 @@ cap <domain> <entity> upload-excel file.xlsx
 ```
 
 > Always access `.data` to get the items array from list commands.
-> Text output truncates IDs (e.g., `019c4261...`). Use `--json` for full UUIDs.
+> Text output truncates IDs (e.g., `<id>`). Use `--json` for full UUIDs.
 
 ## Reporting Data — Period Formats
 

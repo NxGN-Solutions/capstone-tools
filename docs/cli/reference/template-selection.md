@@ -6,16 +6,8 @@
 
 ## Runtime Setup
 
-If running from source (no installed `cap` binary), use:
-
 ```bash
-dotnet run --no-build --project NxGN.Capstone.Cli -- <command>
-```
-
-Local dev setup:
-
-```bash
-export CAPSTONE_API_URL=https://localhost:<port>
+cap config set api-url <capstone-api-url>
 cap auth whoami
 ```
 
@@ -162,7 +154,7 @@ cap reporting dashboards get-data <dashboard-template-id> \
 | Expecting `report-templates` to support raw data entry workflow | Use `data input-values *` with a `capture-template` |
 | Mixing `--org-node` and `--org-nodes` for widgets | `widgets get-data` uses `--org-node`; type-specific widgets use `--org-nodes` |
 | Forgetting period discovery | Run `cap data time-periods list --data-interval <interval>` first |
-| Running docs examples assuming `cap` binary exists in source checkout | Use `dotnet run --no-build --project NxGN.Capstone.Cli -- <command>` |
+| Running docs examples before installing or extracting the CLI | Download the release package and use `cap` or `.\cap.exe` |
 
 ---
 
@@ -170,8 +162,3 @@ cap reporting dashboards get-data <dashboard-template-id> \
 
 - [Commands Reference](./commands.md)
 - [Glossary](./glossary.md)
-- [Spreadsheet Templates Overview](../../features/spreadsheet-templates/overview.md)
-- [Capture Templates](../../features/spreadsheet-templates/capture-templates.md)
-- [Report Templates](../../features/spreadsheet-templates/report-templates.md)
-- [Widget Templates](../../features/widget-templates/overview.md)
-- [Dashboard Templates](../../features/dashboard-templates/overview.md)

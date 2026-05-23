@@ -321,7 +321,7 @@ When analyzing retrieved data, use these techniques based on the user's question
 
 ## See Also
 
-- [CLI Skill](../cli/SKILL.md) — CLI interface (for Claude Code with Bash access)
+- [CLI Skill](../capstone-cli/SKILL.md) — CLI interface (for Claude Code with Bash access)
 - [Recipes](./recipes/README.md) — Step-by-step workflow guides
 - [Tool Reference](./reference/tools.md) — All 41 tools with parameters and response formats
 - [Glossary](./reference/glossary.md) — Detailed term definitions with MCP tools

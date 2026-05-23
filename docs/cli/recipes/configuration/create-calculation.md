@@ -40,7 +40,7 @@ Before starting, Claude should know:
 
 ### Step 2: Find Referenced Metrics
 
-**Purpose:** Get GUIDs for metrics used in the formula.
+**Purpose:** Get IDs for metrics used in the formula.
 
 **Command:**
 ```bash
@@ -49,11 +49,11 @@ cap model metrics list --json
 
 **Match the user's description to existing metrics:**
 ```
-Looking for formula inputs...
+Looking for formula <id>
 
 Found:
-- "Total Electricity" (abc123...) — Input, kWh, Sum
-- "Headcount" (def456...) — Input, count, Last Value
+- "Total Electricity" (<id>) — Input, kWh, Sum
+- "Headcount" (<id>) — Input, count, Last Value
 
 Formula: Total Electricity / Headcount = kWh per person
 ```
@@ -87,7 +87,7 @@ cap masterdata units list --json
 
 **Formula syntax:**
 - Reference by name: `[Metric Name]`
-- Reference by GUID (recommended for CLI): `[4f20e84a-9b10-4d99-abe1-afe9f8f578f5]`
+- Reference by ID (recommended for CLI): `[<id>]`
 - Arithmetic: `+`, `-`, `*`, `/`
 - Conditional: `IF [condition] THEN [value] ELSE [value]`
 - Comparison: `=`, `<>`, `>`, `<`, `>=`, `<=`
@@ -107,14 +107,14 @@ cap masterdata units list --json
 | Conversion | `[Source] * 0.001` | Unit conversion (e.g., kWh to MWh) |
 | Emission factor | `[Consumption] * 2.68` | CO2e from fuel consumption |
 
-> **Tip:** Use GUIDs in formulas for CLI usage — they're unambiguous, rename-safe, and what the API stores internally.
+> **Tip:** Use IDs in formulas for CLI usage — they're unambiguous, rename-safe, and what the API stores internally.
 
 **Present to user:**
 ```
 Formula: IF [Headcount] <> 0 THEN [Total Electricity] / [Headcount] ELSE 0
 
-Using GUIDs:
-IF [def456...] <> 0 THEN [abc123...] / [def456...] ELSE 0
+Using IDs:
+IF [<id>] <> 0 THEN [<id>] / [<id>] ELSE 0
 ```
 
 ---
@@ -194,17 +194,17 @@ Proceed? [Yes/No]
 ```bash
 cat <<'EOF' | cap model calculations create --json
 {
-  "id": "00000000-0000-0000-0000-000000000000",
+  "id": "<empty-id>",
   "name": "Energy Intensity",
   "description": "Electricity consumption per person",
-  "discipline": { "id": "<discipline-guid>" },
-  "unitOfMeasure": { "id": "<unit-guid>" },
+  "discipline": { "id": "<discipline-id>" },
+  "unitOfMeasure": { "id": "<unit-id>" },
   "dataInterval": { "id": 2, "name": "Month" },
   "precision": 2,
   "calculationPhase": { "id": 1, "name": "After Aggregations" },
   "orgStructureAggregationMethod": { "id": 3, "name": "None" },
   "timePeriodAggregationMethod": { "id": 0, "name": "None" },
-  "formula": "IF [def456...] <> 0 THEN [abc123...] / [def456...] ELSE 0",
+  "formula": "IF [<id>] <> 0 THEN [<id>] / [<id>] ELSE 0",
   "translatedNames": [],
   "translatedDescriptions": [],
   "attributeValues": []
@@ -212,14 +212,14 @@ cat <<'EOF' | cap model calculations create --json
 EOF
 ```
 
-> **Note:** Use the zero GUID for `id` when creating. Enum fields use `{ "id": <int>, "name": "<name>" }` format. See [Model Building Reference](../../reference/model-building.md) for all enum ID lookup tables.
+> **Note:** Use the zero ID for `id` when creating. Enum fields use `{ "id": <int>, "name": "<name>" }` format. See [Model Building Reference](../../reference/model-building.md) for all enum ID lookup tables.
 
 **What to look for:**
-- Success response: `{ "success": true, "id": "<new-guid>" }`
+- Success response: `{ "success": true, "id": "<new-id>" }`
 - The returned ID can be referenced in other calculations' formulas
 
 **If error:**
-- `VALIDATION_ERROR` → Check JSON structure; common issue: formula references a non-existent metric GUID
+- `VALIDATION_ERROR` → Check JSON structure; common issue: formula references a non-existent metric ID
 - Formula syntax errors are returned with a description of the problem
 
 ---
@@ -234,14 +234,14 @@ EOF
 cap model calculations get <new-id> --json
 
 # Validate the formula syntax
-cap model formula-validation validate --formula "IF [def456...] <> 0 THEN [abc123...] / [def456...] ELSE 0" --json
+cap model formula-validation validate --formula "IF [<id>] <> 0 THEN [<id>] / [<id>] ELSE 0" --json
 ```
 
 **Present confirmation:**
 ```
 Calculation created successfully!
 
-ID:             xyz78901-...
+ID:             <id>
 Name:           Energy Intensity
 Formula:        IF [Headcount] <> 0 THEN [Total Electricity] / [Headcount] ELSE 0
 Calc Phase:     After Aggregations
@@ -262,7 +262,7 @@ Next steps:
 ```bash
 cap model metrics list --json
 ```
-Found "Diesel Consumption" (abc123...) — Input, litres, Sum
+Found "Diesel Consumption" (<id>) — Input, litres, Sum
 
 **Claude:** For diesel CO2 emissions, the standard factor is 2.68 kg CO2e per litre. The formula would be:
 
@@ -277,7 +277,7 @@ Here's what I'll create:
 Name:           Diesel CO2 Emissions
 Discipline:     Environmental > Emissions
 Unit:           kg CO2e
-Formula:        [abc123...] * 2.68
+Formula:        [<id>] * 2.68
 Calc Phase:     Before Aggregations
 Org Aggregation: Sum
 Time Aggregation: Sum
@@ -291,17 +291,17 @@ Proceed?
 ```bash
 cat <<'EOF' | cap model calculations create --json
 {
-  "id": "00000000-0000-0000-0000-000000000000",
+  "id": "<empty-id>",
   "name": "Diesel CO2 Emissions",
   "description": "CO2 equivalent emissions from diesel consumption (2.68 kg CO2e/L)",
-  "discipline": { "id": "<emissions-discipline-guid>" },
-  "unitOfMeasure": { "id": "<kg-co2e-unit-guid>" },
+  "discipline": { "id": "<emissions-discipline-id>" },
+  "unitOfMeasure": { "id": "<kg-co2e-unit-id>" },
   "dataInterval": { "id": 2, "name": "Month" },
   "precision": 2,
   "calculationPhase": { "id": 0, "name": "Before Aggregations" },
   "orgStructureAggregationMethod": { "id": 0, "name": "Sum" },
   "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
-  "formula": "[abc123...] * 2.68",
+  "formula": "[<id>] * 2.68",
   "translatedNames": [],
   "translatedDescriptions": [],
   "attributeValues": []
@@ -324,11 +324,11 @@ When creating calculations that reference each other, create them in dependency 
 cat <<'EOF' | cap model calculations create --json
 { "name": "Total Energy", "formula": "[Electricity] + [Gas] + [Diesel]", ... }
 EOF
-# Returns ID: calc-energy-guid
+# Returns ID: calc-energy-id
 
 # 2. Create dependent calculation using the new ID
 cat <<'EOF' | cap model calculations create --json
-{ "name": "Energy Intensity", "formula": "IF [Headcount] <> 0 THEN [calc-energy-guid] / [Headcount] ELSE 0", ... }
+{ "name": "Energy Intensity", "formula": "IF [Headcount] <> 0 THEN [calc-energy-id] / [Headcount] ELSE 0", ... }
 EOF
 ```
 
@@ -336,7 +336,7 @@ See [Model Building Reference](../../reference/model-building.md#create-calculat
 
 ### Updating a Formula
 
-Use `save` instead of `create` with the existing GUID:
+Use `save` instead of `create` with the existing ID:
 
 ```bash
 cap model calculations get <id> --json > calc.json

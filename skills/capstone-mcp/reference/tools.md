@@ -39,9 +39,9 @@ No parameters.
 **Response example:**
 ```json
 {
-  "userName": "jane.doe@acme.com",
-  "tenantName": "Acme Corporation",
-  "tenantId": "a1b2c3d4-...",
+  "userName": "user@example.com",
+  "tenantName": "Example Organization",
+  "tenantId": "<id>",
   "roles": ["Admin", "DataManager"],
   "language": "en"
 }
@@ -61,8 +61,8 @@ No parameters.
 ```json
 {
   "tenants": [
-    { "id": "a1b2c3d4-...", "name": "Acme Corporation", "isCurrent": true },
-    { "id": "e5f6g7h8-...", "name": "Acme Test", "isCurrent": false }
+    { "id": "<id>", "name": "Example Organization", "isCurrent": true },
+    { "id": "<id>", "name": "Example Test Tenant", "isCurrent": false }
   ]
 }
 ```
@@ -75,7 +75,7 @@ Switch to a different tenant. Changes become your default for future sessions.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `tenantId` | string (GUID) | Yes | Tenant ID to switch to |
+| `tenantId` | string (ID) | Yes | Tenant ID to switch to |
 
 **Returns:** Confirmation with new tenant name. Invalidates cached resources.
 
@@ -91,7 +91,7 @@ List metrics in the Capstone model. Returns metric hierarchy with names, types, 
 |-----------|------|----------|-------------|
 | `search` | string | No | Search by metric name (case-insensitive substring match) |
 | `metricType` | string | No | Filter by type: `input`, `calculation`, or omit for all |
-| `disciplineId` | string (GUID) | No | Filter by discipline ID |
+| `disciplineId` | string (ID) | No | Filter by discipline ID |
 | `limit` | int | No | Maximum results (default: 100) |
 
 **Returns:** Tree grid of metrics with name, type (Input/Calculation), discipline, unit of measure, data interval, and calculation details.
@@ -101,7 +101,7 @@ List metrics in the Capstone model. Returns metric hierarchy with names, types, 
 {
   "gridRows": [
     {
-      "id": "4f20e84a-...",
+      "id": "<id>",
       "name": "Electricity Consumption",
       "path": "Electricity Consumption",
       "metricType": "Input",
@@ -115,7 +115,7 @@ List metrics in the Capstone model. Returns metric hierarchy with names, types, 
       "timePeriodAggregationMethod": { "id": 1, "name": "Sum" }
     },
     {
-      "id": "8fa4d124-...",
+      "id": "<id>",
       "name": "Total Energy",
       "path": "Energy > Total Energy",
       "metricType": "Calculation",
@@ -142,7 +142,7 @@ Get full details for a single metric including formula, aggregation settings, an
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `metricId` | string (GUID) | Yes | Metric ID to retrieve |
+| `metricId` | string (ID) | Yes | Metric ID to retrieve |
 
 **Returns:** Formatted metric details including type, discipline, unit of measure, data interval, precision, and editability. Uses `POST Model/Metrics/GetTreeGridList` internally and filters client-side.
 
@@ -151,7 +151,7 @@ Get full details for a single metric including formula, aggregation settings, an
 Metric: Electricity Consumption
 ==============================
 
-ID: 4f20e84a-...
+ID: <id>
 Type: Input
 
 Classification:
@@ -194,18 +194,18 @@ List organization structure (hierarchical tree of locations, regions, business u
 {
   "gridRows": [
     {
-      "id": "019c27be-...",
+      "id": "<id>",
       "name": "Corporate",
       "level": 0,
       "treePath": "Corporate",
       "parentId": null
     },
     {
-      "id": "019c27be-...",
+      "id": "<id>",
       "name": "Site A",
       "level": 1,
       "treePath": "Corporate > Site A",
-      "parentId": "019c27be-..."
+      "parentId": "<id>"
     }
   ]
 }
@@ -293,15 +293,15 @@ Query raw input data (manually entered or imported values) with validation statu
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `templateId` | string (GUID) | Conditional | Capture template ID (from `templates_spreadsheetCaptures_list`). Optional if `templateJson` is provided. |
+| `templateId` | string (ID) | Conditional | Capture template ID (from `templates_spreadsheetCaptures_list`). Optional if `templateJson` is provided. |
 | `templateJson` | string (JSON) | Conditional | Inline capture template JSON (alternative to `templateId`). Minimum: `{"name":"Ad-hoc","dataGrouping":{"id":1},"spreadsheetTemplateMetrics":[{"metric":{"id":"METRIC_GUID"},"sortOrder":0}]}`. `dataGrouping` id: 0=None, 1=OrgNode, 2=Discipline. Get metric IDs from `model_metrics_list`. |
 | `timePeriodNames` | string | No | Comma-separated period names (e.g., `Jan 2025,Feb 2025`) |
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
 | `periodCount` | int | No | Number of recent periods (default: 4, used with `periodType`) |
 | `dataInterval` | int | No | Day=0, Week=1, Month=2 (default), Quarter=3, Year=4 |
-| `orgNodeIds` | string | No | Comma-separated org node GUIDs |
-| `disciplineNodeIds` | string | No | Comma-separated discipline GUIDs |
-| `frameworkNodeIds` | string | No | Comma-separated framework GUIDs |
+| `orgNodeIds` | string | No | Comma-separated org node IDs |
+| `disciplineNodeIds` | string | No | Comma-separated discipline IDs |
+| `frameworkNodeIds` | string | No | Comma-separated framework IDs |
 | `metricNames` | string | No | Include only metrics matching these names (comma-separated, case-insensitive substring match, e.g. `Revenue,Profit`) |
 | `excludeMetricNames` | string | No | Exclude metrics matching these names (comma-separated, case-insensitive substring match, e.g. `Change %`) |
 | `limit` | int | No | Maximum pivot rows to return (default: 500) |
@@ -318,17 +318,17 @@ Query raw input data (manually entered or imported values) with validation statu
   ],
   "gridRows": [
     {
-      "id": "row-guid",
+      "id": "row-id",
       "name": "Electricity Consumption",
       "path": "Electricity Consumption->Corporate->Site A",
       "isDataRow": true,
-      "unitOfMeasure": { "name": "kWh", "id": "uom-guid" },
+      "unitOfMeasure": { "name": "kWh", "id": "uom-id" },
       "precision": 2,
-      "groupingKey": "org-node-guid",
+      "groupingKey": "org-node-id",
       "timePeriodColumns": [
         {
           "inputValue": {
-            "id": "value-guid",
+            "id": "value-id",
             "value": 15000.50,
             "validationStatus": 2,
             "isLocked": false,
@@ -337,7 +337,7 @@ Query raw input data (manually entered or imported values) with validation statu
         },
         {
           "inputValue": {
-            "id": "00000000-0000-0000-0000-000000000000",
+            "id": "<empty-id>",
             "validationStatus": 0,
             "isLocked": false,
             "userCanCapture": true
@@ -351,7 +351,7 @@ Query raw input data (manually entered or imported values) with validation statu
 
 **Key points:**
 - `gridRows[].timePeriodColumns` aligns with the top-level `timePeriodColumns` by index
-- A zero GUID in `inputValue.id` means no value has been entered for that cell
+- A zero ID in `inputValue.id` means no value has been entered for that cell
 - `value` field is absent (not null) when no data exists
 - `path` uses `->` separators: `MetricName->OrgPath`
 - `groupingKey` is the org node ID for that row
@@ -362,7 +362,7 @@ Query raw input data (manually entered or imported values) with validation statu
 
 ### `data_inputValues_save`
 
-Save input values (batch upsert). Uses business-key matching — zero GUIDs resolve to existing records automatically.
+Save input values (batch upsert). Uses business-key matching — zero IDs resolve to existing records automatically.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -371,16 +371,16 @@ Save input values (batch upsert). Uses business-key matching — zero GUIDs reso
 **Input value object:**
 ```json
 {
-  "id": "00000000-0000-0000-0000-000000000000",
+  "id": "<empty-id>",
   "value": 1500,
-  "metric": { "id": "<metric-guid>" },
-  "orgNode": { "id": "<org-node-guid>" },
+  "metric": { "id": "<metric-id>" },
+  "orgNode": { "id": "<org-node-id>" },
   "timePeriodType": { "id": 2, "name": "Month" },
   "startDate": "2025-03-01T00:00:00Z"
 }
 ```
 
-**Business key:** `metric` + `orgNode` + `timePeriodType` + `startDate` uniquely identifies each value. The `id` field can always be the zero GUID — the API resolves existing records by business key. This makes saves idempotent.
+**Business key:** `metric` + `orgNode` + `timePeriodType` + `startDate` uniquely identifies each value. The `id` field can always be the zero ID — the API resolves existing records by business key. This makes saves idempotent.
 
 **TimePeriodType values:**
 
@@ -402,15 +402,15 @@ Save input values (batch upsert). Uses business-key matching — zero GUIDs reso
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `templateId` | string (GUID) | Conditional | Report template ID (from `templates_spreadsheetReports_list`). Optional if `templateJson` is provided. |
+| `templateId` | string (ID) | Conditional | Report template ID (from `templates_spreadsheetReports_list`). Optional if `templateJson` is provided. |
 | `templateJson` | string (JSON) | Conditional | Inline report template JSON (alternative to `templateId`). Minimum: `{"name":"Ad-hoc","dataGrouping":{"id":1},"spreadsheetTemplateMetrics":[{"metric":{"id":"METRIC_GUID"},"sortOrder":0}]}`. `dataGrouping` id: 0=None, 1=OrgNode, 2=Discipline. Get metric IDs from `model_metrics_list`. |
 | `timePeriodNames` | string | No | Comma-separated period names (e.g., `Jan 2025,Feb 2025`) |
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
 | `periodCount` | int | No | Number of recent periods (default: 4, used with `periodType`) |
 | `dataInterval` | int | No | Day=0, Week=1, Month=2 (default), Quarter=3, Year=4 |
-| `orgNodeIds` | string | No | Comma-separated org node GUIDs |
-| `disciplineNodeIds` | string | No | Comma-separated discipline GUIDs |
-| `frameworkNodeIds` | string | No | Comma-separated framework GUIDs |
+| `orgNodeIds` | string | No | Comma-separated org node IDs |
+| `disciplineNodeIds` | string | No | Comma-separated discipline IDs |
+| `frameworkNodeIds` | string | No | Comma-separated framework IDs |
 | `metricNames` | string | No | Include only metrics matching these names (comma-separated, case-insensitive substring match) |
 | `excludeMetricNames` | string | No | Exclude metrics matching these names (comma-separated, case-insensitive substring match, e.g. `Change %`) |
 | `includeMetricDetails` | bool | No | Include metric formula, aggregation, and discipline info section (default: false) |
@@ -430,7 +430,7 @@ Save input values (batch upsert). Uses business-key matching — zero GUIDs reso
   ],
   "gridRows": [
     {
-      "id": "row-guid",
+      "id": "row-id",
       "name": "GHG Emissions",
       "path": "Environmental > Emissions > GHG Emissions",
       "isDataRow": true,
@@ -442,7 +442,7 @@ Save input values (batch upsert). Uses business-key matching — zero GUIDs reso
       ]
     },
     {
-      "id": "row-guid",
+      "id": "row-id",
       "name": "Energy Use",
       "path": "Environmental > Energy > Energy Use",
       "isDataRow": true,
@@ -475,8 +475,8 @@ For template-based queries where a report template already defines the metric se
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `metricIds` | string | Yes | Comma-separated metric GUIDs to query |
-| `orgNodeIds` | string | No | Comma-separated org node GUIDs. When multiple are provided, results are grouped by org node. |
+| `metricIds` | string | Yes | Comma-separated metric IDs to query |
+| `orgNodeIds` | string | No | Comma-separated org node IDs. When multiple are provided, results are grouped by org node. |
 | `dataInterval` | int | No | Day=0, Week=1, Month=2 (default), Quarter=3, Year=4 |
 | `timePeriodNames` | string | No | Comma-separated period names (e.g., `Jan 2025,Feb 2025`) |
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
@@ -495,8 +495,8 @@ For template-based queries where a report template already defines the metric se
 1. model_metrics_list(search="Revenue")  → find metric IDs
 2. model_orgNodes_list(search="Site 1")  → find org node ID
 3. data_computedValues_query(
-     metricIds="<revenue-guid>,<cost-guid>",
-     orgNodeIds="<site1-guid>",
+     metricIds="<revenue-id>,<cost-id>",
+     orgNodeIds="<site-id>",
      dataInterval=2,
      periodType="month",
      periodCount=6
@@ -515,8 +515,8 @@ Get all widget data from a dashboard as CSV. Returns data at each widget's nativ
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `dashboardTemplateId` | string (GUID) | Yes | Dashboard template ID (from `templates_dashboards_list`) |
-| `orgNodeId` | string (GUID) | Yes | Organization node ID |
+| `dashboardTemplateId` | string (ID) | Yes | Dashboard template ID (from `templates_dashboards_list`) |
+| `orgNodeId` | string (ID) | Yes | Organization node ID |
 | `timePeriodNames` | string | No | Comma-separated period names |
 | `periodType` | string | No | `month`, `quarter` (default), or `year` |
 | `periodCount` | int | No | Number of recent periods (default: 4) |
@@ -532,9 +532,9 @@ Get one widget's data as CSV. Use a widget template ID (from `templates_widgets_
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `widgetTemplateId` | string (GUID) | Conditional | Widget template ID (from `templates_widgets_list`). Optional if `templateJson` is provided. |
-| `templateJson` | string (JSON) | Conditional | Inline widget template JSON (alternative to `widgetTemplateId`). Required fields: `name`, `discipline` (`{"id":"GUID"}`), `widgetType` (`{"id":0}` InfoCard, 1 PieChart, 2 XYChart, 4 Table), `dataRangeMode` (`{"id":0}`), `metricSelectionMode` (`{"id":0}`), `dataItems` array. Table templates also require `rowFields` and `valueFields`; each Table value column is an explicit configured value field using row metric, selected metric, or selected calculation binding. Get metric/discipline IDs from `model_metrics_list` and `model_disciplines_list`. |
-| `orgNodeId` | string (GUID) | No | Organization node ID (from `model_orgNodes_list`) |
+| `widgetTemplateId` | string (ID) | Conditional | Widget template ID (from `templates_widgets_list`). Optional if `templateJson` is provided. |
+| `templateJson` | string (JSON) | Conditional | Inline widget template JSON (alternative to `widgetTemplateId`). Required fields: `name`, `discipline` (`{"id":"ID"}`), `widgetType` (`{"id":0}` InfoCard, 1 PieChart, 2 XYChart, 4 Table), `dataRangeMode` (`{"id":0}`), `metricSelectionMode` (`{"id":0}`), `dataItems` array. Table templates also require `rowFields` and `valueFields`; each Table value column is an explicit configured value field using row metric, selected metric, or selected calculation binding. Get metric/discipline IDs from `model_metrics_list` and `model_disciplines_list`. |
+| `orgNodeId` | string (ID) | No | Organization node ID (from `model_orgNodes_list`) |
 | `timePeriodNames` | string | No | Comma-separated period names (e.g., `Q1 FY 25,Q2 FY 25`) |
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
 | `periodCount` | int | No | Number of recent periods (default: 4, used with `periodType`) |
@@ -560,8 +560,8 @@ List dashboard templates (name + ID). Use the ID with: `reporting_dashboards_get
 ```json
 {
   "gridRows": [
-    { "id": "dash-guid", "name": "ESG Executive Dashboard", "description": "Overview of ESG performance" },
-    { "id": "dash-guid", "name": "Operations Dashboard", "description": "Operational KPIs" }
+    { "id": "dash-id", "name": "ESG Executive Dashboard", "description": "Overview of ESG performance" },
+    { "id": "dash-id", "name": "Operations Dashboard", "description": "Operational KPIs" }
   ]
 }
 ```
@@ -583,10 +583,10 @@ List widget templates (name + ID + type). Widget names encode their content: 'Su
 ```json
 {
   "gridRows": [
-    { "id": "wt-guid", "name": "Emissions Card", "widgetType": { "id": 0, "name": "InfoCard" } },
-    { "id": "wt-guid", "name": "Energy Mix", "widgetType": { "id": 1, "name": "PieChart" } },
-    { "id": "wt-guid", "name": "Emissions Trend", "widgetType": { "id": 2, "name": "XYChart" } },
-    { "id": "wt-guid", "name": "Metric Table", "widgetType": { "id": 4, "name": "Table" } }
+    { "id": "wt-id", "name": "Emissions Card", "widgetType": { "id": 0, "name": "InfoCard" } },
+    { "id": "wt-id", "name": "Energy Mix", "widgetType": { "id": 1, "name": "PieChart" } },
+    { "id": "wt-id", "name": "Emissions Trend", "widgetType": { "id": 2, "name": "XYChart" } },
+    { "id": "wt-id", "name": "Metric Table", "widgetType": { "id": 4, "name": "Table" } }
   ]
 }
 ```
@@ -634,7 +634,7 @@ Get detailed configuration of a specific report template.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `templateId` | string (GUID) | Yes | Report template ID |
+| `templateId` | string (ID) | Yes | Report template ID |
 
 **Returns:** Template configuration including filters (discipline, framework, metric type), org node assignments, and included metrics.
 
@@ -646,7 +646,7 @@ Get detailed configuration of a specific capture template.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `templateId` | string (GUID) | Yes | Capture template ID |
+| `templateId` | string (ID) | Yes | Capture template ID |
 
 **Returns:** Template configuration including assigned metrics, org nodes, and data entry settings.
 
@@ -662,8 +662,8 @@ Render a full dashboard as interactive HTML with Chart.js charts. Use when the u
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `dashboardTemplateId` | string (GUID) | Yes | Dashboard template ID |
-| `orgNodeId` | string (GUID) | Yes | Organization node ID |
+| `dashboardTemplateId` | string (ID) | Yes | Dashboard template ID |
+| `orgNodeId` | string (ID) | Yes | Organization node ID |
 | `startDate` | string | Yes | Start date (ISO format: yyyy-MM-dd) |
 | `endDate` | string | Yes | End date (ISO format: yyyy-MM-dd) |
 | `timePeriodType` | string | No | `day`, `week`, `month` (default), `quarter`, `year` |
@@ -673,8 +673,8 @@ Render a full dashboard as interactive HTML with Chart.js charts. Use when the u
 **Example call:**
 ```
 apps_dashboard_render({
-  dashboardTemplateId: "dash-guid",
-  orgNodeId: "org-guid",
+  dashboardTemplateId: "dash-id",
+  orgNodeId: "org-id",
   startDate: "2024-10-01",
   endDate: "2025-03-31",
   timePeriodType: "quarter"
@@ -689,8 +689,8 @@ Render a KPI info card as HTML showing metric values with labels, units, and tre
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `widgetTemplateId` | string (GUID) | Yes | Widget template ID (InfoCard type) |
-| `orgNodeIds` | string | Yes | Comma-separated org node GUIDs |
+| `widgetTemplateId` | string (ID) | Yes | Widget template ID (InfoCard type) |
+| `orgNodeIds` | string | Yes | Comma-separated org node IDs |
 | `startDate` | string | Yes | Start date (ISO format) |
 | `endDate` | string | Yes | End date (ISO format) |
 | `timePeriodType` | string | No | Period type (default: `month`) |
@@ -705,8 +705,8 @@ Render a pie/donut chart as interactive HTML (Chart.js). Shows part-to-whole bre
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `widgetTemplateId` | string (GUID) | Yes | Widget template ID (PieChart type) |
-| `orgNodeIds` | string | Yes | Comma-separated org node GUIDs |
+| `widgetTemplateId` | string (ID) | Yes | Widget template ID (PieChart type) |
+| `orgNodeIds` | string | Yes | Comma-separated org node IDs |
 | `startDate` | string | Yes | Start date (ISO format) |
 | `endDate` | string | Yes | End date (ISO format) |
 | `timePeriodType` | string | No | Period type (default: `month`) |
@@ -721,8 +721,8 @@ Render a bar/line/area chart as interactive HTML (Chart.js). Shows trends, time 
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `widgetTemplateId` | string (GUID) | Yes | Widget template ID (XYChart type) |
-| `orgNodeIds` | string | Yes | Comma-separated org node GUIDs |
+| `widgetTemplateId` | string (ID) | Yes | Widget template ID (XYChart type) |
+| `orgNodeIds` | string | Yes | Comma-separated org node IDs |
 | `startDate` | string | Yes | Start date (ISO format) |
 | `endDate` | string | Yes | End date (ISO format) |
 | `timePeriodType` | string | No | Period type (default: `month`) |
@@ -737,8 +737,8 @@ Render a table widget as HTML. Shows dashboard-shaped table rows, columns, forma
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `widgetTemplateId` | string (GUID) | Yes | Widget template ID (Table type) |
-| `orgNodeIds` | string | Yes | Comma-separated org node GUIDs |
+| `widgetTemplateId` | string (ID) | Yes | Widget template ID (Table type) |
+| `orgNodeIds` | string | Yes | Comma-separated org node IDs |
 | `startDate` | string | Yes | Start date (ISO format) |
 | `endDate` | string | Yes | End date (ISO format) |
 | `timePeriodType` | string | No | Period type (default: `month`) |
@@ -753,9 +753,9 @@ Render pre-generated AI insights (trends, anomalies, correlations) as HTML cards
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `dashboardTemplateId` | string (GUID) | Yes | Dashboard template ID |
-| `dashboardTemplateNodeId` | string (GUID) | Yes | Dashboard template node ID — specific section to analyze |
-| `orgNodeId` | string (GUID) | Yes | Organization node ID |
+| `dashboardTemplateId` | string (ID) | Yes | Dashboard template ID |
+| `dashboardTemplateNodeId` | string (ID) | Yes | Dashboard template node ID — specific section to analyze |
+| `orgNodeId` | string (ID) | Yes | Organization node ID |
 
 **Returns:** HTML with AI-generated insights and trend analysis.
 
@@ -857,7 +857,7 @@ Create a new widget template from JSON config. Checks for name collisions — if
 | Field | Type | Notes |
 |-------|------|-------|
 | `name` | string | Template name |
-| `discipline` | `{id: "guid"}` | Discipline category |
+| `discipline` | `{id: "id"}` | Discipline category |
 | `widgetType` | `{id: int}` | 0=InfoCard, 1=PieChart, 2=XYChart, 4=Table |
 | `dataRangeMode` | `{id: int}` | Data range mode |
 | `metricSelectionMode` | `{id: int}` | Metric selection mode |
@@ -878,10 +878,10 @@ Update an existing widget template by ID. Same required fields as `templates_wid
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string (GUID) | Yes | Template ID to update |
+| `id` | string (ID) | Yes | Template ID to update |
 | `config` | string (JSON) | Yes | Widget template config with updated fields |
 
-If the config contains an `id` field, it must match the `id` parameter or be the empty GUID.
+If the config contains an `id` field, it must match the `id` parameter or be the empty ID.
 
 **Returns:** Success message with the updated template ID and name.
 
@@ -893,7 +893,7 @@ Delete a widget template by ID. Permanently removes the template — dashboards 
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string (GUID) | Yes | Template ID to delete |
+| `id` | string (ID) | Yes | Template ID to delete |
 
 **Returns:** Confirmation message.
 
@@ -914,7 +914,7 @@ Create a new report template from JSON config. Checks for name collisions — if
 | Field | Type | Notes |
 |-------|------|-------|
 | `name` | string | Template name |
-| `dataGrouping` | `{id: "guid"}` | Data grouping to use |
+| `dataGrouping` | `{id: "id"}` | Data grouping to use |
 
 **Returns:** Success message with the new template ID and name.
 
@@ -926,10 +926,10 @@ Update an existing report template by ID. Same required fields as `templates_rep
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string (GUID) | Yes | Template ID to update |
+| `id` | string (ID) | Yes | Template ID to update |
 | `config` | string (JSON) | Yes | Report template config with updated fields |
 
-If the config contains an `id` field, it must match the `id` parameter or be the empty GUID.
+If the config contains an `id` field, it must match the `id` parameter or be the empty ID.
 
 **Returns:** Success message with the updated template ID and name.
 
@@ -941,7 +941,7 @@ Delete a report template by ID. Permanently removes the template.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string (GUID) | Yes | Template ID to delete |
+| `id` | string (ID) | Yes | Template ID to delete |
 
 **Returns:** Confirmation message.
 
@@ -955,25 +955,25 @@ Get a dashboard template's full structure including all tree items with their ID
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string (GUID) | Yes | Dashboard template ID |
+| `id` | string (ID) | Yes | Dashboard template ID |
 
 **Returns:** JSON with complete dashboard structure:
 
 ```json
 {
-  "id": "dash-guid",
+  "id": "dash-id",
   "name": "ESG Executive Dashboard",
   "treeItems": [
     {
-      "id": "item-guid",
+      "id": "item-id",
       "path": "Overview",
       "isWidget": false
     },
     {
-      "id": "item-guid",
+      "id": "item-id",
       "path": "Overview -> Energy Card",
       "isWidget": true,
-      "widgetTemplate": {"id": "wt-guid", "name": "Energy Card"},
+      "widgetTemplate": {"id": "wt-id", "name": "Energy Card"},
       "widgetType": {"id": 0, "name": "InfoCard"},
       "sortOrder": 1,
       "widgetSize": {"id": 1}
@@ -1005,7 +1005,7 @@ Create a new dashboard template from JSON config. Checks for name collisions —
 |-------|------|----------|-------|
 | `path` | string | Yes | Use `->` for nesting (e.g. `"Tab -> Widget"`) |
 | `isWidget` | boolean | Yes | `false` for tabs, `true` for widgets |
-| `widgetTemplate` | `{id: "guid"}` | Widget only | Widget template ID (from `templates_widgets_list`) |
+| `widgetTemplate` | `{id: "id"}` | Widget only | Widget template ID (from `templates_widgets_list`) |
 | `widgetType` | `{id: int}` | Widget only | 0=InfoCard, 1=PieChart, 2=XYChart, 4=Table |
 | `sortOrder` | int | No | Display order within tab |
 | `widgetSize` | `{id: int}` | No | Widget size |
@@ -1028,10 +1028,10 @@ Update an existing dashboard template by ID.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string (GUID) | Yes | Dashboard template ID to update |
+| `id` | string (ID) | Yes | Dashboard template ID to update |
 | `config` | string (JSON) | Yes | **Complete** dashboard template config — must include ALL tree items |
 
-If the config contains an `id` field, it must match the `id` parameter or be the empty GUID.
+If the config contains an `id` field, it must match the `id` parameter or be the empty ID.
 
 **Returns:** Success message with the updated dashboard ID and name.
 
@@ -1043,7 +1043,7 @@ Delete a dashboard template by ID. Permanently removes the dashboard template an
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string (GUID) | Yes | Dashboard template ID to delete |
+| `id` | string (ID) | Yes | Dashboard template ID to delete |
 
 **Returns:** Confirmation message.
 
@@ -1114,11 +1114,11 @@ The `dataInterval` parameter controls the time granularity. Be aware of the type
 | `data_computedValues_list` | int | Day=0, Week=1, Month=2, Quarter=3, Year=4 |
 | `data_computedValues_query` | int | Day=0, Week=1, Month=2, Quarter=3, Year=4 |
 
-### GUID Parameters
+### ID Parameters
 
-All ID parameters expect standard GUID format: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
+All ID parameters expect standard ID format: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
 
-Invalid GUIDs return an error with a hint to the discovery tool.
+Invalid IDs return an error with a hint to the discovery tool.
 
 ---
 

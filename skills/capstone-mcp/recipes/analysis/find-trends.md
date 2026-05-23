@@ -62,7 +62,7 @@ Find a template including the target metrics.
 
 ```
 data_computedValues_list({
-  templateId: "<report-template-guid>",
+  templateId: "<report-template-id>",
   periodType: "month",
   periodCount: 12,
   dataInterval: 2
@@ -167,7 +167,7 @@ Would you like me to visualize this trend?
 ```
 apps_widget_xyChart({
   widgetTemplateId: "<emissions-trend-widget>",
-  orgNodeIds: "<root-org-guid>",
+  orgNodeIds: "<root-org-id>",
   startDate: "2024-01-01",
   endDate: "2024-12-31",
   timePeriodType: "month"
@@ -202,4 +202,4 @@ Identify recurring patterns by comparing same months across multiple years.
 
 ## CLI Equivalent
 
-[CLI: Find Trends](../../../cli/recipes/analysis/find-trends.md)
+[CLI: Find Trends](../../../capstone-cli/recipes/analysis/find-trends.md)

@@ -90,7 +90,7 @@
 
 **Capstone Term:** Calculation (Metric)
 
-**Definition:** A metric whose values are computed from a formula referencing other metrics. Formulas use Excel-like syntax with `[Metric Name]` or `[GUID]` references.
+**Definition:** A metric whose values are computed from a formula referencing other metrics. Formulas use Excel-like syntax with `[Metric Name]` or `[ID]` references.
 
 **MCP Tools:**
 - `model_metrics_list` with `includeInputs: false, includeCalculations: true` — List calculations only
@@ -114,7 +114,7 @@ SUM([A], [B], [C])                Sum of values
 
 **Definition:** An actual data entry for an Input metric at a specific Org Node and Time Period. Input Values are stored with validation status and audit trail.
 
-**Business Key:** `metric` + `orgNode` + `timePeriodType` + `startDate`. This combination uniquely identifies an input value. The save tool uses business-key upsert — zero GUIDs resolve to existing records automatically, making saves idempotent.
+**Business Key:** `metric` + `orgNode` + `timePeriodType` + `startDate`. This combination uniquely identifies an input value. The save tool uses business-key upsert — zero IDs resolve to existing records automatically, making saves idempotent.
 
 **MCP Tools:**
 - `data_inputValues_list` — List values for a capture template

@@ -50,7 +50,7 @@ Found metrics containing "diesel":
 **If user gave ID:** Use directly.
 
 **If no metric found:**
-- "I couldn't find a metric matching '[name]'. Here are available Input metrics..."
+- "I couldn't find a metric matching '[name]'. Here are available Input <id>"
 - Present list for selection
 
 ---
@@ -154,7 +154,7 @@ Proceed? [Yes/No]
 
 **Purpose:** Execute the save command.
 
-> **Important:** The save endpoint requires the full business key (`metric`, `orgNode`, `timePeriodType`, `startDate`) for every input value, even when updating an existing record by ID. The `id` field uses the zero GUID for new values, or an existing input value GUID for updates.
+> **Important:** The save endpoint requires the full business key (`metric`, `orgNode`, `timePeriodType`, `startDate`) for every input value, even when updating an existing record by ID. The `id` field uses the zero ID for new values, or an existing input value ID for updates.
 
 **Command:**
 ```bash
@@ -162,10 +162,10 @@ cat <<'EOF' | cap data input-values save --json
 {
   "inputValues": [
     {
-      "id": "00000000-0000-0000-0000-000000000000",
+      "id": "<empty-id>",
       "value": 1500,
-      "metric": { "id": "<metric-guid>" },
-      "orgNode": { "id": "<org-node-guid>" },
+      "metric": { "id": "<metric-id>" },
+      "orgNode": { "id": "<org-node-id>" },
       "timePeriodType": { "id": 2, "name": "Month" },
       "startDate": "2025-03-01T00:00:00Z"
     }
@@ -269,7 +269,7 @@ cat <<'EOF' | cap data input-values save --json
 {
   "inputValues": [
     {
-      "id": "00000000-0000-0000-0000-000000000000",
+      "id": "<empty-id>",
       "value": 1500,
       "metric": { "id": "abc123" },
       "orgNode": { "id": "org789" },
@@ -305,17 +305,17 @@ When populating many values across org nodes and time periods (e.g., plan metric
    cap data time-periods list --data-interval week --json # weekly startDates
    ```
 
-2. **Generate payload** — build JSON with all values using zero GUIDs:
+2. **Generate payload** — build JSON with all values using zero IDs:
    ```bash
    python3 -c "
    import json
-   ZERO = '00000000-0000-0000-0000-000000000000'
+   ZERO = '<empty-id>'
    values = []
    for org_id, rate in [('<org-1>', 300), ('<org-2>', 320)]:
        for start_date in ['2026-02-09T00:00:00Z', '2026-02-16T00:00:00Z']:
            values.append({
                'id': ZERO, 'value': rate,
-               'metric': {'id': '<metric-guid>'},
+               'metric': {'id': '<metric-id>'},
                'orgNode': {'id': org_id},
                'timePeriodType': {'id': 1, 'name': 'Week'},
                'startDate': start_date

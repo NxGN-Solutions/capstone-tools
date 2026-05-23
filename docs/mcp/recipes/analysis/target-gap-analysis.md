@@ -52,10 +52,10 @@ Find a report template that includes the target metrics. Use the template `id` f
 
 ```
 data_computedValues_list({
-  templateId: "<report-template-guid>",
+  templateId: "<report-template-id>",
   timePeriodNames: "Q1 FY 25",
   dataInterval: 3,
-  orgNodeIds: "<root-org-node-guid>"
+  orgNodeIds: "<root-org-node-id>"
 })
 ```
 

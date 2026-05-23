@@ -214,7 +214,7 @@ OR: No external frameworks configured
 
 ```bash
 cap auth whoami --json
-# → Tenant: Acme Corporation
+# → Tenant: Example Organization
 
 cap masterdata org-nodes list --json
 # → 15 nodes, 3 levels deep
@@ -231,7 +231,7 @@ cap model metrics list --json
 
 **Claude:**
 
-## Tenant Overview: Acme Corporation
+## Tenant Overview: Example Organization
 
 ### Organizational Structure
 - **Total Nodes:** 15

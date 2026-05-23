@@ -54,10 +54,10 @@ Pick a template covering the comparison metrics.
 
 ```
 data_computedValues_list({
-  templateId: "<report-template-guid>",
+  templateId: "<report-template-id>",
   timePeriodNames: "Q1 FY 25",
   dataInterval: 3,
-  orgNodeIds: "<location-1-guid>"
+  orgNodeIds: "<location-1-id>"
 })
 ```
 
@@ -65,10 +65,10 @@ data_computedValues_list({
 
 ```
 data_computedValues_list({
-  templateId: "<report-template-guid>",
+  templateId: "<report-template-id>",
   timePeriodNames: "Q1 FY 25",
   dataInterval: 3,
-  orgNodeIds: "<location-2-guid>"
+  orgNodeIds: "<location-2-id>"
 })
 ```
 
@@ -177,4 +177,4 @@ Compare how locations are changing over time by including multiple periods.
 
 ## CLI Equivalent
 
-[CLI: Compare Operations](../../../cli/recipes/analysis/compare-operations.md)
+[CLI: Compare Operations](../../../capstone-cli/recipes/analysis/compare-operations.md)

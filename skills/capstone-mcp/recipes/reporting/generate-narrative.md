@@ -44,8 +44,8 @@ Match the dashboard name from `gridRows`. Extract the `id`.
 
 ```
 reporting_dashboards_getData({
-  dashboardTemplateId: "<dashboard-guid>",
-  orgNodeId: "<root-org-guid>",
+  dashboardTemplateId: "<dashboard-id>",
+  orgNodeId: "<root-org-id>",
   periodType: "quarter",
   periodCount: 4
 })
@@ -61,8 +61,8 @@ If comparison is useful, the query above already includes multiple periods. Calc
 
 ```
 apps_widget_aiSummary({
-  dashboardTemplateId: "<dashboard-guid>",
-  orgNodeId: "<root-org-guid>",
+  dashboardTemplateId: "<dashboard-id>",
+  orgNodeId: "<root-org-id>",
   startDate: "2024-10-01",
   endDate: "2025-03-31",
   timePeriodType: "quarter"
@@ -104,7 +104,7 @@ Adjust language based on audience:
 ```
 ## Q1 FY 2025 ESG Performance Summary
 
-In the first quarter of FY 2025, Acme Corporation continued its
+In the first quarter of FY 2025, Example Organization continued its
 trajectory toward sustainability goals, achieving notable reductions
 in greenhouse gas emissions while maintaining strong safety performance.
 Water consumption and waste diversion rates present opportunities for
@@ -161,7 +161,7 @@ apps_widget_aiSummary({
 
 ## Q1 FY 2025 ESG Performance Summary
 
-Acme Corporation delivered strong environmental performance in Q1 FY 2025, with greenhouse gas emissions declining 8% quarter-over-quarter to 1,850 tonnes CO2e. Renewable energy adoption reached a record 45% of the total energy mix. Social metrics present a mixed picture, with training hours behind schedule at 82.5% of target.
+Example Organization delivered strong environmental performance in Q1 FY 2025, with greenhouse gas emissions declining 8% quarter-over-quarter to 1,850 tonnes CO2e. Renewable energy adoption reached a record 45% of the total energy mix. Social metrics present a mixed picture, with training hours behind schedule at 82.5% of target.
 
 ### Environmental Performance
 - **Emissions:** 1,850 t CO2e (-8% QoQ, -22% YoY) — **On Track**
@@ -197,8 +197,8 @@ Expand with data tables for each metric, location breakdowns, and trend charts:
 
 ```
 apps_dashboard_render({
-  dashboardTemplateId: "<dashboard-guid>",
-  orgNodeId: "<root-org-guid>",
+  dashboardTemplateId: "<dashboard-id>",
+  orgNodeId: "<root-org-id>",
   startDate: "2024-04-01",
   endDate: "2025-03-31",
   timePeriodType: "quarter"
@@ -221,4 +221,4 @@ Structure the narrative to align with a specific reporting framework (GRI, SASB)
 
 ## CLI Equivalent
 
-[CLI: Generate Narrative](../../../cli/recipes/reporting/generate-narrative.md)
+[CLI: Generate Narrative](../../../capstone-cli/recipes/reporting/generate-narrative.md)

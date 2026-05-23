@@ -4,7 +4,7 @@
 
 Do not open public GitHub issues for vulnerabilities, credentials, tenant data, screenshots containing customer information, or private implementation details.
 
-Report security concerns through your NxGN support, implementation, or account contact. Include:
+Report security concerns through your Capstone support, implementation, or account contact. Include:
 
 - affected tool: CLI, MCP, documentation, or release process;
 - affected version and operating system;
@@ -12,7 +12,7 @@ Report security concerns through your NxGN support, implementation, or account c
 - impact and scope;
 - whether any credential or customer data may have been exposed.
 
-NxGN will triage reports through its private support process.
+Reports are triaged through the private Capstone support process.
 
 ## Credential Handling
 

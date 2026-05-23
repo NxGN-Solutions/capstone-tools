@@ -137,7 +137,7 @@ cap <domain> <entity> get <id> [--json]
 
 **Example:**
 ```bash
-cap model metrics get 12345678-1234-1234-1234-123456789012 --json
+cap model metrics get <id> --json
 ```
 
 ### Metric Formula Exploration
@@ -146,7 +146,7 @@ Use these commands when diagnosing a model or preparing AI analysis over calcula
 
 ```bash
 # Find metrics with formula and aggregation metadata
-cap model metrics list --search "Gross Earnings" --rich --json
+cap model metrics list --search "Sample Metric" --rich --json
 
 # Explain one metric's direct and transitive dependencies/dependents
 cap model metrics explain <metric-id> --max-depth 3 --json
@@ -156,7 +156,7 @@ cap model metrics graph --roots <metric-id>[,<metric-id>] --direction dependenci
 cap model metrics graph --roots <metric-id> --direction both --max-depth 2 --json
 ```
 
-`model metrics get` and rich list output include `metricType`, `formula`, `calculationPhase`, `orgStructureAggregationMethod`, and `timePeriodAggregationMethod`. Formula graph commands resolve both GUID tokens and display-name tokens such as `[Gross Earnings]`.
+`model metrics get` and rich list output include `metricType`, `formula`, `calculationPhase`, `orgStructureAggregationMethod`, and `timePeriodAggregationMethod`. Formula graph commands resolve both ID tokens and display-name tokens such as `[Sample Metric]`.
 
 ### Get Multiple Items (Bulk)
 
@@ -231,7 +231,7 @@ cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --data
 cap reporting dashboards get-insights <dashboard-template-id> <layout-node-id> --org-node <id> --data-interval month --periods "Jan 25" [--json]
 ```
 
-> **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`) use `--org-nodes` (plural, comma-separated) and require `--data-interval`. These commands return typed dashboard render JSON for their widget type. The `get-data` command uses `--org-node` (singular GUID), auto-detects the data interval from the widget template, and returns the type-agnostic CSV/AI extraction payload, not the Table dashboard render response. Use `cap data time-periods list` to discover available period names.
+> **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`) use `--org-nodes` (plural, comma-separated) and require `--data-interval`. These commands return typed dashboard render JSON for their widget type. The `get-data` command uses `--org-node` (singular ID), auto-detects the data interval from the widget template, and returns the type-agnostic CSV/AI extraction payload, not the Table dashboard render response. Use `cap data time-periods list` to discover available period names.
 
 **Table widget command discovery for agents:**
 
@@ -293,12 +293,12 @@ Widget templates support auto-wrapping - you can provide the inner object withou
 echo '{
   "name": "Energy Usage Card",
   "widgetType": { "id": 0, "name": "InfoCard" },
-  "discipline": { "id": "<discipline-guid>" },
+  "discipline": { "id": "<discipline-id>" },
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
   "dataItems": [
-    { "metric": { "id": "<metric-guid>" }, "sortOrder": 1 }
+    { "metric": { "id": "<metric-id>" }, "sortOrder": 1 }
   ]
 }' | cap templates widget-templates create --json
 
@@ -306,7 +306,7 @@ echo '{
 echo '{
   "name": "Waste Breakdown",
   "widgetType": { "id": 1, "name": "PieChart" },
-  "discipline": { "id": "<discipline-guid>" },
+  "discipline": { "id": "<discipline-id>" },
   "dataRangeMode": { "id": 0, "name": "Dynamic" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
@@ -319,7 +319,7 @@ echo '{
 echo '{
   "name": "Monthly Trend",
   "widgetType": { "id": 2, "name": "XYChart" },
-  "discipline": { "id": "<discipline-guid>" },
+  "discipline": { "id": "<discipline-id>" },
   "dataRangeMode": { "id": 0, "name": "Dynamic" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
@@ -335,7 +335,7 @@ echo '{
   "name": "Portfolio KPI Matrix",
   "title": "Portfolio KPI Matrix",
   "widgetType": { "id": 4, "name": "Table" },
-  "discipline": { "id": "<discipline-guid>" },
+  "discipline": { "id": "<discipline-id>" },
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 3, "name": "Quarter" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
@@ -357,7 +357,7 @@ echo '{
   "includeOrgNodeName": true,
   "includeOrgNodePath": false,
   "includeOrgNodeAttributes": [
-    { "id": "<sector-attribute-type-guid>", "name": "Sector" }
+    { "id": "<sector-attribute-type-id>", "name": "Sector" }
   ],
   "includeMetricName": false,
   "includeMetricReference": false,
@@ -367,24 +367,24 @@ echo '{
   "columnLayout": { "id": 3, "name": "Metric Then Period" },
   "metrics": [
     {
-      "metric": { "id": "<revenue-metric-guid>", "name": "Revenue" },
+      "metric": { "id": "<revenue-metric-id>", "name": "Revenue" },
       "sortOrder": 0
     },
     {
-      "metric": { "id": "<ebitda-metric-guid>", "name": "EBITDA" },
+      "metric": { "id": "<ebitda-metric-id>", "name": "EBITDA" },
       "sortOrder": 1
     }
   ],
   "periodSet": [
-    { "id": "<q1-period-guid>", "name": "Q1 FY 25" },
-    { "id": "<q2-period-guid>", "name": "Q2 FY 25" }
+    { "id": "<q1-period-id>", "name": "Q1 FY 25" },
+    { "id": "<q2-period-id>", "name": "Q2 FY 25" }
   ],
   "extraColumns": [
     {
       "sortOrder": 0,
       "headerTranslations": [{ "value": "YoY %", "language": { "code": "en" } }],
       "calculationMetricSelection": {
-        "metric": { "id": "<yoy-calculation-metric-guid>", "name": "Revenue YoY %" }
+        "metric": { "id": "<yoy-calculation-metric-id>", "name": "Revenue YoY %" }
       },
       "formatter": { "id": 2, "name": "Percent" },
       "precision": 1,
@@ -394,7 +394,7 @@ echo '{
   "dimensionalSorts": [
     {
       "targetDimension": { "id": 1, "name": "Row context" },
-      "targetAttributeType": { "id": "<sector-attribute-type-guid>", "name": "Sector" },
+      "targetAttributeType": { "id": "<sector-attribute-type-id>", "name": "Sector" },
       "direction": { "id": 0, "name": "Ascending" },
       "nullPlacement": { "id": 0, "name": "Last" },
       "sortOrder": 0
@@ -442,7 +442,7 @@ cap <domain> <entity> delete <id> [--json]
 
 **Example:**
 ```bash
-cap model inputs delete 12345678-1234-1234-1234-123456789012
+cap model inputs delete <id>
 ```
 
 ### Validate Data
@@ -480,9 +480,9 @@ cap data narrative-change-requests validate <request-id> --result approve --comm
 cap data data-lock unlock --data-interval quarter --periods "Q1 FY 25" --org-nodes <id> --discipline-nodes <id> --description "Reopen narrative capture" --json
 ```
 
-Narrative JSON input uses the shared `NxGN.Capstone.Api.Contracts` request
+Narrative JSON input uses the Capstone narrative request
 contracts. Use `--file <path>` or pipe JSON on stdin; use `--json` so automation
-receives full GUIDs and contract-shaped response envelopes.
+receives full IDs and contract-shaped response envelopes.
 
 ### Data Locks
 

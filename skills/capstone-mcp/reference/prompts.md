@@ -32,7 +32,7 @@ Compare actual performance against targets to identify gaps.
 
 **Orchestrates:** `model_metrics_list` → `templates_spreadsheetReports_list` → `data_computedValues_list` → gap calculation → status report
 
-**Recipe:** [Target Gap Analysis](../recipes/analysis/target-gap-analysis.md) | **CLI:** [Target Gap Analysis](../../cli/recipes/analysis/target-gap-analysis.md)
+**Recipe:** [Target Gap Analysis](../recipes/analysis/target-gap-analysis.md) | **CLI:** [Target Gap Analysis](../../capstone-cli/recipes/analysis/target-gap-analysis.md)
 
 ---
 
@@ -47,7 +47,7 @@ Detect statistical outliers in the data.
 
 **Orchestrates:** `model_metrics_list` → `templates_spreadsheetReports_list` → `data_computedValues_list` (current + historical) → statistical analysis → anomaly report
 
-**Recipe:** [Spot Anomalies](../recipes/analysis/spot-anomalies.md) | **CLI:** [Spot Anomalies](../../cli/recipes/analysis/spot-anomalies.md)
+**Recipe:** [Spot Anomalies](../recipes/analysis/spot-anomalies.md) | **CLI:** [Spot Anomalies](../../capstone-cli/recipes/analysis/spot-anomalies.md)
 
 ---
 
@@ -62,7 +62,7 @@ Compare performance between two locations or organizational units.
 
 **Orchestrates:** `model_orgNodes_list` → `templates_spreadsheetReports_list` → `data_computedValues_list` (per location) → comparison table
 
-**Recipe:** [Compare Operations](../recipes/analysis/compare-operations.md) | **CLI:** [Compare Operations](../../cli/recipes/analysis/compare-operations.md)
+**Recipe:** [Compare Operations](../recipes/analysis/compare-operations.md) | **CLI:** [Compare Operations](../../capstone-cli/recipes/analysis/compare-operations.md)
 
 ---
 
@@ -77,7 +77,7 @@ Analyze time-series trends in the data.
 
 **Orchestrates:** `model_metrics_list` → `data_timePeriods_list` → `templates_spreadsheetReports_list` → `data_computedValues_list` → trend analysis → projections
 
-**Recipe:** [Find Trends](../recipes/analysis/find-trends.md) | **CLI:** [Find Trends](../../cli/recipes/analysis/find-trends.md)
+**Recipe:** [Find Trends](../recipes/analysis/find-trends.md) | **CLI:** [Find Trends](../../capstone-cli/recipes/analysis/find-trends.md)
 
 ---
 
@@ -91,7 +91,7 @@ No arguments.
 
 **Orchestrates:** `model_orgNodes_list` → `model_disciplines_list` → `model_frameworks_list` → `model_metrics_list` → structured summary
 
-**Recipe:** [Discover Structure](../recipes/exploration/discover-structure.md) | **CLI:** [Discover Tenant Structure](../../cli/recipes/exploration/discover-tenant-structure.md)
+**Recipe:** [Discover Structure](../recipes/exploration/discover-structure.md) | **CLI:** [Discover Tenant Structure](../../capstone-cli/recipes/exploration/discover-tenant-structure.md)
 
 ---
 
@@ -106,7 +106,7 @@ Audit data completeness for a specific time period.
 
 **Orchestrates:** `data_availability` → `model_metrics_list` → gap identification → completeness percentage → action items
 
-**Recipe:** [Check Completeness](../recipes/exploration/check-completeness.md) | **CLI:** [Check Data Completeness](../../cli/recipes/exploration/check-completeness.md)
+**Recipe:** [Check Completeness](../recipes/exploration/check-completeness.md) | **CLI:** [Check Data Completeness](../../capstone-cli/recipes/exploration/check-completeness.md)
 
 ---
 
@@ -122,7 +122,7 @@ Explore and interpret a dashboard's data and visualizations.
 
 **Orchestrates:** `templates_dashboards_list` → `reporting_dashboards_getData` → section interpretation → cross-metric insights → key takeaways
 
-**Recipe:** [Talk to Dashboard](../recipes/exploration/talk-to-dashboard.md) | **CLI:** [Talk to Your Dashboard](../../cli/recipes/exploration/talk-to-your-dashboard.md)
+**Recipe:** [Talk to Dashboard](../recipes/exploration/talk-to-dashboard.md) | **CLI:** [Talk to Your Dashboard](../../capstone-cli/recipes/exploration/talk-to-your-dashboard.md)
 
 ---
 
@@ -137,7 +137,7 @@ Generate an AI-written performance summary suitable for reports.
 
 **Orchestrates:** `reporting_dashboards_getData` → `apps_widget_aiSummary` → professional narrative with executive summary, highlights, concerns, recommendations
 
-**Recipe:** [Generate Narrative](../recipes/reporting/generate-narrative.md) | **CLI:** [Generate Narrative](../../cli/recipes/reporting/generate-narrative.md)
+**Recipe:** [Generate Narrative](../recipes/reporting/generate-narrative.md) | **CLI:** [Generate Narrative](../../capstone-cli/recipes/reporting/generate-narrative.md)
 
 ---
 
@@ -157,13 +157,13 @@ These CLI recipes have no MCP equivalent yet:
 
 | CLI Recipe | Why Not in MCP v1 |
 |------------|-------------------|
-| [Dashboard Comparison](../../cli/recipes/analysis/dashboard-comparison.md) | Requires period selection UI |
-| [Deep Dashboard Analysis](../../cli/recipes/analysis/deep-dashboard-analysis.md) | Complex cross-metric correlation |
-| [Create Metric Wizard](../../cli/recipes/configuration/create-metric.md) | v1 is read-only |
-| [Create Widget Template](../../cli/recipes/configuration/create-widget-template.md) | v1 is read-only |
-| [Enter Data](../../cli/recipes/data-management/enter-data.md) | Use `data_inputValues_save` directly |
-| [Bulk Import Data](../../cli/recipes/data-management/bulk-import.md) | Excel operations deferred |
-| [Review Approvals](../../cli/recipes/data-management/review-approvals.md) | Change request workflow deferred |
+| [Dashboard Comparison](../../capstone-cli/recipes/analysis/dashboard-comparison.md) | Requires period selection UI |
+| [Deep Dashboard Analysis](../../capstone-cli/recipes/analysis/deep-dashboard-analysis.md) | Complex cross-metric correlation |
+| [Create Metric Wizard](../../capstone-cli/recipes/configuration/create-metric.md) | v1 is read-only |
+| [Create Widget Template](../../capstone-cli/recipes/configuration/create-widget-template.md) | v1 is read-only |
+| [Enter Data](../../capstone-cli/recipes/data-management/enter-data.md) | Use `data_inputValues_save` directly |
+| [Bulk Import Data](../../capstone-cli/recipes/data-management/bulk-import.md) | Excel operations deferred |
+| [Review Approvals](../../capstone-cli/recipes/data-management/review-approvals.md) | Change request workflow deferred |
 
 ---
 

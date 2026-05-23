@@ -72,7 +72,7 @@ cap templates widget-templates get-bulk -i wt-emissions-123,wt-energy-456,wt-tre
 **Response:**
 ```json
 {
-  "tenant": "Tharisa",
+  "tenant": "Example Tenant",
   "widgets": [
     {
       "id": "wt-emissions-123",

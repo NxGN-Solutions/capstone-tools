@@ -8,7 +8,6 @@ The Capstone CLI (`cap`) runs on Windows, macOS, and Linux. Commands are identic
 |---------|---------|
 | Pre-built binary (on PATH) | `cap <command>` |
 | Pre-built binary (local) | `./cap` (macOS/Linux) or `.\cap.exe` (Windows) |
-| Source checkout | `dotnet run --no-build --project NxGN.Capstone.Cli -- <command>` |
 
 All documentation uses `cap` as the command name. Substitute with the appropriate invocation for your setup.
 

@@ -67,7 +67,6 @@ The CLI works on **Windows, macOS, and Linux**. For shell-specific syntax (envir
 | Pre-built binary (on PATH) | `cap <command>` |
 | Pre-built binary (local, macOS/Linux) | `./cap <command>` |
 | Pre-built binary (local, Windows) | `.\cap.exe <command>` |
-| Source checkout | `dotnet run --no-build --project NxGN.Capstone.Cli -- <command>` |
 
 ### Verify Connection
 
@@ -425,10 +424,8 @@ Validation errors return details about what failed:
 
 ## See Also
 
-- [CLI Design](../designs/cli/00-overview.md) — Full command reference and architecture
-- [Recipes](./recipes/README.md) — Step-by-step workflows
-- [Commands Reference](./reference/commands.md) — Quick command lookup
-- [Template Selection Guide](./reference/template-selection.md) — Decide capture vs report vs widget vs dashboard workflows
-- [Glossary](./reference/glossary.md) — Detailed term mapping
-- [Output Formats](./reference/output-formats.md) — Table vs JSON output examples
-- [Feature Documentation](../features/README.md) — Product capabilities
+- [Recipes](./recipes/README.md) - Step-by-step workflows
+- [Commands Reference](./reference/commands.md) - Quick command lookup
+- [Template Selection Guide](./reference/template-selection.md) - Decide capture vs report vs widget vs dashboard workflows
+- [Glossary](./reference/glossary.md) - Detailed term mapping
+- [Output Formats](./reference/output-formats.md) - Table vs JSON output examples

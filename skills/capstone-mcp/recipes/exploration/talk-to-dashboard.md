@@ -45,8 +45,8 @@ If name is ambiguous, present options for user selection.
 
 ```
 reporting_dashboards_getData({
-  dashboardTemplateId: "<dashboard-guid>",
-  orgNodeId: "<root-org-guid>",
+  dashboardTemplateId: "<dashboard-id>",
+  orgNodeId: "<root-org-id>",
   periodType: "quarter",
   periodCount: 4
 })
@@ -65,8 +65,8 @@ For each data section in the CSV:
 
 ```
 apps_widget_aiSummary({
-  dashboardTemplateId: "<dashboard-guid>",
-  orgNodeId: "<root-org-guid>",
+  dashboardTemplateId: "<dashboard-id>",
+  orgNodeId: "<root-org-id>",
   startDate: "2024-07-01",
   endDate: "2025-03-31",
   timePeriodType: "quarter"
@@ -166,8 +166,8 @@ Render the actual dashboard with interactive charts:
 
 ```
 apps_dashboard_render({
-  dashboardTemplateId: "<dashboard-guid>",
-  orgNodeId: "<root-org-guid>",
+  dashboardTemplateId: "<dashboard-id>",
+  orgNodeId: "<root-org-id>",
   startDate: "2024-04-01",
   endDate: "2025-03-31",
   timePeriodType: "quarter"
@@ -194,4 +194,4 @@ If user asks about a specific section, focus analysis there.
 
 ## CLI Equivalent
 
-[CLI: Talk to Your Dashboard](../../../cli/recipes/exploration/talk-to-your-dashboard.md)
+[CLI: Talk to Your Dashboard](../../../capstone-cli/recipes/exploration/talk-to-your-dashboard.md)

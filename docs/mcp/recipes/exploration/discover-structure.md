@@ -87,7 +87,7 @@ Based on the structure, recommend which prompts would be most valuable:
 ## Present Results
 
 ```
-## Tenant Overview: Acme Corporation
+## Tenant Overview: Example Organization
 
 ### Organizational Structure
 - **Total Nodes:** 15
@@ -128,7 +128,7 @@ Based on the structure, recommend which prompts would be most valuable:
 **Claude:**
 ```
 Whoami()
-→ Tenant: Acme Corporation, User: jane.doe@acme.com
+→ Tenant: Example Organization, User: user@example.com
 
 model_orgNodes_list()
 → 15 nodes, 3 levels deep (Corporate → 3 Regions → 12 Sites)
@@ -145,7 +145,7 @@ model_metrics_list()
 
 **Claude:**
 
-## Tenant Overview: Acme Corporation
+## Tenant Overview: Example Organization
 
 ### Organizational Structure
 - **Total Nodes:** 15

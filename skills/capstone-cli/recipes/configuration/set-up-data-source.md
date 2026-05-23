@@ -93,7 +93,7 @@ Does your new source overlap with any of these?
 ```bash
 cat <<'EOF' | cap masterdata data-sources create --json
 {
-  "id": "00000000-0000-0000-0000-000000000000",
+  "id": "<empty-id>",
   "name": "Factory MQTT Sensors",
   "description": "Real-time sensor data from factory floor"
 }
@@ -103,7 +103,7 @@ EOF
 > **Note:** The CLI creates the data source entity. Connection details (broker URLs, credentials, queries) are configured through the web UI or Integration Service configuration, not via CLI. The data source record serves as the reference that input metrics link to.
 
 **What to look for:**
-- Success response: `{ "success": true, "id": "<new-guid>" }`
+- Success response: `{ "success": true, "id": "<new-id>" }`
 - Record the ID — it's needed when linking metrics to this source
 
 ---
@@ -117,13 +117,13 @@ When creating or updating input metrics, set the `inputDataFeeds` array to refer
 ```bash
 cat <<'EOF' | cap model inputs save --json
 {
-  "id": "<existing-input-metric-guid>",
+  "id": "<existing-input-metric-id>",
   "name": "Electricity Consumption",
   "inputDataFeeds": [
     {
-      "id": "00000000-0000-0000-0000-000000000000",
+      "id": "<empty-id>",
       "name": "Factory MQTT Feed",
-      "dataSource": { "id": "<data-source-guid>" },
+      "dataSource": { "id": "<data-source-id>" },
       "dataSourceInstruction": "topic: factory/site-a/electricity",
       "orgNodeOverrides": []
     }
@@ -157,7 +157,7 @@ cap model inputs get <metric-id> --json
 ```
 Data source configured!
 
-Data Source: Factory MQTT Sensors (abc123...)
+Data Source: Factory MQTT Sensors (<id>)
 Linked Metrics:
 - Electricity Consumption → topic: factory/site-a/electricity
 - Gas Consumption → topic: factory/site-a/gas
@@ -184,20 +184,20 @@ No existing SQL sources found. I'll create one.
 
 **Claude:** What's the purpose of this connection?
 
-**User:** "Pull revenue and cost data monthly from our Oracle ERP"
+**User:** "Pull revenue and cost data monthly from our Enterprise data warehouse"
 
 **Claude:**
 ```bash
 cat <<'EOF' | cap masterdata data-sources create --json
 {
-  "id": "00000000-0000-0000-0000-000000000000",
-  "name": "Oracle ERP - Financial Data",
-  "description": "Monthly revenue and cost data from Oracle ERP"
+  "id": "<empty-id>",
+  "name": "Enterprise data warehouse - Financial Data",
+  "description": "Monthly revenue and cost data from Enterprise data warehouse"
 }
 EOF
 ```
 
-Data source created! ID: `xyz789...`
+Data source created! ID: `<id>`
 
 Now you'll need to:
 1. **Configure connection details** in the Integration Service (database host, credentials, query schedule) — this is done via the web UI or service configuration
@@ -217,12 +217,12 @@ A metric can receive data from multiple sources (e.g., automated + manual overri
 "inputDataFeeds": [
   {
     "name": "Automated Feed",
-    "dataSource": { "id": "<mqtt-source-guid>" },
+    "dataSource": { "id": "<mqtt-source-id>" },
     "dataSourceInstruction": "topic: sensors/electricity"
   },
   {
     "name": "Manual Override",
-    "dataSource": { "id": "<manual-capture-guid>" },
+    "dataSource": { "id": "<manual-capture-id>" },
     "dataSourceInstruction": ""
   }
 ]
@@ -246,11 +246,11 @@ Different locations can have different source instructions:
 ```json
 "orgNodeOverrides": [
   {
-    "orgNode": { "id": "<site-a-guid>" },
+    "orgNode": { "id": "<site-a-id>" },
     "dataSourceInstruction": "topic: factory-a/electricity"
   },
   {
-    "orgNode": { "id": "<site-b-guid>" },
+    "orgNode": { "id": "<site-b-id>" },
     "dataSourceInstruction": "topic: factory-b/electricity"
   }
 ]

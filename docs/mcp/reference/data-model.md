@@ -151,7 +151,7 @@ Root Category (Discipline)
 
 - **Input metrics** are leaf nodes where data is captured
 - **Calculation metrics** derive values from formulas referencing other metrics
-- Formulas use `[Metric Name]` or `[GUID]` syntax
+- Formulas use `[Metric Name]` or `[ID]` syntax
 
 ### Org Node Hierarchy
 
@@ -231,7 +231,7 @@ When you retrieve input values, each cell has:
 - **value** — The numeric data point (absent when no data entered)
 - **validationStatus** — Draft (0), Pending (1), Approved (2), Rejected (3)
 - **isLocked** — Whether the period is locked for editing
-- **id** — Zero GUID means no value exists; a real GUID means data was entered
+- **id** — Zero ID means no value exists; a real ID means data was entered
 
 ### Comparing Values
 

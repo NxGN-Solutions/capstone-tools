@@ -84,21 +84,21 @@ Retrieve the aggregated data:
 
 ```
 data_computedValues_list({
-  templateId: "<report-template-guid>",
+  templateId: "<report-template-id>",
   periodType: "quarter",
   periodCount: 4,
   dataInterval: 3,
-  orgNodeIds: "<org-node-guid>"
+  orgNodeIds: "<org-node-id>"
 })
 ```
 
 **Or for specific periods:**
 ```
 data_computedValues_list({
-  templateId: "<report-template-guid>",
+  templateId: "<report-template-id>",
   timePeriodNames: "Q1 FY 25,Q2 FY 25,Q3 FY 25,Q4 FY 25",
   dataInterval: 3,
-  orgNodeIds: "<org-node-guid>"
+  orgNodeIds: "<org-node-id>"
 })
 ```
 
@@ -215,7 +215,7 @@ When the user asks to "show" data, combine data retrieval with an MCP App:
 ```
 apps_widget_xyChart({
   widgetTemplateId: "<emissions-trend-widget>",
-  orgNodeIds: "<root-org-guid>",
+  orgNodeIds: "<root-org-id>",
   startDate: "2025-01-01",
   endDate: "2025-03-31",
   timePeriodType: "month"

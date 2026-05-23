@@ -171,7 +171,7 @@ cap reporting computed-values list \
 
 ## Q1 FY 2025 ESG Performance Summary
 
-In the first quarter of FY 2025, Acme Corporation continued its trajectory toward sustainability goals, achieving notable reductions in greenhouse gas emissions while maintaining strong safety performance. However, water consumption and waste diversion rates present opportunities for improvement in the coming quarters.
+In the first quarter of FY 2025, Example Organization continued its trajectory toward sustainability goals, achieving notable reductions in greenhouse gas emissions while maintaining strong safety performance. However, water consumption and waste diversion rates present opportunities for improvement in the coming quarters.
 
 ### Key Highlights
 

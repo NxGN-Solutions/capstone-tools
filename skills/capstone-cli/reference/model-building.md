@@ -190,12 +190,12 @@ the definition and `data narrative-values` for captured text.
 
 ```json
 {
-  "id": "00000000-0000-0000-0000-000000000000",
+  "id": "<empty-id>",
   "name": "<narrative name>",
   "description": "<description>",
   "reference": "<optional-reference>",
   "discipline": {
-    "id": "<discipline-guid>"
+    "id": "<discipline-id>"
   },
   "captureInterval": {
     "id": 3,
@@ -225,14 +225,14 @@ workflows use `cap data data-lock lock|unlock` and
 
 ```json
 {
-  "id": "00000000-0000-0000-0000-000000000000",
+  "id": "<empty-id>",
   "name": "<metric name>",
   "description": "<description>",
   "discipline": {
-    "id": "<discipline-guid>"
+    "id": "<discipline-id>"
   },
   "unitOfMeasure": {
-    "id": "<unit-guid>"
+    "id": "<unit-id>"
   },
   "dataInterval": {
     "id": 2,
@@ -252,10 +252,10 @@ workflows use `cap data data-lock lock|unlock` and
   "requireDataCapture": false,
   "inputDataFeeds": [
     {
-      "id": "00000000-0000-0000-0000-000000000000",
+      "id": "<empty-id>",
       "name": "Manual Capture",
       "dataSource": {
-        "id": "<manual-capture-datasource-guid>"
+        "id": "<manual-capture-datasource-id>"
       },
       "dataSourceInstruction": "",
       "orgNodeOverrides": []
@@ -276,21 +276,21 @@ EOF
 
 **Response:**
 ```json
-{ "success": true, "id": "<new-guid>" }
+{ "success": true, "id": "<new-id>" }
 ```
 
 ### Create Calculation
 
 ```json
 {
-  "id": "00000000-0000-0000-0000-000000000000",
+  "id": "<empty-id>",
   "name": "<calculation name>",
   "description": "<description>",
   "discipline": {
-    "id": "<discipline-guid>"
+    "id": "<discipline-id>"
   },
   "unitOfMeasure": {
-    "id": "<unit-guid>"
+    "id": "<unit-id>"
   },
   "dataInterval": {
     "id": 0,
@@ -316,7 +316,7 @@ EOF
 }
 ```
 
-> **Formula references:** Formulas can reference metrics by name (`[Metric Name]`) or by GUID (`[4f20e84a-9b10-4d99-abe1-afe9f8f578f5]`). GUIDs are recommended for CLI usage — they're unambiguous, rename-safe, and what the API stores internally. Use `cap model calculations get <id> --json` to see existing formulas with their GUID references.
+> **Formula references:** Formulas can reference metrics by name (`[Metric Name]`) or by ID (`[<id>]`). IDs are recommended for CLI usage — they're unambiguous, rename-safe, and what the API stores internally. Use `cap model calculations get <id> --json` to see existing formulas with their ID references.
 
 **Command:**
 ```bash
@@ -327,11 +327,11 @@ EOF
 
 ### Update Existing (Save)
 
-Same structure as create, but set `id` to the existing metric's GUID. Use `save` instead of `create`:
+Same structure as create, but set `id` to the existing metric's ID. Use `save` instead of `create`:
 
 ```bash
 cat <<'EOF' | cap model inputs save --json
-{ "id": "<existing-guid>", ... rest of payload ... }
+{ "id": "<existing-id>", ... rest of payload ... }
 EOF
 ```
 
@@ -349,8 +349,8 @@ EOF
 **`create`** uses CLI flags (no JSON):
 ```bash
 cap data input-values create \
-  --org-node <org-node-guid> \
-  --input <metric-guid> \
+  --org-node <org-node-id> \
+  --input <metric-id> \
   --period-type week \
   --start-date 2026-02-09 \
   --json
@@ -361,11 +361,11 @@ cap data input-values create \
 cat payload.json | cap data input-values save --json
 ```
 
-> In practice, `save` with zero GUIDs handles both creation and updates. Use `create` only when you need to get the existing value ID for a specific cell.
+> In practice, `save` with zero IDs handles both creation and updates. Use `create` only when you need to get the existing value ID for a specific cell.
 
 ## Save Input Values
 
-> **Important:** The save endpoint uses **business-key upsert** semantics. Each input value is uniquely identified by its business key: `metric` + `orgNode` + `timePeriodType` + `startDate`. The `id` field can be the zero GUID (`00000000-0000-0000-0000-000000000000`) for **both** new values and updates — the API resolves existing records by business key automatically. You only need existing GUIDs if you want to be explicit, but it's not required. This makes batch saves idempotent — running the same payload again overwrites with the same values, never creating duplicates.
+> **Important:** The save endpoint uses **business-key upsert** semantics. Each input value is uniquely identified by its business key: `metric` + `orgNode` + `timePeriodType` + `startDate`. The `id` field can be the zero ID (`<empty-id>`) for **both** new values and updates — the API resolves existing records by business key automatically. You only need existing IDs if you want to be explicit, but it's not required. This makes batch saves idempotent — running the same payload again overwrites with the same values, never creating duplicates.
 
 ### TimePeriodType Reference
 
@@ -384,10 +384,10 @@ cat <<'EOF' | cap data input-values save --json
 {
   "inputValues": [
     {
-      "id": "00000000-0000-0000-0000-000000000000",
+      "id": "<empty-id>",
       "value": 1500,
-      "metric": { "id": "<metric-guid>" },
-      "orgNode": { "id": "<org-node-guid>" },
+      "metric": { "id": "<metric-id>" },
+      "orgNode": { "id": "<org-node-id>" },
       "timePeriodType": { "id": 2, "name": "Month" },
       "startDate": "2025-03-01T00:00:00Z"
     }
@@ -405,26 +405,26 @@ cat <<'EOF' | cap data input-values save --json
 {
   "inputValues": [
     {
-      "id": "00000000-0000-0000-0000-000000000000",
+      "id": "<empty-id>",
       "value": 0.08,
-      "metric": { "id": "<metric-a-guid>" },
-      "orgNode": { "id": "<site-1-guid>" },
+      "metric": { "id": "<metric-a-id>" },
+      "orgNode": { "id": "<site-1-id>" },
       "timePeriodType": { "id": 2, "name": "Month" },
       "startDate": "2026-01-01T00:00:00Z"
     },
     {
-      "id": "00000000-0000-0000-0000-000000000000",
+      "id": "<empty-id>",
       "value": 0.09,
-      "metric": { "id": "<metric-a-guid>" },
-      "orgNode": { "id": "<site-2-guid>" },
+      "metric": { "id": "<metric-a-id>" },
+      "orgNode": { "id": "<site-2-id>" },
       "timePeriodType": { "id": 2, "name": "Month" },
       "startDate": "2026-01-01T00:00:00Z"
     },
     {
-      "id": "<existing-value-guid>",
+      "id": "<existing-value-id>",
       "value": 0.10,
-      "metric": { "id": "<metric-a-guid>" },
-      "orgNode": { "id": "<site-3-guid>" },
+      "metric": { "id": "<metric-a-id>" },
+      "orgNode": { "id": "<site-3-id>" },
       "timePeriodType": { "id": 2, "name": "Month" },
       "startDate": "2026-01-01T00:00:00Z"
     }
@@ -448,7 +448,7 @@ cap data input-values save --file /path/to/values.json --json
    cap data input-values list --template <capture-template-id> --periods "Jan 2026,Feb 2026" --json
    ```
 
-2. **Build payload** — use the existing `id` for updates, or the zero GUID for new entries. Include the full business key on every entry.
+2. **Build payload** — use the existing `id` for updates, or the zero ID for new entries. Include the full business key on every entry.
 
 3. **Save:**
    ```bash
@@ -471,18 +471,18 @@ cat <<'EOF' | cap data input-values save --json
 {
   "inputValues": [
     {
-      "id": "00000000-0000-0000-0000-000000000000",
+      "id": "<empty-id>",
       "value": 300,
-      "metric": { "id": "<filler-planned-rate-guid>" },
-      "orgNode": { "id": "<filler-node-guid>" },
+      "metric": { "id": "<filler-planned-rate-id>" },
+      "orgNode": { "id": "<filler-node-id>" },
       "timePeriodType": { "id": 1, "name": "Week" },
       "startDate": "2026-02-09T00:00:00Z"
     },
     {
-      "id": "00000000-0000-0000-0000-000000000000",
+      "id": "<empty-id>",
       "value": 0.60,
-      "metric": { "id": "<cola-plan-pct-guid>" },
-      "orgNode": { "id": "<site-guid>" },
+      "metric": { "id": "<cola-plan-pct-id>" },
+      "orgNode": { "id": "<site-id>" },
       "timePeriodType": { "id": 1, "name": "Week" },
       "startDate": "2026-02-09T00:00:00Z"
     }
@@ -522,17 +522,17 @@ The `data input-values list` response returns a **grid structure** matching the 
   ],
   "gridRows": [
     {
-      "id": "<grid-row-guid>",
+      "id": "<grid-row-id>",
       "name": "Cola Plan %",
-      "path": "Cola Plan %->Enterprise B->Site1",
+      "path": "Cola Plan %->Example Enterprise->Example Site 1",
       "isDataRow": true,
-      "unitOfMeasure": { "name": "%", "id": "<uom-guid>" },
+      "unitOfMeasure": { "name": "%", "id": "<uom-id>" },
       "precision": 2,
-      "groupingKey": "<org-node-guid>",
+      "groupingKey": "<org-node-id>",
       "timePeriodColumns": [
         {
           "inputValue": {
-            "id": "<value-guid-or-zero>",
+            "id": "<value-id-or-zero>",
             "value": 0.6,
             "validationStatus": 2,
             "isLocked": false,
@@ -541,7 +541,7 @@ The `data input-values list` response returns a **grid structure** matching the 
         },
         {
           "inputValue": {
-            "id": "00000000-0000-0000-0000-000000000000",
+            "id": "<empty-id>",
             "validationStatus": 0,
             "isLocked": false,
             "userCanCapture": true
@@ -555,7 +555,7 @@ The `data input-values list` response returns a **grid structure** matching the 
 
 **Key points:**
 - `gridRows[].timePeriodColumns` aligns with the top-level `timePeriodColumns` by index
-- A zero GUID in `inputValue.id` means no value has been entered for that cell
+- A zero ID in `inputValue.id` means no value has been entered for that cell
 - `value` field is absent (not null) when no data exists
 - `path` uses `->` separators: `MetricName->OrgPath`
 - `groupingKey` is the org node ID for that row
@@ -585,61 +585,13 @@ Specify periods as comma-separated period names (matching output from `time-peri
 
 ---
 
-## ProveIt Tenant Reference Data
-
-> These IDs are specific to the ProveIt tenant. Other tenants will have different IDs.
-
-### Discipline IDs
-
-| Discipline | ID | Parent |
-|------------|----|--------|
-| Finance | `019c27be-2d4b-78cc-8297-e0860d332330` | -- |
-| Cost | `019c27be-2d4c-7962-9c0c-5cc6ef9d4603` | Finance |
-| Cost Assumptions | `019c27be-2d4c-76d8-aacc-ab09591ec69c` | Finance |
-| Revenue | `019c27be-2d4c-76b5-9e2d-148f7afbf548` | Finance |
-| Revenue Assumptions | `019c27be-2d4c-7851-b657-f25e4e32cbd5` | Finance |
-| Production | `019c27be-2d4c-71c7-a264-6f5e35191268` | -- |
-| Metrics | `019c27be-2d4c-73be-b621-67d08778d435` | Production |
-| Plan | `019c27be-2d4c-71d5-8610-9ae72ea95e38` | Production |
-| Raw Metrics | `019c27be-2d4c-74e8-a958-130359d6b69c` | Production |
-
-### Unit of Measure IDs
-
-| Unit | Symbol | Position | ID |
-|------|--------|----------|----|
-| % | % | Suffix | `019c27bd-d8b6-7c62-8eed-c585d9c1dd5d` |
-| Count | | Suffix | `019c27bd-d8b6-7886-8d4f-2036938c9475` |
-| Factor | | Suffix | `019c27bd-d8b6-7f2b-b09d-f1f373a03d41` |
-| Litres | l | Suffix | `019c27bd-d8b6-778b-a687-e95342ff8e8d` |
-| Units | | Suffix | `019c27bd-d8b7-72c5-b780-cecbe151995f` |
-| Units/Minute | | Suffix | `019c27bd-d8b7-7c8e-ad4f-56684e813cae` |
-| USD | $ | Prefix | `019c27bd-d8b7-7e81-8a5a-28d628b1db13` |
-
-### Data Source IDs
-
-| Data Source | ID |
-|-------------|-----|
-| Manual Capture | `019c274c-1e1d-72fd-a560-1068f484e311` |
-| MQTT TimescaleDB | `019c274c-1e25-7578-94b4-eca88d4470f7` |
-
-### Enterprise & Site IDs
-
-| Node | ID |
-|------|----|
-| Enterprise B | `019c27be-1601-779a-a224-14e4088ad8b6` |
-| Site1 | `019c27be-1602-7339-9f88-70478f2bd0fc` |
-| Site2 | `019c27be-1606-7659-b886-3c6dc5d1ea06` |
-| Site3 | `019c27be-1609-7341-a7f6-4f10fdd45a2a` |
-
----
-
 ## Payload Templates: Unit of Measure
 
 ### Create/Save Unit of Measure
 
 ```json
 {
-  "id": "00000000-0000-0000-0000-000000000000",
+  "id": "<empty-id>",
   "name": "USD",
   "symbol": "$",
   "symbolPosition": {
@@ -655,8 +607,8 @@ Specify periods as comma-separated period names (matching output from `time-peri
 # Create
 echo '{ ... }' | cap masterdata units create --json
 
-# Update (set id to existing GUID)
-echo '{ "id": "<existing-guid>", ... }' | cap masterdata units save --json
+# Update (set id to existing ID)
+echo '{ "id": "<existing-id>", ... }' | cap masterdata units save --json
 ```
 
 > **Note:** `symbolPosition` is an `EnumDTO` with `id` and `name`. Values: `0`/`Suffix` (default), `1`/`Prefix`. Currency symbols (USD, ZAR, EUR) should use Prefix; all other units use Suffix.
@@ -686,13 +638,13 @@ DIV(a, b), SUMPRODUCT(r1, r2)    Safe division, sum of products
 IF [Denominator] <> 0 THEN [Numerator] / [Denominator] ELSE 0
 ```
 
-See [Formula Language](../../features/metrics/formula-language.md) for the full reference.
+Use `cap model formula-validation validate --json` to verify formula syntax before saving a calculation.
 
 ---
 
 ## Workflow: Creating a New Input
 
-1. Identify the discipline, unit, and aggregation pattern from the tables above
+1. Identify the discipline, unit, and aggregation pattern with `cap masterdata disciplines list --json`, `cap masterdata units list --json`, and the aggregation tables above
 2. Copy the Input payload template
 3. Fill in name, description, discipline ID, unit ID, aggregation IDs
 4. Run `cat <<'EOF' | cap model inputs create --json`
@@ -700,32 +652,32 @@ See [Formula Language](../../features/metrics/formula-language.md) for the full 
 
 ## Workflow: Creating a New Calculation
 
-1. Identify which metrics to reference in the formula — use `cap model metrics list --json` to find GUIDs
-2. Choose the calculation phase (Before/After Aggregations) — see [Calculation Phases](../../features/metrics/calculations.md#calculation-phase)
+1. Identify which metrics to reference in the formula — use `cap model metrics list --json` to find the metric IDs for the target tenant
+2. Choose the calculation phase (Before/After Aggregations)
 3. Choose aggregation methods (or None for recomputed ratios) — see Common Aggregation Patterns above
 4. Copy the Calculation payload template
-5. Fill in name, description, discipline ID, unit ID, formula using GUID references
+5. Fill in name, description, discipline ID, unit ID, and formula using metric ID references
 6. Run `cat <<'EOF' | cap model calculations create --json`
-7. Capture the returned GUID from the `--json` response — needed if other calculations reference this one
+7. Capture the returned ID from the `--json` response — needed if other calculations reference this one
 8. Verify with `cap model calculations get <new-id> --json`
 
 **Important notes:**
-- **Formula validation** happens at create time — the API checks syntax, verifies referenced metric GUIDs exist, and detects circular dependencies
+- **Formula validation** happens at create time — the API checks syntax, verifies referenced metric IDs exist, and detects circular dependencies
 - **Duplicate names** are allowed — the system won't prevent creating a second calculation with the same name
 - **Automatic engine pickup** — a `ComputableItemChange` message is published after create, so the calculation engine processes new calculations without manual intervention
-- **Computed values visibility** — to query computed values for the new calculation, ensure a Report Template exists whose filters (discipline, metric type) include it. Report templates use filter criteria to determine which metrics appear; new calculations matching those filters show up automatically. See [Report Templates](../../features/spreadsheet-templates/report-templates.md)
+- **Computed values visibility** — to query computed values for the new calculation, ensure a Report Template exists whose filters include it. Report templates use filter criteria to determine which metrics appear; new calculations matching those filters show up automatically.
 
 ---
 
 ## Batch Calculation Creation
 
-When creating calculations that **reference other new calculations**, you need to create them in dependency order because formulas use GUIDs.
+When creating calculations that **reference other new calculations**, you need to create them in dependency order because formulas use metric IDs.
 
 ### Strategy
 
-1. **Batch 1:** Create calculations that only reference existing metrics (GUIDs already known)
-2. **Batch 2:** Capture Batch 1 GUIDs from `--json` responses, use them in Batch 2 formulas
-3. **Batch 3:** Capture Batch 2 GUIDs, use them in Batch 3 formulas
+1. **Batch 1:** Create calculations that only reference existing metrics
+2. **Batch 2:** Capture Batch 1 IDs from `--json` responses, use them in Batch 2 formulas
+3. **Batch 3:** Capture Batch 2 IDs, use them in Batch 3 formulas
 
 ### Example
 
@@ -733,29 +685,29 @@ When creating calculations that **reference other new calculations**, you need t
 # Batch 1: Cost Per Unit (references existing Filler Throughput and Total Cost)
 cat <<'EOF' | cap model calculations create --json
 {
-  "id": "00000000-0000-0000-0000-000000000000",
+  "id": "<empty-id>",
   "name": "Cost Per Unit",
-  "discipline": { "id": "<cost-discipline-guid>" },
-  "unitOfMeasure": { "id": "<usd-unit-guid>" },
+  "discipline": { "id": "<cost-discipline-id>" },
+  "unitOfMeasure": { "id": "<usd-unit-id>" },
   "dataInterval": { "id": 0, "name": "Day" },
   "precision": 2,
   "calculationPhase": { "id": 1, "name": "After Aggregations" },
   "orgStructureAggregationMethod": { "id": 3, "name": "None" },
   "timePeriodAggregationMethod": { "id": 0, "name": "None" },
-  "formula": "IF [3b46e59b-7315-43bb-a667-9fbfd55f8b6c] <> 0 THEN [4b9d3b4e-327a-48de-a60b-f5fa1cf6749d] / [3b46e59b-7315-43bb-a667-9fbfd55f8b6c] ELSE 0",
+  "formula": "IF [<id>] <> 0 THEN [<id>] / [<id>] ELSE 0",
   "translatedNames": [],
   "translatedDescriptions": [],
   "attributeValues": []
 }
 EOF
-# Returns: { "success": true, "id": "8fa4d124-6807-4814-a70b-94e0a7947fc2" }
-# ^^^^^ Capture this GUID for Batch 2
+# Returns: { "success": true, "id": "<id>" }
+# ^^^^^ Capture this ID for Batch 2
 
 # Batch 2: Margin Per Unit (references Batch 1's Cost Per Unit)
 cat <<'EOF' | cap model calculations create --json
 {
   ...
-  "formula": "[7b8d66f5-24fb-4353-83d0-aefe5373b8a8] - [8fa4d124-6807-4814-a70b-94e0a7947fc2]",
+  "formula": "[<id>] - [<id>]",
   ...
 }
 EOF
@@ -763,9 +715,9 @@ EOF
 
 ### Tips
 
-- Always use `--json` output to capture the new GUID from each create
+- Always use `--json` output to capture the new ID from each create
 - Verify each batch with `cap model calculations list` before proceeding
-- For large batches, consider scripting the GUID capture and substitution
+- For large batches, consider scripting the ID capture and substitution
 
 ---
 
@@ -774,6 +726,3 @@ EOF
 - [Commands Reference](./commands.md) -- Quick command lookup
 - [Glossary](./glossary.md) -- Term definitions
 - [Create Metric Recipe](../recipes/configuration/create-metric.md) -- Interactive wizard
-- [Calculations](../../features/metrics/calculations.md) -- Calculation phases and behavior
-- [Formula Language](../../features/metrics/formula-language.md) -- Formula syntax
-- [Aggregation Methods](../../features/metrics/aggregation-methods.md) -- Detailed aggregation rules

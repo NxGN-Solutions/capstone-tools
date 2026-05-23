@@ -2,7 +2,7 @@
 
 > Guided workflow for creating widget templates (InfoCard, PieChart, XYChart, Table).
 >
-> **MCP alternative:** Widget templates can also be created via MCP using the `templates_widgets_create` tool. See [MCP Tool Reference — Templates CRUD](../../mcp/reference/tools.md#templates--crud-10-tools).
+> **MCP alternative:** Widget templates can also be created via MCP using the `templates_widgets_create` tool. See [MCP Tool Reference — Templates CRUD](../../../mcp/reference/tools.md#templates--crud-10-tools).
 
 ## When to Use
 
@@ -64,7 +64,7 @@ cap masterdata disciplines list --json
 **Include the full discipline path** in the JSON — `name` and `path` help with readability:
 ```json
 "discipline": {
-  "id": "<discipline-guid>",
+  "id": "<discipline-id>",
   "name": "Cost",
   "path": "Finance->Cost"
 }
@@ -97,7 +97,7 @@ cap model metrics list --json
 - `title` - Displayed to dashboard users as the widget heading
 - `description` - Optional text shown to dashboard users below the widget content (see User-Facing Fields rules below)
 - `widgetType` - { id: 0|1|2|4, name: "InfoCard"|"PieChart"|"XYChart"|"Table" }
-- `discipline` - { id: "<guid>" }
+- `discipline` - { id: "<id>" }
 - `dataRangeMode` - { id: 1, name: "Static" } or { id: 0, name: "Dynamic" }
 - `dataInterval` - { id: 2, name: "Month" }, { id: 3, name: "Quarter" }, etc.
 - `metricSelectionMode` - { id: 0, name: "Static" } (explicit metrics) or { id: 1, name: "Dynamic" }
@@ -134,17 +134,16 @@ Leave **empty** in most cases. The title, values, and footnote already tell the 
 |------|-----|
 | `""` (empty — widget is self-explanatory) | `"Shows total cost from all sites"` (repeats what the title says) |
 | `"Excludes contractor hours"` (useful caveat) | `"For Executive P&L dashboard"` (developer note) |
-| | `"Created for the ProveIt demo"` (irrelevant to viewer) |
+| | `"Created for the Example demo"` (irrelevant to viewer) |
 
 **Tip:** If you're tempted to add a short interpretive note (e.g., "Positive = Cola earns more per unit than Orange"), use the **footnote** instead — it renders more subtly beneath the widget content.
 
 #### `footnote` (widget-level)
 
-Use for trend indicators, contextual notes, interpretive hints, or sourcing. Renders as subtle text beneath the widget content. Supports [templating tokens](../../features/widget-templates/templating-tokens.md) like `#trend[guid]` and `@[period]`.
 
 | Use Case | Example |
 |----------|---------|
-| Trend indicator | `#trend[<guid>] since @[period:-1]` |
+| Trend indicator | `#trend[<id>] since @[period:-1]` |
 | Interpretive hint | `Positive = Cola earns more per unit than Orange` |
 | Data caveat | `Excludes weekends and public holidays` |
 
@@ -199,13 +198,13 @@ The legend entry would redundantly show "Cola Price Premium %" under a chart alr
   "name": "Total Energy Consumption",
   "title": "Energy Usage",
   "widgetType": { "id": 0, "name": "InfoCard" },
-  "discipline": { "id": "<discipline-guid>" },
+  "discipline": { "id": "<discipline-id>" },
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
   "dataItems": [
     {
-      "metric": { "id": "<metric-guid>", "name": "Electricity Consumption" },
+      "metric": { "id": "<metric-id>", "name": "Electricity Consumption" },
       "aggregationMethod": { "id": 1, "name": "Sum" }
     }
   ]
@@ -220,16 +219,16 @@ This pattern shows two data items (current vs previous period) with a trend indi
 {
   "name": "Profit | Comparison | Daily | Card",
   "title": "Daily Profit",
-  "footnote": "#trend[<change-metric-guid>] since @[period:-1]",
+  "footnote": "#trend[<change-metric-id>] since @[period:-1]",
   "widgetType": { "id": 0, "name": "InfoCard" },
-  "discipline": { "id": "<discipline-guid>" },
+  "discipline": { "id": "<discipline-id>" },
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 0, "name": "Day" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
   "timePeriodAggregationMethod": { "id": 0, "name": "None" },
   "dataItems": [
     {
-      "metric": { "id": "<metric-guid>", "name": "Profit" },
+      "metric": { "id": "<metric-id>", "name": "Profit" },
       "displayName": "@[period]",
       "dataPeriodStart": 0,
       "dataPeriodEnd": 0,
@@ -238,7 +237,7 @@ This pattern shows two data items (current vs previous period) with a trend indi
       "timePeriodAggregationMethod": { "id": 0, "name": "None" }
     },
     {
-      "metric": { "id": "<metric-guid>", "name": "Profit" },
+      "metric": { "id": "<metric-id>", "name": "Profit" },
       "displayName": "@[period:-1]",
       "dataPeriodStart": -1,
       "dataPeriodEnd": -1,
@@ -254,7 +253,6 @@ This pattern shows two data items (current vs previous period) with a trend indi
 - `dataRangeMode: Static` — required for period offsets to work
 - `dataPeriodStart` / `dataPeriodEnd` — `0` = last period with data, `-1` = previous period
 - `displayName` — use `@[period]` tokens so labels show the actual period name
-- `footnote` — `#trend[guid]` references a % change calculation metric (see [Templating Tokens](../../features/widget-templates/templating-tokens.md))
 - `timePeriodAggregationMethod: None` — each data item shows a single period's value
 
 **Naming convention:** `{Metric} | Comparison | {Interval} | Card`
@@ -265,16 +263,16 @@ This pattern shows two data items (current vs previous period) with a trend indi
   "name": "Waste Breakdown by Type",
   "title": "Waste Distribution",
   "widgetType": { "id": 1, "name": "PieChart" },
-  "discipline": { "id": "<discipline-guid>" },
+  "discipline": { "id": "<discipline-id>" },
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
   "showLegend": true,
   "pieChartWidgetTemplateType": { "id": 0, "name": "Standard" },
   "dataItems": [
-    { "metric": { "id": "<metric-guid>", "name": "Recycled Waste" } },
-    { "metric": { "id": "<metric-guid>", "name": "Landfill Waste" } },
-    { "metric": { "id": "<metric-guid>", "name": "Composted Waste" } }
+    { "metric": { "id": "<metric-id>", "name": "Recycled Waste" } },
+    { "metric": { "id": "<metric-id>", "name": "Landfill Waste" } },
+    { "metric": { "id": "<metric-id>", "name": "Composted Waste" } }
   ]
 }
 ```
@@ -288,7 +286,7 @@ This pattern shows two data items (current vs previous period) with a trend indi
   "name": "Monthly Energy Trend",
   "title": "Energy Over Time",
   "widgetType": { "id": 2, "name": "XYChart" },
-  "discipline": { "id": "<discipline-guid>" },
+  "discipline": { "id": "<discipline-id>" },
   "dataRangeMode": { "id": 0, "name": "Dynamic" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
@@ -300,7 +298,7 @@ This pattern shows two data items (current vs previous period) with a trend indi
   ],
   "dataItems": [
     {
-      "metric": { "id": "<metric-guid>", "name": "Electricity Consumption" },
+      "metric": { "id": "<metric-id>", "name": "Electricity Consumption" },
       "xyChartWidgetTemplateDataItemType": { "id": 2, "name": "Line" },
       "xyChartWidgetTemplateAxis": { "name": "kWh", "dynamicAxis": true },
       "colour": "#1565C0",
@@ -325,7 +323,7 @@ Table widgets are the dashboard grid/table widget type. They use normal Input an
   "name": "Ambient Noise | Site Matrix | Quarterly | Table",
   "title": "Ambient Noise by Site",
   "widgetType": { "id": 4, "name": "Table" },
-  "discipline": { "id": "<discipline-guid>" },
+  "discipline": { "id": "<discipline-id>" },
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 3, "name": "Quarter" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
@@ -337,7 +335,7 @@ Table widgets are the dashboard grid/table widget type. They use normal Input an
   "defaultRowSortMode": { "id": 1, "name": "DisplayText" },
   "dataItems": [
     {
-      "metric": { "id": "<metric-guid>", "name": "Ambient Noise Day Time" },
+      "metric": { "id": "<metric-id>", "name": "Ambient Noise Day Time" },
       "sortOrder": 0,
       "metricPartitioningMode": { "id": 1, "name": "Children" },
       "timePeriodAggregationMethod": { "id": 0, "name": "None" },
@@ -410,7 +408,7 @@ Table widgets are the dashboard grid/table widget type. They use normal Input an
 echo '{
   "name": "Total Energy Consumption",
   "widgetType": { "id": 0, "name": "InfoCard" },
-  "discipline": { "id": "<discipline-guid>" },
+  "discipline": { "id": "<discipline-id>" },
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
@@ -466,7 +464,7 @@ Use the type-specific Table command when you need to validate `columns`, `column
 ```
 Widget template created and verified!
 
-ID:           abc12345-...
+ID:           <id>
 Name:         Total Energy Consumption
 Widget Type:  InfoCard
 Discipline:   Environmental > Energy
@@ -488,12 +486,12 @@ Next steps:
 ```bash
 cap masterdata disciplines list --json
 ```
-→ Found "Energy" discipline under Environmental: `abc123...`
+→ Found "Energy" discipline under Environmental: `<id>`
 
 ```bash
 cap model metrics list --json | grep -i electricity
 ```
-→ Found "Electricity Consumption" metric: `def456...`
+→ Found "Electricity Consumption" metric: `<id>`
 
 **Claude:** Here's the widget I'll create:
 
@@ -515,24 +513,24 @@ echo '{
   "name": "Total Electricity Usage",
   "title": "Electricity Usage",
   "widgetType": { "id": 0, "name": "InfoCard" },
-  "discipline": { "id": "abc123..." },
+  "discipline": { "id": "<id>" },
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
   "dataItems": [
     {
-      "metric": { "id": "def456...", "name": "Electricity Consumption" },
+      "metric": { "id": "<id>", "name": "Electricity Consumption" },
       "aggregationMethod": { "id": 1, "name": "Sum" }
     }
   ]
 }' | cap templates widget-templates create --json
 ```
 
-Widget template created! ID: `xyz789...`
+Widget template created! ID: `<id>`
 
 You can view widget data using:
 ```bash
-cap reporting widgets info-card xyz789... \
+cap reporting widgets info-card <id> \
   --org-nodes <org-node-id> \
   --data-interval month \
   --periods "Jan 2026" \
@@ -560,7 +558,7 @@ cap templates widget-templates save --file widget.json --json
 **Important:** When using auto-wrap with updates, the `id` must be in the inner widget object:
 ```json
 {
-    "id": "abc12345-1234-1234-1234-123456789012",
+    "id": "<id>",
     "name": "Updated Widget Name",
     "widgetType": { "id": 0, "name": "InfoCard" },
     ...
@@ -588,7 +586,7 @@ cap templates widget-templates save --file template.json --json
 This is useful for:
 - Bulk modifications via scripting (loop over templates)
 - Backing up templates before changes
-- Copying a template as a starting point for a new one (change the `id` to zero GUID)
+- Copying a template as a starting point for a new one (change the `id` to zero ID)
 
 ### Listing Available Lookups
 

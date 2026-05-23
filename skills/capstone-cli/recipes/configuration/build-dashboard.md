@@ -2,7 +2,7 @@
 
 > Guided workflow for creating a dashboard with widget templates.
 >
-> **MCP alternative:** Dashboards can also be created and modified via MCP using the `templates_dashboards_create`, `templates_dashboards_get`, and `templates_dashboards_save` tools. See [MCP Tool Reference — Dashboard Templates](../../mcp/reference/tools.md#dashboard-templates-4-tools).
+> **MCP alternative:** Dashboards can also be created and modified via MCP using the `templates_dashboards_create`, `templates_dashboards_get`, and `templates_dashboards_save` tools. See [MCP Tool Reference — Dashboard Templates](../../../capstone-mcp/reference/tools.md#dashboard-templates-4-tools).
 
 ## When to Use
 
@@ -77,30 +77,30 @@ echo '{
   "name": "Total Energy | Static | Month | Card",
   "title": "Total Energy",
   "widgetType": { "id": 0, "name": "InfoCard" },
-  "discipline": { "id": "<energy-discipline-guid>" },
+  "discipline": { "id": "<energy-discipline-id>" },
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
   "dataItems": [
-    { "metric": { "id": "<total-energy-guid>" }, "sortOrder": 1 }
+    { "metric": { "id": "<total-energy-id>" }, "sortOrder": 1 }
   ]
 }' | cap templates widget-templates create --json
-# → Returns widget ID: widget-1-guid
+# → Returns widget ID: widget-1-id
 
 # 2. Diesel CO2e InfoCard
 echo '{
   "name": "Diesel CO2e | Static | Month | Card",
   "title": "Diesel Emissions",
   "widgetType": { "id": 0, "name": "InfoCard" },
-  "discipline": { "id": "<emissions-discipline-guid>" },
+  "discipline": { "id": "<emissions-discipline-id>" },
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
   "dataItems": [
-    { "metric": { "id": "<diesel-co2e-guid>" }, "sortOrder": 1 }
+    { "metric": { "id": "<diesel-co2e-id>" }, "sortOrder": 1 }
   ]
 }' | cap templates widget-templates create --json
-# → Returns widget ID: widget-2-guid
+# → Returns widget ID: widget-2-id
 ```
 
 **Record all widget template IDs** — they're needed for the dashboard template in Step 4.
@@ -119,12 +119,12 @@ cap templates widget-templates list --json
 **Check that all planned widgets exist:**
 ```
 Created widget templates:
-- widget-1-guid: Total Energy (InfoCard)
-- widget-2-guid: Diesel Emissions (InfoCard)
-- widget-3-guid: Energy Intensity (InfoCard)
-- widget-4-guid: Monthly Energy Trend (XYChart)
-- widget-5-guid: Energy by Source (PieChart)
-- widget-6-guid: Emissions by Type (PieChart)
+- widget-1-id: Total Energy (InfoCard)
+- widget-2-id: Diesel Emissions (InfoCard)
+- widget-3-id: Energy Intensity (InfoCard)
+- widget-4-id: Monthly Energy Trend (XYChart)
+- widget-5-id: Energy by Source (PieChart)
+- widget-6-id: Emissions by Type (PieChart)
 ```
 
 ---
@@ -139,79 +139,79 @@ Dashboard templates use a tree structure where **sections** are parent nodes and
 ```bash
 cat <<'EOF' | cap templates dashboard-templates create --json
 {
-  "id": "00000000-0000-0000-0000-000000000000",
+  "id": "<empty-id>",
   "name": "Executive Energy Dashboard",
   "description": "Monthly energy KPIs, trends, and breakdowns",
   "useTabSheet": false,
   "treeItems": [
     {
-      "id": "00000000-0000-0000-0000-000000000001",
+      "id": "<id>",
       "name": "Overview",
       "isWidget": false,
       "sortOrder": 1,
       "parent": null
     },
     {
-      "id": "00000000-0000-0000-0000-000000000002",
+      "id": "<id>",
       "name": "Total Energy",
       "isWidget": true,
       "sortOrder": 1,
-      "parent": { "id": "00000000-0000-0000-0000-000000000001" },
-      "widgetTemplate": { "id": "<widget-1-guid>" }
+      "parent": { "id": "<id>" },
+      "widgetTemplate": { "id": "<widget-1-id>" }
     },
     {
-      "id": "00000000-0000-0000-0000-000000000003",
+      "id": "<id>",
       "name": "Diesel Emissions",
       "isWidget": true,
       "sortOrder": 2,
-      "parent": { "id": "00000000-0000-0000-0000-000000000001" },
-      "widgetTemplate": { "id": "<widget-2-guid>" }
+      "parent": { "id": "<id>" },
+      "widgetTemplate": { "id": "<widget-2-id>" }
     },
     {
-      "id": "00000000-0000-0000-0000-000000000004",
+      "id": "<id>",
       "name": "Energy Intensity",
       "isWidget": true,
       "sortOrder": 3,
-      "parent": { "id": "00000000-0000-0000-0000-000000000001" },
-      "widgetTemplate": { "id": "<widget-3-guid>" }
+      "parent": { "id": "<id>" },
+      "widgetTemplate": { "id": "<widget-3-id>" }
     },
     {
-      "id": "00000000-0000-0000-0000-000000000005",
+      "id": "<id>",
       "name": "Trends",
       "isWidget": false,
       "sortOrder": 2,
       "parent": null
     },
     {
-      "id": "00000000-0000-0000-0000-000000000006",
+      "id": "<id>",
       "name": "Monthly Energy Trend",
       "isWidget": true,
       "sortOrder": 1,
-      "parent": { "id": "00000000-0000-0000-0000-000000000005" },
-      "widgetTemplate": { "id": "<widget-4-guid>" }
+      "parent": { "id": "<id>" },
+      "widgetTemplate": { "id": "<widget-4-id>" }
     },
     {
-      "id": "00000000-0000-0000-0000-000000000007",
+      "id": "<id>",
       "name": "Breakdown",
       "isWidget": false,
       "sortOrder": 3,
       "parent": null
     },
     {
-      "id": "00000000-0000-0000-0000-000000000008",
+      "id": "<id>",
       "name": "Energy by Source",
       "isWidget": true,
       "sortOrder": 1,
-      "parent": { "id": "00000000-0000-0000-0000-000000000007" },
-      "widgetTemplate": { "id": "<widget-5-guid>" }
+      "parent": { "id": "<id>" },
+      "widgetTemplate": { "id": "<widget-5-id>" }
     },
     {
-      "id": "00000000-0000-0000-0000-000000000009",
+      "id": "<id>",
       "name": "Emissions by Type",
       "isWidget": true,
       "sortOrder": 2,
-      "parent": { "id": "00000000-0000-0000-0000-000000000007" },
-      "widgetTemplate": { "id": "<widget-6-guid>" }
+      "parent": { "id": "<id>" },
+      "widgetTemplate": { "id": "<widget-6-id>" }
     }
   ]
 }
@@ -222,11 +222,11 @@ EOF
 - Sections (`isWidget: false`) are parent nodes with `parent: null` for top-level
 - Widgets (`isWidget: true`) reference a section via `parent: { "id": "<section-id>" }`
 - `sortOrder` controls display order within each section
-- Use sequential zero GUIDs for `id` on create — the API assigns real IDs
+- Use sequential zero IDs for `id` on create — the API assigns real IDs
 - The CLI `save` command accepts both bare JSON and the `get --json` wrapper format (`{"tenant": "...", "dashboardTemplate": {...}}`) — it auto-unwraps the `dashboardTemplate` property
 
 **What to look for:**
-- Success response: `{ "success": true, "id": "<new-dashboard-guid>" }`
+- Success response: `{ "success": true, "id": "<new-dashboard-id>" }`
 
 ---
 
@@ -298,14 +298,14 @@ cap reporting widgets get-data <widget-template-id> \
 ```
 Dashboard created and verified!
 
-ID: <dashboard-guid>
+ID: <dashboard-id>
 Name: Executive Energy Dashboard
 Sections: 3 (Overview, Trends, Breakdown)
 Widgets: 6
 Data: All metrics returning values
 
 Query data:
-  cap reporting dashboards get-data <dashboard-guid> --org-node <id> --data-interval month --periods "Jan 2026" --json
+  cap reporting dashboards get-data <dashboard-id> --org-node <id> --data-interval month --periods "Jan 2026" --json
 
 View in web UI:
   Navigate to Dashboards > Executive Energy Dashboard
@@ -428,7 +428,7 @@ Specify widget size in the treeItems entry:
   "isWidget": true,
   "sortOrder": 1,
   "parent": { "id": "<section-id>" },
-  "widgetTemplate": { "id": "<widget-template-guid>" },
+  "widgetTemplate": { "id": "<widget-template-id>" },
   "widgetType": { "id": 0, "name": "Info Card" },
   "widgetSize": { "id": 2, "name": "50%" }
 }
@@ -465,24 +465,24 @@ Each top-level section becomes a tab.
   "useTabSheet": true,
   "treeItems": [
     {
-      "id": "00000000-0000-0000-0000-000000000001",
+      "id": "<id>",
       "name": "Monthly Summary",
       "path": "Monthly Summary",
       "isWidget": false, "sortOrder": 1, "parent": null
     },
     {
-      "id": "00000000-0000-0000-0000-000000000002",
+      "id": "<id>",
       "name": "Key Metrics",
       "path": "Monthly Summary->Key Metrics",
       "isWidget": false, "sortOrder": 1,
-      "parent": { "id": "00000000-0000-0000-0000-000000000001", "path": "Monthly Summary" }
+      "parent": { "id": "<id>", "path": "Monthly Summary" }
     },
     {
       "name": "Revenue Card",
       "path": "Monthly Summary->Key Metrics->Revenue Card",
       "isWidget": true, "sortOrder": 1,
-      "parent": { "id": "00000000-0000-0000-0000-000000000002", "path": "Monthly Summary->Key Metrics" },
-      "widgetTemplate": { "id": "<widget-template-guid>" },
+      "parent": { "id": "<id>", "path": "Monthly Summary->Key Metrics" },
+      "widgetTemplate": { "id": "<widget-template-id>" },
       "widgetType": { "id": 0, "name": "Info Card" },
       "widgetSize": { "id": 2, "name": "50%" }
     }
@@ -508,7 +508,7 @@ Tab: Cost Analysis [bg: #b77a46]
 ├── Section: Cost Headlines [bg: #b77a46]
 │   └── (info cards...)
 ├── Section: Cost Breakdown [bg: #b77a46]
-│   └── (charts...)
+│   └── (<id>)
 └── Section: Insights [icon: fas fa-lightbulb, bg: #b77a46]   ← dedicated section
     └── AI Summary (Peers)                                     ← analyzes all peer sections
 ```
@@ -572,7 +572,7 @@ The CLI's `get --json` output is directly roundtrippable with `save --file`:
 ```bash
 # Full roundtrip — no conversion needed
 cap templates dashboard-templates get <id> --json > dashboard.json
-# Edit dashboard.json as needed...
+# Edit dashboard.json as <id>
 cap templates dashboard-templates save --file dashboard.json --json
 ```
 
@@ -582,19 +582,19 @@ The `dashboardTemplate` contains a flat `treeItems` array with `EnumDTO` objects
 
 #### API DTO Contract Reference
 
-The `DashboardTemplateTreeItemDTO` (in `NxGN.Capstone.Api.Contracts`) defines the SAVE format:
+The `DashboardTemplateTreeItemDTO` defines the SAVE format:
 
 ```
 DashboardTemplateTreeItemDTO extends TreeNodeDTO:
   IsWidget: bool
-  WidgetTemplate: NamedDTO?       ← { "id": "guid", "name": "template name" }
+  WidgetTemplate: NamedDTO?       ← { "id": "id", "name": "template name" }
   WidgetType: EnumDTO?            ← { "id": 2, "name": "XYChart" }
   WidgetSize: EnumDTO?            ← { "id": 2, "name": "50%" }
   SortOrder: int
   AISummaryContext: EnumDTO?      ← { "id": 0, "name": "Peers" }
 
 TreeNodeDTO extends TreePathDTO:
-  Parent: TreePathDTO?            ← { "id": "parent-guid" }
+  Parent: TreePathDTO?            ← { "id": "parent-id" }
   Icon: string?
   BackgroundColor: string?        ← "#00806a"
 
@@ -610,7 +610,7 @@ There are two kinds of widgets:
 
 | Widget Kind | Has `widgetTemplate`? | Has `widgetType`? | Extra fields |
 |-------------|----------------------|-------------------|-------------|
-| **Regular widget** (InfoCard, PieChart, XYChart, Table) | Yes — `{ "id": "<guid>" }` | Yes — REQUIRED | `widgetSize` |
+| **Regular widget** (InfoCard, PieChart, XYChart, Table) | Yes — `{ "id": "<id>" }` | Yes — REQUIRED | `widgetSize` |
 | **AI Summary** | No — omit entirely | Yes — `{ "id": 3, "name": "AISummary" }` | `aiSummaryContext`, `widgetSize` |
 
 > **Common errors:**

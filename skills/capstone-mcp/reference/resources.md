@@ -64,7 +64,7 @@ Organization structure tree.
 
 **Cache TTL:** 5 minutes.
 
-**Use:** Answer "what locations exist?" without calling `model_orgNodes_list`. Understand hierarchy depth and structure. Use `parentId`/`parentName` to determine direct parent-child relationships (e.g., "which nodes are direct children of Enterprise B?").
+**Use:** Answer "what locations exist?" without calling `model_orgNodes_list`. Understand hierarchy depth and structure. Use `parentId`/`parentName` to determine direct parent-child relationships (e.g., "which nodes are direct children of Example Enterprise?").
 
 ---
 

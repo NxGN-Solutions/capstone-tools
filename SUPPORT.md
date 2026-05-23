@@ -4,8 +4,7 @@ Use this repository for downloads, installation instructions, agent guidance, an
 
 For help:
 
-- Clients and implementers should use their NxGN implementation, support, or account contact.
-- Internal NxGN teams should use the normal Capstone engineering/support channel.
+- Clients and implementers should use their Capstone implementation, support, or account contact.
 - Security concerns should follow [SECURITY.md](SECURITY.md).
 
 When requesting support, include:

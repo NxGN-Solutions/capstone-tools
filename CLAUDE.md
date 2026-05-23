@@ -21,9 +21,21 @@ For best results, provide Claude with:
 
 ## CLI Bootstrap
 
-1. Download the right `capstone-cli-{rid}.zip` from the latest release.
+1. Download the right `capstone-cli-{rid}.zip` from the target environment release when available, such as `demo-v<version>` or `prod-v<version>`.
 2. Extract it to a stable folder.
-3. Configure the API URL:
+3. Configure the API URL with the included helper:
+
+```bash
+./config/configure-cli.sh
+```
+
+Windows PowerShell:
+
+```powershell
+.\config\configure-cli.ps1
+```
+
+If the package does not contain `config/`, configure the API URL manually:
 
 ```bash
 ./cap config set api-url <capstone-api-url>
@@ -47,9 +59,9 @@ Windows users run `.\cap.exe` instead of `./cap`.
 
 ## MCP Bootstrap
 
-1. Download the right `capstone-mcp-{rid}.zip` from the latest release.
+1. Download the right `capstone-mcp-{rid}.zip` from the target environment release when available.
 2. Extract it to a stable folder.
-3. Add the binary path and `CAPSTONE_API_URL` to Claude Desktop's MCP configuration.
+3. Start from `config/claude-desktop.capstone-mcp.json` and replace only the binary path. If the package does not contain `config/`, add the binary path and `CAPSTONE_API_URL` manually.
 4. Restart Claude Desktop.
 5. Ask Claude to log in to Capstone.
 
@@ -57,12 +69,12 @@ See `docs/mcp/setup.md` for complete configuration examples.
 
 ## Operating Notes
 
-- Always ask which Capstone API URL to use unless it is already configured.
+- Always ask which Capstone API URL to use unless it is already configured or the package contains environment-specific `config/` files.
 - Authentication is per user and per machine.
 - Tenant access is controlled by the Capstone API, not by the binary download.
 - Prefer JSON output from the CLI for agent reasoning.
 - Prefer MCP prompts/resources for Claude Desktop discovery.
 
-Current release: `0.4.63` (`stable`)
+Current release: `see environment manifests` (`environment-specific`)
 
-Last updated: `2026-05-18T08:51:34Z`
+Last updated: `2026-05-23T09:36:41Z`

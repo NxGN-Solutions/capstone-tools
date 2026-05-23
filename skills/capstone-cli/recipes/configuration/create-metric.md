@@ -198,12 +198,12 @@ Proceed? [Yes/No]
 ```bash
 cat <<'EOF' | cap model inputs create --json
 {
-  "id": "00000000-0000-0000-0000-000000000000",
+  "id": "<empty-id>",
   "name": "Diesel Consumption",
   "description": "Monthly diesel fuel usage for fleet vehicles",
   "reference": "",
-  "discipline": { "id": "<discipline-guid>" },
-  "unitOfMeasure": { "id": "<unit-guid>" },
+  "discipline": { "id": "<discipline-id>" },
+  "unitOfMeasure": { "id": "<unit-id>" },
   "dataInterval": { "id": 2, "name": "Month" },
   "precision": 0,
   "orgStructureAggregationMethod": { "id": 0, "name": "Sum" },
@@ -213,9 +213,9 @@ cat <<'EOF' | cap model inputs create --json
   "requireDataCapture": false,
   "inputDataFeeds": [
     {
-      "id": "00000000-0000-0000-0000-000000000000",
+      "id": "<empty-id>",
       "name": "Manual Capture",
-      "dataSource": { "id": "<manual-capture-datasource-guid>" },
+      "dataSource": { "id": "<manual-capture-datasource-id>" },
       "dataSourceInstruction": "",
       "orgNodeOverrides": []
     }
@@ -227,10 +227,10 @@ cat <<'EOF' | cap model inputs create --json
 EOF
 ```
 
-> **Note:** Use the zero GUID for `id` when creating new metrics. Enum fields use `{ "id": <int>, "name": "<name>" }` format and entity references use `{ "id": "<guid>" }` format. See [Model Building Reference](../../reference/model-building.md) for enum ID lookup tables and payload templates.
+> **Note:** Use the zero ID for `id` when creating new metrics. Enum fields use `{ "id": <int>, "name": "<name>" }` format and entity references use `{ "id": "<id>" }` format. See [Model Building Reference](../../reference/model-building.md) for enum ID lookup tables and payload templates.
 
 **What to look for:**
-- Success response: `{ "success": true, "id": "<new-guid>" }`
+- Success response: `{ "success": true, "id": "<new-id>" }`
 - The returned ID is needed if other calculations will reference this metric
 
 **If error:**
@@ -252,7 +252,7 @@ cap model metrics get <new-id> --json
 ```
 ✅ Metric created successfully!
 
-ID:             abc12345-...
+ID:             <id>
 Name:           Diesel Consumption
 Description:    Monthly diesel fuel usage for fleet vehicles
 Type:           Input
@@ -309,12 +309,12 @@ Proceed?
 ```bash
 cat <<'EOF' | cap model inputs create --json
 {
-  "id": "00000000-0000-0000-0000-000000000000",
+  "id": "<empty-id>",
   "name": "Diesel Consumption",
   "description": "Monthly diesel fuel usage for fleet vehicles",
   "reference": "",
-  "discipline": { "id": "abc12345-..." },
-  "unitOfMeasure": { "id": "def45678-..." },
+  "discipline": { "id": "<id>" },
+  "unitOfMeasure": { "id": "<id>" },
   "dataInterval": { "id": 2, "name": "Month" },
   "precision": 0,
   "orgStructureAggregationMethod": { "id": 0, "name": "Sum" },
@@ -330,7 +330,7 @@ cat <<'EOF' | cap model inputs create --json
 EOF
 ```
 
-→ `{ "success": true, "id": "xyz78901-..." }`
+→ `{ "success": true, "id": "<id>" }`
 
 Metric created! You can now enter data using: "Record 500 litres of diesel for Site A in March"
 
@@ -342,7 +342,7 @@ Metric created! You can now enter data using: "Record 500 litres of diesel for S
 
 If user wants a formula-derived metric:
 - "This sounds like a calculation (derived from other metrics) rather than an input. Would you like to create a calculation instead?"
-- Calculations require additional decisions: calculation phase (Before/After Aggregation), formula syntax, and GUID references
+- Calculations require additional decisions: calculation phase (Before/After Aggregation), formula syntax, and ID references
 - See [Model Building Reference](../../reference/model-building.md#create-calculation) for the payload template, enum IDs, and the batch creation pattern for calculations that reference each other
 
 ### Bulk Creation

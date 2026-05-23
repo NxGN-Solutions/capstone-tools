@@ -44,7 +44,7 @@ Pick a template covering the metrics of interest.
 
 ```
 data_computedValues_list({
-  templateId: "<report-template-guid>",
+  templateId: "<report-template-id>",
   timePeriodNames: "Mar 2025",
   dataInterval: 2
 })
@@ -54,7 +54,7 @@ data_computedValues_list({
 
 ```
 data_computedValues_list({
-  templateId: "<report-template-guid>",
+  templateId: "<report-template-id>",
   periodType: "month",
   periodCount: 12,
   dataInterval: 2
@@ -169,4 +169,4 @@ Also flag unusual trends (e.g., 3 consecutive months of increase when the norm i
 
 ## CLI Equivalent
 
-[CLI: Spot Anomalies](../../../cli/recipes/analysis/spot-anomalies.md)
+[CLI: Spot Anomalies](../../../capstone-cli/recipes/analysis/spot-anomalies.md)

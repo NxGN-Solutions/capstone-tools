@@ -11,11 +11,12 @@ This repository contains binary distributions and agent-facing documentation for
 ## First Steps
 
 1. Identify the user's operating system and shell.
-2. Download the matching zip from the latest release.
+2. Download the matching zip from the latest environment-specific release when one exists (`demo-v<version>` or `prod-v<version>`), otherwise use the latest generic release.
 3. Verify the `.sha256` checksum when possible.
 4. Extract the package to a stable local path.
-5. Ask the user for the Capstone API URL.
-6. Authenticate through the user's browser or configured MCP login flow.
+5. Use the included `config/` helpers when present; they already contain the correct environment API URL.
+6. If no `config/` folder is present, ask the user for the Capstone API URL.
+7. Authenticate through the user's browser or configured MCP login flow.
 
 ## CLI Usage Rules
 
@@ -24,6 +25,7 @@ This repository contains binary distributions and agent-facing documentation for
 - Cache tenant discovery data in a workspace folder before making repeated list calls.
 - Keep create/save payloads in explicit JSON files under a workspace `scratch/` folder.
 - After a successful mutation, refresh the relevant cache file and update notes.
+- For environment-scoped packages, prefer `config/configure-cli.sh` or `config/configure-cli.ps1` over manually entering the API URL.
 
 Load the full CLI skill from `skills/capstone-cli/SKILL.md`.
 
@@ -31,6 +33,7 @@ Load the full CLI skill from `skills/capstone-cli/SKILL.md`.
 
 - Configure Claude Desktop with an absolute path to `capstone-mcp` or `capstone-mcp.exe`.
 - Set `CAPSTONE_API_URL` in the MCP server environment.
+- For environment-scoped packages, start from `config/claude-desktop.capstone-mcp.json` and only replace the binary path.
 - Use MCP resources and prompts for exploration before making changes.
 - Keep user authentication local to the user's machine; never copy credential files between machines.
 
@@ -51,4 +54,5 @@ Load the full MCP skill from `skills/capstone-mcp/SKILL.md`.
 - `docs/cli/` - CLI recipes and reference docs.
 - `docs/mcp/` - MCP setup, tools, resources, prompts, and recipes.
 - `manifest.json` - current release metadata and checksums.
+- `environments/<slug>/manifest.json` - environment-specific release metadata for update checks.
 - `LICENSE.md`, `SECURITY.md`, `SUPPORT.md` - distribution terms and support boundaries.

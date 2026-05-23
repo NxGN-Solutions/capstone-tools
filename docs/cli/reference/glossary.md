@@ -19,7 +19,6 @@ cap model inputs list --json           # Manual entry metrics
 cap model calculations list --json     # Formula-based metrics
 ```
 
-**See also:** [Metrics Overview](../../features/metrics/overview.md)
 
 ---
 
@@ -35,7 +34,6 @@ cap masterdata org-nodes list --json
 cap masterdata org-nodes get <id> --json
 ```
 
-**See also:** [Org Nodes Overview](../../features/org-nodes/overview.md)
 
 ---
 
@@ -51,7 +49,6 @@ cap masterdata disciplines list --json
 cap masterdata disciplines get <id> --json
 ```
 
-**See also:** [Disciplines Overview](../../features/disciplines/overview.md)
 
 ---
 
@@ -67,7 +64,6 @@ cap masterdata frameworks list --json
 cap masterdata frameworks get <id> --json
 ```
 
-**See also:** [Frameworks Overview](../../features/frameworks/overview.md)
 
 ---
 
@@ -84,7 +80,6 @@ cap masterdata units get <id> --json
 cap masterdata units save --json       # Update symbol position, etc.
 ```
 
-**See also:** [Units of Measure](../../features/units-of-measure/overview.md), [Model Building > Symbol Position](./model-building.md#symbol-position-units-of-measure)
 
 ---
 
@@ -100,7 +95,6 @@ cap model inputs list --json
 cap model inputs create --file input.json
 ```
 
-**See also:** [Inputs](../../features/metrics/inputs.md)
 
 ---
 
@@ -116,7 +110,6 @@ cap model calculations list --json
 cap model calculations create --file calc.json
 ```
 
-**See also:** [Calculations](../../features/metrics/calculations.md), [Formula Language](../../features/metrics/formula-language.md)
 
 ---
 
@@ -128,7 +121,7 @@ cap model calculations create --file calc.json
 
 **Definition:** An actual data entry for an Input metric at a specific Org Node and Time Period. Input Values are stored with validation status and audit trail.
 
-**Business Key:** `metric` + `orgNode` + `timePeriodType` + `startDate`. This combination uniquely identifies an input value. The save endpoint uses business-key upsert — zero GUIDs resolve to existing records automatically, making saves idempotent.
+**Business Key:** `metric` + `orgNode` + `timePeriodType` + `startDate`. This combination uniquely identifies an input value. The save endpoint uses business-key upsert — zero IDs resolve to existing records automatically, making saves idempotent.
 
 **CLI:**
 ```bash
@@ -138,7 +131,6 @@ cap data input-values save --file values.json
 
 > **Note:** The `list` command requires both `--template` and `--data-interval`. Use `--periods` to specify which periods to show (comma-separated period names from `time-periods list`).
 
-**See also:** [Data Capture](../../features/data-management/data-capture.md), [Model Building > Save Input Values](./model-building.md#save-input-values)
 
 ---
 
@@ -155,7 +147,6 @@ cap data time-periods list --data-interval quarter --json
 cap data time-periods list --data-interval year --json
 ```
 
-**See also:** [Time Periods](../../features/time-periods/overview.md)
 
 ---
 
@@ -171,7 +162,6 @@ cap data input-values validate <id> --result approve --json
 cap data input-values validate <id> --result reject --comments "Reason for rejection" --json
 ```
 
-**See also:** [Data Validation](../../features/data-management/data-validation.md)
 
 ---
 
@@ -188,7 +178,6 @@ cap data change-requests create --file request.json
 cap data change-requests validate <id> --result approve
 ```
 
-**See also:** [Change Requests](../../features/data-management/change-requests.md)
 
 ---
 
@@ -204,7 +193,6 @@ cap data data-lock lock --data-interval year --periods "FY 2024" --org-nodes <id
 cap data data-lock unlock --data-interval year --periods "FY 2024" --org-nodes <id> --description "Reopen FY 2024"
 ```
 
-**See also:** [Data Locks](../../features/data-management/data-locks.md)
 
 ---
 
@@ -232,9 +220,7 @@ cap reporting computed-values download-excel \
   -o output.xlsx
 ```
 
-> **Note:** The `--template` parameter specifies a Report Template whose filters (discipline, metric type, framework) determine which metrics appear in the output. New calculations automatically appear if they match the template's filter criteria. See [Report Templates](../../features/spreadsheet-templates/report-templates.md) for how filters work.
 
-**See also:** [Reporting](../../features/reporting/overview.md)
 
 ---
 
@@ -256,7 +242,6 @@ cap reporting widgets table <widget-template-id> --org-nodes <id> --data-interva
 cap reporting widgets get-data <widget-template-id> --org-node <id> --periods "FY 24, FY 25" --json
 ```
 
-**See also:** [Widget Templates](../../features/widget-templates/overview.md)
 
 ---
 
@@ -272,7 +257,6 @@ cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --data
 cap reporting dashboards get-insights <dashboard-template-id> <layout-node-id> --org-node <id> --data-interval month --periods "Jan 25" --json
 ```
 
-**See also:** [Dashboards](../../features/dashboards/overview.md)
 
 ---
 
@@ -287,7 +271,6 @@ cap reporting dashboards get-insights <dashboard-template-id> <layout-node-id> -
 cap model inputs get <id> --json   # Shows aggregation settings
 ```
 
-**See also:** [Aggregation Methods](../../features/metrics/aggregation-methods.md)
 
 ---
 
@@ -305,7 +288,6 @@ cap templates capture-templates list --json
 cap templates capture-templates get <id> --json
 ```
 
-**See also:** [Spreadsheet Templates](../../features/spreadsheet-templates/overview.md)
 
 ---
 
@@ -321,7 +303,6 @@ cap templates report-templates list --json
 cap templates report-templates get <id> --json
 ```
 
-**See also:** [Spreadsheet Templates](../../features/spreadsheet-templates/overview.md)
 
 ---
 
@@ -357,7 +338,6 @@ cap reporting widgets table <id> --org-nodes <org-node-id> --data-interval quart
 
 > **Note:** The create/save commands auto-wrap JSON - you can provide just the inner object without `{"widgetTemplate": {...}}`.
 
-**See also:** [Widget Templates](../../features/widget-templates/overview.md), [Create Widget Template Recipe](../recipes/configuration/create-widget-template.md)
 
 ---
 
@@ -373,7 +353,6 @@ cap templates dashboard-templates list --json
 cap templates dashboard-templates get <id> --json
 ```
 
-**See also:** [Dashboard Templates](../../features/dashboard-templates/overview.md)
 
 ---
 
@@ -389,7 +368,6 @@ cap templates org-node-templates list --json
 cap templates org-node-templates get <id> --json
 ```
 
-**See also:** [Org Node Templates](../../features/org-node-templates/overview.md)
 
 ---
 
@@ -405,7 +383,6 @@ cap model input-overrides list --org-node <id> --json
 cap model calculation-overrides list --org-node <id> --json
 ```
 
-**See also:** [Metric Overrides](../../features/metrics/metric-overrides.md)
 
 ---
 
@@ -439,7 +416,6 @@ cap auth tenants --json              # List accessible tenants
 cap auth switch-tenant <id>          # Change active tenant
 ```
 
-**See also:** [Tenants](../../features/tenants/overview.md)
 
 ---
 
@@ -455,7 +431,6 @@ cap security users list --json
 cap security users get <id> --json
 ```
 
-**See also:** [Users](../../features/users/overview.md)
 
 ---
 
@@ -470,7 +445,6 @@ cap security users get <id> --json
 cap security roles list --json
 ```
 
-**See also:** [Roles](../../features/users/roles.md)
 
 ---
 
@@ -480,7 +454,6 @@ cap security roles list --json
 
 **Definition:** Controls which Org Nodes and Disciplines a user can view/edit. Combines with Roles for complete access control.
 
-**See also:** [Data Permissions](../../features/users/data-permissions.md)
 
 ---
 
@@ -496,7 +469,6 @@ cap masterdata data-sources list --json
 cap masterdata data-sources get <id> --json
 ```
 
-**See also:** [Data Sources](../../features/data-sources/overview.md)
 
 ---
 
@@ -512,7 +484,6 @@ cap masterdata data-exports list --json
 cap masterdata data-exports get <id> --json
 ```
 
-**See also:** [Data Exports](../../features/data-exports/overview.md)
 
 ---
 

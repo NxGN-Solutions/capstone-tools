@@ -20,7 +20,8 @@ If you received a distribution zip (`capstone-mcp-osx-arm64.zip` or `capstone-mc
 
 1. Extract the zip to a convenient location (e.g., `~/tools/capstone-mcp/`)
 2. Make the binary executable (macOS/Linux): `chmod +x capstone-mcp`
-3. Skip to [Configure Claude Desktop](#2-configure-claude-desktop) — use the full path to the extracted binary
+3. If the zip contains `config/claude-desktop.capstone-mcp.json`, use it as the Claude Desktop template. It already contains the environment API URL.
+4. Skip to [Configure Claude Desktop](#2-configure-claude-desktop) — use the full path to the extracted binary
 
 > See the [MCP Deployment Guide](reference/deployment.md) for building from source.
 
@@ -58,7 +59,7 @@ Add the Capstone server:
 }
 ```
 
-Replace `https://your-capstone-instance.example.com` with your actual Capstone API URL.
+Replace `https://your-capstone-instance.example.com` with your actual Capstone API URL. Environment-scoped releases include `config/claude-desktop.capstone-mcp.json` with this value already filled in; replace only the `command` path.
 
 Restart Claude Desktop after saving.
 

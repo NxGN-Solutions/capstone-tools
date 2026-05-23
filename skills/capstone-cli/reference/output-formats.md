@@ -24,13 +24,13 @@ Every command supports two output modes:
 ```
 ID         | Name                  | Discipline        | Unit
 -----------|-----------------------|-------------------|--------
-550e84...  | Electricity Usage     | Energy            | kWh
-550e85...  | Water Consumption     | Water             | kL
-550e86...  | Safety Incidents      | Health & Safety   | count
+<id>  | Electricity Usage     | Energy            | kWh
+<id>  | Water Consumption     | Water             | kL
+<id>  | Safety Incidents      | Health & Safety   | count
 ```
 
 - Column widths auto-size to fit the longest value
-- GUIDs are truncated to 8 characters + `...` for readability
+- IDs are truncated to 8 characters + `...` for readability
 - Columns are separated by ` | ` with a divider row
 
 ### JSON Mode
@@ -39,13 +39,13 @@ ID         | Name                  | Discipline        | Unit
 {
   "items": [
     {
-      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "id": "<id>",
       "name": "Electricity Usage",
       "discipline": "Energy",
       "unit": "kWh"
     },
     {
-      "id": "550e8401-e29b-41d4-a716-446655440001",
+      "id": "<id>",
       "name": "Water Consumption",
       "discipline": "Water",
       "unit": "kL"
@@ -54,7 +54,7 @@ ID         | Name                  | Discipline        | Unit
 }
 ```
 
-- Full GUIDs (not truncated)
+- Full IDs (not truncated)
 - Property names in `camelCase`
 - Null values omitted
 - Pretty-printed with indentation
@@ -70,11 +70,11 @@ Entities like org nodes, disciplines, and frameworks display as trees.
 ```
 ID         | Name                  | Level | Path
 -----------|-----------------------|-------|------------------------------
-a1b2c3...  | Corporate             | 0     | Corporate
-d4e5f6...  |   Region 1            | 1     | Corporate > Region 1
-g7h8i9...  |     Site A            | 2     | Corporate > Region 1 > Site A
-j0k1l2...  |     Site B            | 2     | Corporate > Region 1 > Site B
-m3n4o5...  |   Region 2            | 1     | Corporate > Region 2
+<id>  | Corporate             | 0     | Corporate
+<id>  |   Region 1            | 1     | Corporate > Region 1
+<id>  |     Site A            | 2     | Corporate > Region 1 > Site A
+<id>  |     Site B            | 2     | Corporate > Region 1 > Site B
+<id>  |   Region 2            | 1     | Corporate > Region 2
 ```
 
 - Indentation indicates hierarchy depth
@@ -86,13 +86,13 @@ m3n4o5...  |   Region 2            | 1     | Corporate > Region 2
 {
   "items": [
     {
-      "id": "a1b2c3d4-...",
+      "id": "<id>",
       "name": "Corporate",
       "level": 0,
       "path": "Corporate",
       "children": [
         {
-          "id": "d4e5f6a7-...",
+          "id": "<id>",
           "name": "Region 1",
           "level": 1,
           "path": "Corporate > Region 1"
@@ -112,7 +112,7 @@ m3n4o5...  |   Region 2            | 1     | Corporate > Region 2
 ```
 Field                    Value
 ------------------------ ------------------------------------------
-ID                       550e8400-e29b-41d4-a716-446655440000
+ID                       <id>
 Name                     Electricity Usage
 Description              Monthly electricity consumption at site
 Discipline               Environmental > Energy
@@ -130,17 +130,17 @@ Returns the full entity DTO:
 
 ```json
 {
-  "tenant": "Demo Corp",
-  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "tenant": "Example Tenant",
+  "id": "<id>",
   "name": "Electricity Usage",
   "description": "Monthly electricity consumption at site",
   "discipline": {
-    "id": "abc12345-...",
+    "id": "<id>",
     "name": "Energy",
     "path": "Environmental > Energy"
   },
   "unitOfMeasure": {
-    "id": "def67890-...",
+    "id": "<id>",
     "name": "kWh"
   },
   "dataInterval": { "id": 2, "name": "Month" },
@@ -156,11 +156,11 @@ Returns the full entity DTO:
 ### Table Mode
 
 ```
-Created Metric with ID: 550e8400-e29b-41d4-a716-446655440000
+Created Metric with ID: <id>
 ```
 
 ```
-Deleted Metric with ID: 550e8400-e29b-41d4-a716-446655440000
+Deleted Metric with ID: <id>
 ```
 
 ### JSON Mode
@@ -169,7 +169,7 @@ Deleted Metric with ID: 550e8400-e29b-41d4-a716-446655440000
 ```json
 {
   "success": true,
-  "id": "550e8400-e29b-41d4-a716-446655440000"
+  "id": "<id>"
 }
 ```
 
@@ -177,7 +177,7 @@ Deleted Metric with ID: 550e8400-e29b-41d4-a716-446655440000
 ```json
 {
   "success": true,
-  "deleted": "550e8400-e29b-41d4-a716-446655440000"
+  "deleted": "<id>"
 }
 ```
 
@@ -199,7 +199,7 @@ inside CLI envelopes:
 | `cap data data-lock lock|unlock --json` | `{ "tenant": "...", "success": true, "id": "...", "action": "lock|unlock", ... }` |
 
 Use `--json` for every step in an automated narrative workflow. Table output is
-for humans and may truncate GUIDs.
+for humans and may truncate IDs.
 
 ---
 
@@ -284,7 +284,7 @@ Widget commands have two output families:
 
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "id": "<id>",
   "title": "Ambient Noise by Site",
   "columns": [
     { "stableKey": "org-node", "header": "Org Node", "widthMode": { "id": 2, "name": "Fill" } },
@@ -322,7 +322,7 @@ Widget commands have two output families:
 Without `--json`, the CLI prints a readable table using the returned `columns` and `rows`, followed by row/column/cell counts. Warnings and truncation notices are written as warnings.
 
 ```text
-Tenant: Demo Corp
+Tenant: Example Tenant
 
 Ambient Noise by Site
 
@@ -345,7 +345,7 @@ Errors are written to **stderr** (not stdout), so they don't interfere with pipe
 
 ```
 Error: Metric not found
-  id: 550e8400-e29b-41d4-a716-446655440000
+  id: <id>
   resourceType: Metric
 ```
 

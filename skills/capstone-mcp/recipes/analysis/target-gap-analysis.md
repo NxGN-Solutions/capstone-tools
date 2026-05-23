@@ -52,10 +52,10 @@ Find a report template that includes the target metrics. Use the template `id` f
 
 ```
 data_computedValues_list({
-  templateId: "<report-template-guid>",
+  templateId: "<report-template-id>",
   timePeriodNames: "Q1 FY 25",
   dataInterval: 3,
-  orgNodeIds: "<root-org-node-guid>"
+  orgNodeIds: "<root-org-node-id>"
 })
 ```
 
@@ -161,4 +161,4 @@ When metrics have multiple targets (annual, YoY, monthly cap), show each in a se
 
 ## CLI Equivalent
 
-[CLI: Target Gap Analysis](../../../cli/recipes/analysis/target-gap-analysis.md)
+[CLI: Target Gap Analysis](../../../capstone-cli/recipes/analysis/target-gap-analysis.md)

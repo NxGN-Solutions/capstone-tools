@@ -4,7 +4,7 @@ This repository distributes the Capstone CLI and Capstone MCP server as prebuilt
 
 ## What To Download
 
-Use the latest GitHub Release for your operating system.
+Use the latest GitHub Release for the environment you need to access, then choose the asset for your operating system.
 
 | Tool | Asset | Use when |
 |------|-------|----------|
@@ -15,17 +15,32 @@ Use the latest GitHub Release for your operating system.
 | MCP | `capstone-mcp-osx-arm64.zip` | Connecting Claude Desktop to Capstone on Apple Silicon macOS |
 | MCP | `capstone-mcp-win-x64.zip` | Connecting Claude Desktop to Capstone on Windows |
 
-Each zip has a matching `.sha256` checksum. `manifest.json` lists the current release version, channel, tools, runtime IDs, file names, and checksums.
+Each zip has a matching `.sha256` checksum. The environment manifest lists the current release version, channel, tools, runtime IDs, file names, and checksums.
 
-`manifest.json` is updated by the release workflow. Before the first release, see `manifest.example.json` for the expected structure.
+Environment-specific deployments update `environments/<slug>/manifest.json`, so demo and production can stay on their own latest versions. Before the first release, see `manifest.example.json` for the expected structure.
+
+Manual demo and production deployments publish environment-scoped releases:
+
+| Environment | Release tag pattern | Manifest |
+|-------------|---------------------|----------|
+| Demo | `demo-v<version>` | `environments/demo/manifest.json` |
+| Production | `prod-v<version>` | `environments/prod/manifest.json` |
+
+Environment-scoped packages include a `config/` folder with `configure-cli.sh`, `configure-cli.ps1`, shell environment files, a CLI `config.json`, and a Claude Desktop MCP config template already pointed at that deployment's API URL.
 
 ## Version
 
-Current published version: `0.4.63`
+Current published version: `see environment manifests`
 
-Channel: `stable`
+Channel: `environment-specific`
 
-Release: https://github.com/NxGN-Solutions/capstone-tools/releases/tag/0.4.63
+Release: see GitHub Releases
+
+Environment: `see environment release assets`
+
+API URL: `see environment release assets`
+
+Manifest: `see environments/<slug>/manifest.json`
 
 If that release URL returns 404, no matching release has been published yet. Use the repository docs and wait for the first release assets.
 
@@ -49,6 +64,18 @@ Windows PowerShell:
 .\cap.exe auth login
 .\cap.exe auth whoami
 .\cap.exe schema --json
+```
+
+For an environment-scoped release, run the included helper instead:
+
+```bash
+./config/configure-cli.sh
+```
+
+Windows PowerShell:
+
+```powershell
+.\config\configure-cli.ps1
 ```
 
 See [CLI documentation](docs/cli/) and [CLI agent instructions](skills/capstone-cli/SKILL.md).
@@ -89,6 +116,8 @@ Windows:
 
 Restart Claude Desktop, then ask Claude to log in to Capstone.
 
+For an environment-scoped release, start from `config/claude-desktop.capstone-mcp.json`; it already contains the correct `CAPSTONE_API_URL`.
+
 See [MCP documentation](docs/mcp/) and [MCP agent instructions](skills/capstone-mcp/SKILL.md).
 
 ## Agent Files
@@ -109,6 +138,6 @@ The binaries contain no customer data and no embedded credentials. Access to Cap
 
 These downloads and documents are distributed under the [Capstone Tools Distribution License](LICENSE.md). This is a binary and documentation distribution repo, not an open-source source-code repository.
 
-For help, use your NxGN implementation, support, or account contact. Security reporting guidance is in [SECURITY.md](SECURITY.md), and support request guidance is in [SUPPORT.md](SUPPORT.md).
+For help, use your Capstone implementation, support, or account contact. Security reporting guidance is in [SECURITY.md](SECURITY.md), and support request guidance is in [SUPPORT.md](SUPPORT.md).
 
-Last updated: `2026-05-18T08:51:34Z`
+Last updated: `2026-05-23T09:36:41Z`

@@ -6,7 +6,7 @@
 
 ## Platform Support
 
-Recipes work on **Windows (PowerShell), macOS, and Linux**. All examples use `cap` as the command name — substitute your invocation method (e.g., `.\cap.exe` on Windows, `dotnet run --project ...` for source checkouts).
+Recipes work on **Windows (PowerShell), macOS, and Linux**. All examples use `cap` as the command name — substitute `.\cap.exe` on Windows when running from an extracted package.
 
 For shell-specific syntax translation (environment variables, JSON input, file paths), see the **[Cross-Platform CLI Guide](../reference/platform-guide.md)**.
 
@@ -81,7 +81,7 @@ Each recipe includes:
 
 | Recipe | Description | Status |
 |--------|-------------|--------|
-| [Seed Tenant](./data-management/seed-tenant.md) | Full tenant seeding from Excel fixtures | ✅ Available |
+| [Seed Tenant](./data-management/seed-tenant.md) | Full tenant seeding from approved Excel workbooks | ✅ Available |
 | [Enter Data](./data-management/enter-data.md) | Manual data entry workflow | ✅ Available |
 | [Bulk Import Data](./data-management/bulk-import.md) | Excel upload workflow | ✅ Available |
 | [Review Approvals](./data-management/review-approvals.md) | Change request approval workflow | ✅ Available |
@@ -97,18 +97,18 @@ Each recipe includes:
 | "Analyze our [metric] data..." | Talk to Your Data |
 | "What insights from the [dashboard]..." | Talk to Your Dashboard |
 | "Analyze the entire [dashboard]..." | Deep Dashboard Analysis |
-| "Find correlations across all metrics..." | Deep Dashboard Analysis |
+| "Find correlations across all <id>" | Deep Dashboard Analysis |
 | "How does Q1 compare to Q4..." | Dashboard Comparison |
-| "Compare [location A] vs [location B] dashboard..." | Dashboard Comparison |
+| "Compare [location A] vs [location B] <id>" | Dashboard Comparison |
 | "Compare [location A] vs [location B]..." | Compare Operations |
-| "How is [metric] trending..." | Find Trends |
+| "How is [metric] <id>" | Find Trends |
 | "Any unusual values in..." | Spot Anomalies |
 | "Are we on track for [target]..." | Target Gap Analysis |
 | "What data is missing for..." | Check Data Completeness |
 | "Does this widget have data..." | Verify Data |
-| "Verify the dashboard shows values..." | Verify Data |
-| "Check if my calculation is computing..." | Verify Data |
-| "Test the widget I just created..." | Verify Data |
+| "Verify the dashboard shows <id>" | Verify Data |
+| "Check if my calculation is <id>" | Verify Data |
+| "Test the widget I just <id>" | Verify Data |
 | "Write a summary of..." | Generate Narrative |
 | "What metrics/orgs/frameworks exist..." | Discover Tenant Structure |
 | "I need to create a metric for..." | Create Metric Wizard |
@@ -120,9 +120,9 @@ Each recipe includes:
 | "Connect to our database/MQTT..." | Set Up Data Source |
 | "Record/enter [value] for..." | Enter Data |
 | "Import this Excel file..." | Bulk Import Data |
-| "Seed/set up a fresh tenant..." | Seed Tenant |
-| "Upload all the Tharisa fixtures..." | Seed Tenant |
-| "Review/approve pending requests..." | Review Approvals |
+| "Seed/set up a fresh <id>" | Seed Tenant |
+| "Upload all the implementation <id>" | Seed Tenant |
+| "Review/approve pending <id>" | Review Approvals |
 
 ### By Task Type
 

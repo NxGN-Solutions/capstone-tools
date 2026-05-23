@@ -44,7 +44,7 @@ Pick a template covering the metrics of interest.
 
 ```
 data_computedValues_list({
-  templateId: "<report-template-guid>",
+  templateId: "<report-template-id>",
   timePeriodNames: "Mar 2025",
   dataInterval: 2
 })
@@ -54,7 +54,7 @@ data_computedValues_list({
 
 ```
 data_computedValues_list({
-  templateId: "<report-template-guid>",
+  templateId: "<report-template-id>",
   periodType: "month",
   periodCount: 12,
   dataInterval: 2

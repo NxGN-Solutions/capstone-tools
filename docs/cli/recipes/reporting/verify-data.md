@@ -113,7 +113,7 @@ cap reporting dashboards get-data <dashboard-template-id> \
 **What to check:**
 - All expected metrics appear (match against the dashboard's widget templates)
 - Values are present — empty cells indicate missing data or misconfigured calculations
-- Org node hierarchy appears (e.g., Enterprise B, Enterprise B->Site1, etc.)
+- Org node hierarchy appears (e.g., Example Enterprise, Example Enterprise->Example Site 1, etc.)
 - Calculation-derived metrics have computed values (not just input metrics)
 
 **Optional flags:**
@@ -194,14 +194,14 @@ Period names are what you pass to `--periods`. For daily intervals, these are da
 ```bash
 # First, discover the org node and recent periods
 cap masterdata org-nodes list --json
-# → Enterprise B: 019c27be-1601-779a-a224-14e4088ad8b6
+# → Example Enterprise: <id>
 
 cap data time-periods list --data-interval day --json
 # → Recent: 2026-01-20, 2026-01-21, 2026-01-22
 
 # Verify widget data (auto-detects daily interval from template)
-cap reporting widgets get-data 019c466a-4d46-7575-b598-df17a8035caf \
-  --org-node 019c27be-1601-779a-a224-14e4088ad8b6 \
+cap reporting widgets get-data <id> \
+  --org-node <id> \
   --periods "2026-01-20,2026-01-21,2026-01-22" \
   --json
 ```
@@ -209,13 +209,13 @@ cap reporting widgets get-data 019c466a-4d46-7575-b598-df17a8035caf \
 **Result:**
 ```
 Org Node Path, Metric Name, ..., 2026-01-20, 2026-01-21, 2026-01-22
-Enterprise B, Cola Price Premium %, ..., 1.3, 14.1, -7.5
-Enterprise B->Site1, Cola Price Premium %, ..., 3.6, 24.7, -0.7
-Enterprise B->Site2, Cola Price Premium %, ..., -7.8, 4.6, -19.1
-Enterprise B->Site3, Cola Price Premium %, ..., -22.4, , 5.0
+Example Enterprise, Cola Price Premium %, ..., 1.3, 14.1, -7.5
+Example Enterprise->Example Site 1, Cola Price Premium %, ..., 3.6, 24.7, -0.7
+Example Enterprise->Example Site 2, Cola Price Premium %, ..., -7.8, 4.6, -19.1
+Example Enterprise->Example Site 3, Cola Price Premium %, ..., -22.4, , 5.0
 ```
 
-Widget is returning data at all org levels. Site3 on Jan 21 is empty — likely no Orange RPU data for that day.
+Widget is returning data at all org levels. Example Site 3 on Jan 21 is empty — likely no Orange RPU data for that day.
 
 ---
 
@@ -226,7 +226,7 @@ If values are empty:
 | Symptom | Likely Cause | Fix |
 |---------|-------------|-----|
 | All values empty for a calculation | Calculation engine hasn't processed yet | Wait 15-30 seconds and retry |
-| All values empty after waiting | Formula references a non-existent metric ID | Check formula with `cap model calculations get <id> --json` and verify all `[guid]` references exist in `cap model metrics list --json` |
+| All values empty after waiting | Formula references a non-existent metric ID | Check formula with `cap model calculations get <id> --json` and verify all `[id]` references exist in `cap model metrics list --json` |
 | Values appear after simple formula but not complex | Calculation engine stuck from prior bad formula | Save a simplified formula first (remove IF/THEN), wait for values, then restore full formula |
 | Input metric has values but calculation doesn't | `calculationPhase` may be wrong | Ensure `After Aggregations` (id: 1) for formulas that reference other calculations |
 | Values at enterprise level but not sites | `orgStructureAggregationMethod: None` | Expected — means the metric doesn't roll up. Check if the formula references site-level inputs |
