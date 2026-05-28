@@ -94,7 +94,7 @@ cap masterdata units list --json
 - Math: `SQRT()`, `POW()`, `MOD()`, `PI()`
 - Aggregation: `SUM()`, `AVG()`, `COUNT()`, `MIN()`, `MAX()`, `FIRST()`, `LAST()`, `SUMPRODUCT()`
 - Null handling: `IFNULL()`, `COALESCE()`, `DIV()`
-- Time: `NOW()`, `MONTH()`, `YEAR()`, `YEARSTART()`, `YEAREND()`, `DATEOFFSET()`, `ISFUTURE()`
+- Time: `NOW()`, `MONTH()`, `YEAR()`, `YEARSTART()`, `YEAREND()`, `MONTHSTART()`, `MONTHEND()`, `DATEOFFSET()`, `ISFUTURE()`
 - Duration: `DAYS()`, `WEEKS()`, `MONTHS()`, `QUARTERS()`, `YEARS()`
 
 **Common patterns:**
