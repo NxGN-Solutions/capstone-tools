@@ -77,4 +77,4 @@ See `docs/mcp/setup.md` for complete configuration examples.
 
 Current release: `see environment manifests` (`environment-specific`)
 
-Last updated: `2026-06-02T05:58:13Z`
+Last updated: `2026-06-02T06:04:37Z`
