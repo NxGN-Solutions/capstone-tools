@@ -33,7 +33,7 @@ cap model inputs list --json
 ```
 
 **Look for:**
-- Exact match on name (case-insensitive)
+- Exact match on full name
 - If multiple matches, present options
 - If no match, suggest similar names
 

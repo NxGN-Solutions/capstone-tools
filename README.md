@@ -2,6 +2,11 @@
 
 This repository distributes the Capstone CLI and Capstone MCP server as prebuilt binaries. It intentionally does not contain application source code.
 
+The latest CLI skills, public documentation, release manifests, and checksums
+live in this repository:
+`https://github.com/NxGN-Solutions/capstone-tools`. Point CLI users and agents
+there for current operating guidance instead of private source-repository docs.
+
 ## What To Download
 
 Use the latest GitHub Release for the environment you need to access, then choose the asset for your operating system.
@@ -80,6 +85,34 @@ Windows PowerShell:
 
 See [CLI documentation](docs/cli/) and [CLI agent instructions](skills/capstone-cli/SKILL.md).
 
+For machine-readable workflows, prefer `--json`. Set
+`CAPSTONE_OUTPUT_VERSION=2` to opt into the shared JSON envelope
+`{ ok, data, error, warnings, meta }` on commands that use the shared
+formatter. Run `cap schema --json` to discover supported command arguments,
+output models, the exit-code contract, and the `upsertIdentity` import
+contract. For automation, treat exit code `0` as success, `1` as local CLI
+failure or cancellation, `2` as validation/client-actionable failure, `3` as
+auth/tenant failure, `4` as server/API/network/rate-limit/malformed-response
+failure, `5` as timeout, and `6` as partial result. Do not grep stderr text for
+control flow. For imports and upserts, flat entities match by exact full name only
+after trimming leading/trailing whitespace, and tree entities match by exact
+full path only after trimming leading/trailing whitespace. Matching is
+case-sensitive. Excel upload and JSON batch/upsert use the same identity
+semantics. `upsertIdentity.surfaces` describes when to use JSON
+`import-json --upsert` or Excel `upload-excel`. For rerunnable tenant builds,
+prefer `import-json --upsert --json` for masterdata, model definitions, and
+widget/dashboard templates before using one-item create/save loops. Use
+`cap system tenants snapshot --output snapshot --json` when you need a
+reviewable export of those same import-ready JSON surfaces plus a manifest.
+Restore is a reviewed workflow, not an automatic command: run
+`cap workflows show restore-from-snapshot --json`, inspect the dry-run plans,
+validate calculations, then apply the explicit `import-json --upsert` commands.
+For post-build analysis checks, pair `cap data recalculation wait <version> --json`
+with `cap reporting computed-values audit --metrics <ids> --strict --json`.
+Before live dashboard checks, run `cap templates dashboard-templates audit
+<dashboard-template-id> --strict --json` to catch missing widget references or
+structural template issues.
+
 ## MCP Quick Start
 
 Extract the MCP package and configure Claude Desktop to run the absolute path to `capstone-mcp` or `capstone-mcp.exe`.
@@ -140,4 +173,4 @@ These downloads and documents are distributed under the [Capstone Tools Distribu
 
 For help, use your Capstone implementation, support, or account contact. Security reporting guidance is in [SECURITY.md](SECURITY.md), and support request guidance is in [SUPPORT.md](SUPPORT.md).
 
-Last updated: `2026-06-02T06:04:37Z`
+Last updated: `2026-06-02T15:20:11Z`

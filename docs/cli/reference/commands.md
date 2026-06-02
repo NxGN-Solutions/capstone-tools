@@ -67,6 +67,8 @@ Useful flags:
 | **JSON** (`--json`) | AI/automation, parsing, piping | Structured JSON object |
 
 **Tip:** Always use `--json` when the output will be processed programmatically.
+Set `CAPSTONE_OUTPUT_VERSION=2` to opt into the shared `{ ok, data, error,
+warnings, meta }` JSON envelope on commands that use the shared formatter.
 
 ---
 
@@ -79,6 +81,7 @@ cap schema --json                  # Command names, args, defaults, mutating mar
 cap concepts --json                # Compact Capstone domain ontology
 cap workflows list --json          # Workflow index for common agent tasks
 cap workflows show inspect-model --json
+cap meta lookups list --json       # Cross-domain lookup metadata
 cap version --json                 # CLI/runtime/install context
 cap update check --json            # Explicit update availability check; no install is performed
 ```
@@ -162,11 +165,99 @@ cap model metrics graph --roots <metric-id> --direction both --max-depth 2 --jso
 
 ```bash
 cap templates widget-templates get-bulk <id1> <id2> ... [--json]
+cap model inputs get-bulk <id1> <id2> ... --json
+cap model calculations get-bulk <id1> <id2> ... --json
 ```
 
-Retrieves multiple widget templates in a single request. Returns partial results — valid templates are returned alongside errors for invalid or inaccessible IDs.
+Retrieves multiple full entities in one CLI invocation. Returns partial results — valid entities are returned alongside errors for invalid or inaccessible IDs. Model `get-bulk` commands return the same editable DTOs as `get`, so automation can hydrate list results before analysis or save-round-tripping without spawning one process per entity.
 
-**Supported entities:** `templates widget-templates`
+**Supported entities:** `templates widget-templates`, `model inputs`, `model calculations`
+
+### Identity For Imports And Upserts
+
+The CLI uses one canonical identity contract for JSON batch/upsert workflows and
+Excel upload workflows:
+
+| Entity shape | Match key | Rule |
+|--------------|-----------|------|
+| Flat entities | Exact full name | Names are unique within the entity type. Leading/trailing whitespace is ignored and matching is case-sensitive. A matching full name updates the existing entity; no match creates a new entity. |
+| Tree entities | Exact full path | Paths are unique for tree entities. Leading/trailing whitespace is ignored and matching is case-sensitive. A matching full path updates the existing node; no match creates a new node at that path. |
+
+Do not use fuzzy matching, aliases, partial names, or tree-node short names for
+upsert identity. Agents can inspect the `upsertIdentity` section from
+`cap schema --json` before planning imports. The same section includes
+`surfaces` entries for `json-batch-upsert` and `excel-upload`, so automation can
+choose rerunnable JSON imports or spreadsheet uploads intentionally.
+
+Masterdata, model definition, and widget/dashboard template JSON imports post
+save requests using the same API identity semantics. Use `--upsert` with
+`--dry-run` to preview create/update actions before applying:
+
+```bash
+cap masterdata units import-json --file units.json --upsert --json
+cap masterdata org-nodes import-json --file org-nodes.json --upsert --json
+cap masterdata disciplines import-json --file disciplines.json --upsert --json
+cap masterdata frameworks import-json --file frameworks.json --upsert --json
+cap model inputs import-json --file inputs.json --upsert --json
+cap model calculations validate-batch --file calculations.json --upsert --json
+cap model calculations import-json --file calculations.json --upsert --json
+cap templates widget-templates import-json --file widget-templates.json --upsert --json
+cap templates dashboard-templates import-json --file dashboard-templates.json --upsert --json
+```
+
+`--dry-run --upsert` returns `would-create` and `would-update` plan actions
+without posting changes. Successful upserts return `updated` counts and `idMap`
+entries alongside created items.
+
+### Tenant Snapshot Export
+
+Use snapshot export when you need an auditable, import-ready copy of the current
+tenant's model-building surface:
+
+```bash
+cap system tenants snapshot --output snapshot --json
+```
+
+The command reads from the API only and writes JSON files locally:
+
+| File | Re-import command | Identity |
+|------|-------------------|----------|
+| `masterdata/units.json` | `cap masterdata units import-json --file masterdata/units.json --upsert --json` | Exact full name |
+| `masterdata/org-nodes.json` | `cap masterdata org-nodes import-json --file masterdata/org-nodes.json --upsert --json` | Exact full path |
+| `masterdata/disciplines.json` | `cap masterdata disciplines import-json --file masterdata/disciplines.json --upsert --json` | Exact full path |
+| `masterdata/frameworks.json` | `cap masterdata frameworks import-json --file masterdata/frameworks.json --upsert --json` | Exact full path |
+| `model/inputs.json` | `cap model inputs import-json --file model/inputs.json --upsert --json` | Exact full name |
+| `model/calculations.json` | `cap model calculations import-json --file model/calculations.json --upsert --json` | Exact full name |
+| `templates/widget-templates.json` | `cap templates widget-templates import-json --file templates/widget-templates.json --upsert --json` | Exact full name |
+| `templates/dashboard-templates.json` | `cap templates dashboard-templates import-json --file templates/dashboard-templates.json --upsert --json` | Exact full name |
+
+`manifest.json` records counts, paths, import commands, and identity rules.
+Snapshot export is not restore: review the files, run `--dry-run --upsert`
+imports, validate calculations, then apply the explicit upsert commands.
+
+### Restore From Snapshot Workflow
+
+There is no automatic `cap restore` command. Restore is an explicit reviewed
+workflow over the snapshot files so users can inspect which entities would be
+created or updated before mutating a tenant.
+
+```bash
+cap workflows show restore-from-snapshot --json
+```
+
+The workflow order is:
+
+1. Confirm the active target tenant with `cap status --json` and
+   `cap auth whoami --json`.
+2. Dry-run masterdata imports from `snapshot/masterdata/*.json`, then apply
+   units, org nodes, disciplines, and frameworks with `import-json --upsert`.
+3. Dry-run model imports, run
+   `cap model calculations validate-batch --file snapshot/model/calculations.json --upsert --json`,
+   then apply inputs and calculations.
+4. Dry-run template imports, then apply widget templates before dashboard
+   templates.
+5. Wait for recalculation settlement and audit computed values/dashboard
+   templates before treating the target tenant as restored.
 
 ### Discover Time Periods
 
@@ -186,17 +277,24 @@ cap data availability --data-interval month [--org-nodes "<id>"] [--json]
 ### Lookup Enums
 
 ```bash
-cap <domain> lookups <name> [--json]
+cap meta lookups list --json
+cap meta lookups get <name> [--domain model|data|templates] --json
+cap <domain> lookups get <name> [--json]
 ```
 
 | Domain | Available Lookups |
 |--------|-------------------|
+| `model` | `metric-types`, `time-period-types`, `time-period-aggregation-methods`, `org-structure-aggregation-methods`, `calculation-phases` |
 | `templates` | `widget-sizes`, `widget-types`, `data-grouping-types`, `data-range-modes`, `metric-selection-modes` |
 | `data` | `change-request-reasons`, `change-request-status-types`, `change-request-validation-levels` |
 
+Use `meta lookups` when building scripts or agents that need one discovery
+surface for all enum/reference values. The domain-specific commands remain
+available for direct lookup calls.
+
 ### Reporting Commands
 
-Computed values, dashboards, and widgets. Most require `--data-interval` and `--periods` (exceptions: `widgets get-data` auto-detects the interval from the widget template; `computed-values query` can resolve recent periods with `--period-count`).
+Computed values, dashboards, and widgets. Most require `--data-interval` and `--periods` (exceptions: `widgets get-data` auto-detects the interval from the widget template; `computed-values query` and `computed-values audit` can resolve recent periods with `--period-count`).
 
 ```bash
 # Computed values (via report template filter lens)
@@ -204,17 +302,26 @@ cap reporting computed-values list --template <report-template-id> --data-interv
 
 # Computed values (ad-hoc metric query, no saved report template required)
 cap reporting computed-values query --metrics <metric-id>[,<metric-id>] --data-interval month --period-count 3 --include-metric-details --json
+
+# Computed values audit for post-build verification and CI smoke checks
+cap reporting computed-values audit --metrics <metric-id>[,<metric-id>] --data-interval month --periods "Jan 25" --target-model-version <version> --strict --json
 ```
 
 | Flag | Description | Required |
 |------|-------------|----------|
 | `--template <id>` | Report template whose filters determine visible metrics | Yes |
-| `--metrics "<ids>"` | Metric IDs for ad-hoc `computed-values query` | Yes for `query` |
+| `--metrics "<ids>"` | Metric IDs for ad-hoc `computed-values query` or `audit` | Yes for `query`, `audit` |
 | `--data-interval <interval>` | day, week, month, quarter, year | Yes |
-| `--periods "<names>"` | Comma-separated period names | Yes for `list`; optional for `query` when `--period-count` is supplied |
-| `--period-count <n>` | Resolve the most recent N periods for `computed-values query` | No |
+| `--periods "<names>"` | Comma-separated period names | Yes for `list`; optional for `query`/`audit` when `--period-count` is supplied |
+| `--period-count <n>` | Resolve the most recent N periods for `computed-values query`/`audit` | No |
 | `--org-nodes "<id>"` | Filter to specific org node | No |
 | `--metric-types "<types>"` | `input`, `calculation` (comma-separated) | No |
+
+`computed-values audit --json` returns `ComputedValueAuditResult` with
+`passed`, `summary`, `modelState`, `findings`, and `missingMetricIds`. Findings
+include stale model state, no data rows, all-null values, and requested metrics
+missing from the response. Add `--strict` when CI should receive exit code `6`
+for audit findings while still getting the JSON body.
 
 ```bash
 # Widget data (type-specific — returns typed JSON for rendering)
@@ -229,6 +336,9 @@ cap reporting widgets get-data <widget-template-id> --org-node <id> --periods "F
 # Dashboard data
 cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --data-interval month --periods "Jan 25" [--json]
 cap reporting dashboards get-insights <dashboard-template-id> <layout-node-id> --org-node <id> --data-interval month --periods "Jan 25" [--json]
+
+# Dashboard template static audit before live data checks
+cap templates dashboard-templates audit <dashboard-template-id> --strict --json
 ```
 
 > **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`) use `--org-nodes` (plural, comma-separated) and require `--data-interval`. These commands return typed dashboard render JSON for their widget type. The `get-data` command uses `--org-node` (singular ID), auto-detects the data interval from the widget template, and returns the type-agnostic CSV/AI extraction payload, not the Table dashboard render response. Use `cap data time-periods list` to discover available period names.
@@ -242,8 +352,11 @@ cap templates widget-templates get --help
 cap templates widget-templates get-bulk --help
 cap templates widget-templates create --help
 cap templates widget-templates save --help
+cap templates widget-templates import-json --help
 cap templates widget-templates download-excel --help
 cap templates widget-templates upload-excel --help
+cap templates dashboard-templates import-json --help
+cap templates dashboard-templates audit --help
 cap reporting widgets --help
 cap reporting widgets table --help
 cap reporting widgets get-data --help
@@ -410,7 +523,7 @@ echo '{
 
 > **Note:** The CLI auto-wraps JSON in `{"widgetTemplate": {...}}` if the root object has `name` or `widgetType` properties. You can also use the explicit wrapper format if preferred.
 
-Table templates use the same shared WidgetTemplate API and CLI command surface as the existing widget types. Manage them with `cap templates widget-templates list|get|get-bulk|create|save|delete|download-excel|upload-excel`, and set the widget type to `{ "id": 4, "name": "Table" }` in JSON or the corresponding Table widget type in Excel. Table data comes from selected Input or Calculation metrics and their ComputedValues; do not encode hidden widget-only calculations in the template.
+Table templates use the same shared WidgetTemplate API and CLI command surface as the existing widget types. Manage them with `cap templates widget-templates list|get|get-bulk|create|save|import-json|delete|download-excel|upload-excel`, and set the widget type to `{ "id": 4, "name": "Table" }` in JSON or the corresponding Table widget type in Excel. Table data comes from selected Input or Calculation metrics and their ComputedValues; do not encode hidden widget-only calculations in the template.
 
 **Widget Types:**
 | ID | Name | Use Case |
@@ -548,6 +661,13 @@ cap masterdata org-nodes upload-excel "artifacts/performance/excel/Org Structure
 ```
 
 The default timeout is `3000` seconds (50 minutes). Use `--timeout-seconds <n>` for larger files. In JSON mode the final status payload includes `uploadId`, `status`, `fileName`, `fileSizeBytes`, `totalRows`, `processedRows`, `createdDate`, `completedDate`, and `errors`.
+
+Non-async Excel upload commands return `ExcelUploadResult` in JSON mode:
+`items`, row counts such as `savedRows`/`newRows`/`updatedRows`, `isValid`, and
+`uploadErrors` with `rowIndex`, `columnIndex`, and `errorMessage`. Keep these
+row/cell diagnostics for spreadsheet workflows; use `import-json --upsert` when
+the source of truth is JSON and `orderedPlan`/`idMap` diagnostics are more
+useful.
 
 **Entities supporting Excel upload:**
 - `model inputs`, `model calculations`

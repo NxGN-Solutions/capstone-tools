@@ -17,6 +17,66 @@ Every command supports two output modes:
 
 ---
 
+## JSON Contract Versions
+
+Default `--json` output remains the existing per-command shape. This keeps
+current scripts working: list commands still return their list envelope, get
+commands still return their entity-specific envelope, and create/save/delete
+commands still return the legacy success object shown below.
+
+For automation that wants a stable top-level contract, set
+`CAPSTONE_OUTPUT_VERSION=2` before running commands. Commands that use the
+shared formatter then wrap JSON output as:
+
+```json
+{
+  "ok": true,
+  "data": {},
+  "error": null,
+  "warnings": [],
+  "meta": {
+    "outputVersion": 2,
+    "command": null
+  }
+}
+```
+
+Errors in this mode use the same top-level fields with `ok: false`, `data:
+null`, and an error object containing `code`, `message`, `details`, and
+`retriable`.
+
+Some commands expose a command-specific `--output-version` option for legacy
+detail envelopes. Prefer `cap schema --json` for command-specific arguments;
+the environment variable controls only the shared formatter envelope.
+
+---
+
+## Exit Codes and Error Classification
+
+Use the process exit code for automation decisions. Use `cap schema --json` for
+the live contract; the stable categories are:
+
+| Exit code | Meaning | Typical causes |
+|-----------|---------|----------------|
+| `0` | Success | Command completed normally; valid analysis requests with no data are still success with diagnostics or warnings. |
+| `1` | General CLI failure | User cancellation, local process failure, or unexpected CLI exception. |
+| `2` | Validation/client-actionable failure | Unknown command, invalid option, missing argument, local file/schema validation, not found, API `400`, `404`, `409`, or `422`. |
+| `3` | Authentication/tenant failure | Missing/expired auth, missing tenant, API `401` or `403`. |
+| `4` | Server/API/network failure | Network failure, API `429`, API `5xx`, or malformed API response. |
+| `5` | Timeout | API `408` or CLI-controlled polling/command timeout. |
+| `6` | Partial result | Imports/uploads/checks that completed with row/item errors or strict audit findings. |
+
+Machine-readable errors are written to stderr in JSON mode. In output v2 they
+use the same top-level envelope with `ok: false`, `data: null`, and
+`error.code`, `error.message`, `error.details`, and `error.retriable`.
+
+Invalid local JSON input files are validation errors (`2`). Malformed API
+responses are server/API contract failures (`4`) and use the shared response
+format error path. API rate limiting (`429`) is retriable and exits `4`, not
+validation.
+
+---
+
 ## List Output (Collections)
 
 ### Table Mode
@@ -366,6 +426,26 @@ Error: Authentication required
 }
 ```
 
+### JSON Mode With `CAPSTONE_OUTPUT_VERSION=2`
+
+```json
+{
+  "ok": false,
+  "data": null,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Metric not found",
+    "details": null,
+    "retriable": false
+  },
+  "warnings": [],
+  "meta": {
+    "outputVersion": 2,
+    "command": null
+  }
+}
+```
+
 ### Error Codes
 
 | Code | Meaning | Resolution |
@@ -406,7 +486,17 @@ Warning: Upload completed with errors: 40 imported, 2 error(s)
 | Code | Meaning |
 |------|---------|
 | `0` | Success |
-| `1` | Error (auth, API, validation, network) |
+| `1` | Legacy or uncategorized error |
+| `2` | Validation/client input error |
+| `3` | Authentication, authorization, or tenant-selection error |
+| `4` | Network, API, or server-side error |
+| `5` | Timeout waiting for a terminal state |
+| `6` | Partial result: useful output was returned with row/item warnings or recoverable errors |
+
+Use the exit code together with stderr JSON or the v2 envelope error object.
+For example, `cap data recalculation wait ... --json` returns exit code `5`
+when the model state does not settle before the timeout, while stdout still
+contains the latest model-state payload for analysis.
 
 ---
 

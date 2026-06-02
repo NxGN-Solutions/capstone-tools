@@ -7,6 +7,9 @@ This repository is the binary distribution and documentation hub for Capstone's 
 
 The Capstone source repository is private. This repository is intended for clients, implementers, and agents who need the tools and operating guidance, not source code.
 
+Use `https://github.com/NxGN-Solutions/capstone-tools` as the canonical public
+location for the latest CLI skills, MCP skills, and documentation.
+
 ## Recommended Claude Setup
 
 Use Claude Desktop with the MCP server when the user wants conversational exploration over their Capstone tenant. Use Claude Code with the CLI when the work involves files, repeatable commands, bulk JSON payloads, or implementation handoff.
@@ -73,8 +76,38 @@ See `docs/mcp/setup.md` for complete configuration examples.
 - Authentication is per user and per machine.
 - Tenant access is controlled by the Capstone API, not by the binary download.
 - Prefer JSON output from the CLI for agent reasoning.
+- Set `CAPSTONE_OUTPUT_VERSION=2` only when the workflow expects the shared
+  `{ ok, data, error, warnings, meta }` JSON envelope; otherwise leave the
+  default per-command JSON shapes in place.
+- Use `cap schema --json` for the current command, output, and exit-code
+  contract before writing automation.
+- Interpret exit codes consistently: `0` success, `1` local CLI failure or
+  cancellation, `2` validation/client-actionable failure, `3` auth/tenant
+  failure, `4` server/API/network/rate-limit/malformed-response failure, `5`
+  timeout, and `6` partial result. Do not branch on free-text stderr.
+- For imports and upserts, use the `upsertIdentity` schema contract: flat
+  entities match by exact full name only after trimming leading/trailing
+  whitespace, and tree entities match by exact full path only after trimming
+  leading/trailing whitespace. Matching is case-sensitive. Excel upload and
+  JSON batch/upsert use the same identity semantics. Use
+  `upsertIdentity.surfaces` to choose JSON `import-json --upsert` or Excel
+  `upload-excel` based on the diagnostics the workflow needs.
+- For rerunnable tenant builds, prefer `import-json --upsert --json` for
+  masterdata, model definitions, and widget/dashboard templates before using
+  one-item create/save loops.
+- Use `cap system tenants snapshot --output snapshot --json` when you need a
+  reviewable export of those same import-ready JSON surfaces plus a manifest.
+  Restore is the explicit reviewed `import-json --upsert` path; use
+  `cap workflows show restore-from-snapshot --json` for the dry-run, validate,
+  apply, and audit sequence.
+- After model or seed changes, run `cap data recalculation wait <version>
+  --json`, then use `cap reporting computed-values audit --metrics <ids>
+  --strict --json` for automation-safe output verification.
+- Before live dashboard data checks, run `cap templates dashboard-templates
+  audit <dashboard-template-id> --strict --json` to catch missing widget
+  references or structural template issues.
 - Prefer MCP prompts/resources for Claude Desktop discovery.
 
 Current release: `see environment manifests` (`environment-specific`)
 
-Last updated: `2026-06-02T06:04:37Z`
+Last updated: `2026-06-02T15:20:11Z`

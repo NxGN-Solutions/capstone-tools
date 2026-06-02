@@ -1,9 +1,9 @@
 {
-  "version": "0.4.81",
-  "latestVersion": "0.4.81",
+  "version": "0.4.82",
+  "latestVersion": "0.4.82",
   "channel": "stable",
   "createdUtc": "2026-05-18T00:00:00Z",
-  "releaseUrl": "https://github.com/NxGN-Solutions/capstone-tools/releases/tag/prod-v0.4.81",
+  "releaseUrl": "https://github.com/NxGN-Solutions/capstone-tools/releases/tag/prod-v0.4.82",
   "manifestUrl": "https://raw.githubusercontent.com/NxGN-Solutions/capstone-tools/main/environments/prod/manifest.json",
   "environment": {
     "name": "Production",

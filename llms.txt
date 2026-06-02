@@ -2,6 +2,8 @@
 
 > Binary downloads, installation docs, and agent guidance for the Capstone CLI and MCP server.
 
+Canonical public repository: https://github.com/NxGN-Solutions/capstone-tools
+
 ## Core
 
 - [README](README.md): Download matrix, setup overview, versioning, and security model.
@@ -19,6 +21,29 @@
 - [CLI Docs](docs/cli/): CLI usage guide, recipes, and reference documentation.
 - [CLI Commands](docs/cli/reference/commands.md): Command reference.
 - [CLI Platform Guide](docs/cli/reference/platform-guide.md): Cross-shell syntax and platform notes.
+- `cap schema --json` includes `exitCodes`: `0` success, `1` local CLI failure
+  or cancellation, `2` validation/client-actionable failure, `3` auth/tenant
+  failure, `4` server/API/network/rate-limit/malformed-response failure, `5`
+  timeout, and `6` partial result.
+- `cap schema --json` includes `upsertIdentity`: flat entities match by exact
+  full name only after trimming leading/trailing whitespace, tree entities match
+  by exact full path only after trimming leading/trailing whitespace, matching is
+  case-sensitive, and Excel upload follows the same identity semantics as JSON
+  batch/upsert. Use `upsertIdentity.surfaces` to choose JSON
+  `import-json --upsert` or Excel `upload-excel`.
+- For rerunnable tenant builds, prefer `import-json --upsert --json` for
+  masterdata, model definitions, and widget/dashboard templates before using
+  one-item create/save loops.
+- Use `cap system tenants snapshot --output snapshot --json` for a reviewable
+  export of import-ready JSON files plus `manifest.json`; restore is the
+  explicit reviewed `import-json --upsert` path. Use
+  `cap workflows show restore-from-snapshot --json` for dry-run, validate,
+  apply, and audit steps.
+- For post-build analysis checks, pair `cap data recalculation wait <version>
+  --json` with `cap reporting computed-values audit --metrics <ids> --strict
+  --json`.
+- Before live dashboard checks, run `cap templates dashboard-templates audit
+  <dashboard-template-id> --strict --json`.
 
 ## MCP Documentation
 

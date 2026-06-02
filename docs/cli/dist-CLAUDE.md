@@ -65,6 +65,21 @@ cap auth switch-tenant <tenant-id>  # Switch to a specific tenant
 
 > If any command returns a connection error, ask the user to confirm the API URL is correct and the server is reachable.
 
+## Automation Error Contract
+
+Use `--json` for machine-readable workflows and branch on exit codes, not
+free-text stderr. Run `cap schema --json` for the live contract.
+
+| Exit | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Local CLI failure or user cancellation |
+| `2` | Validation/client-actionable failure, including not found and non-retriable API 4xx |
+| `3` | Authentication or tenant failure |
+| `4` | Server/API/network/rate-limit/malformed-response failure |
+| `5` | Timeout |
+| `6` | Partial result |
+
 ## Workspace & Tenant Cache
 
 This workspace uses a structured directory to cache tenant data and build working memory across sessions. **This is critical for efficiency — always check the cache before querying the API.**
@@ -187,6 +202,61 @@ cap <domain> <entity> download-excel --output file.xlsx
 cap <domain> <entity> upload-excel file.xlsx
 ```
 
+## Machine Contracts And Workflows
+
+Before planning unfamiliar automation, ask the CLI for the current contract:
+
+```
+cap schema --json
+cap concepts --json
+cap workflows list --json
+```
+
+Use `CAPSTONE_OUTPUT_VERSION=2` only when a workflow expects the shared
+`{ ok, data, error, warnings, meta }` envelope. Leave it unset for legacy
+per-command JSON shapes.
+
+The CLI uses the same identity semantics for JSON batch/upsert and Excel upload:
+
+| Entity shape | Match key |
+|--------------|-----------|
+| Flat entities | Exact full name only after trimming leading/trailing whitespace; case-sensitive |
+| Tree entities | Exact full path only after trimming leading/trailing whitespace; case-sensitive |
+
+Do not use fuzzy matching, aliases, partial names, or tree-node short names for
+upsert identity. Read `upsertIdentity` from `cap schema --json` when you need
+to confirm the current contract.
+
+## Model Build And Restore Workflows
+
+Prefer rerunnable JSON imports for tenant builds:
+
+```
+cap masterdata units import-json --file units.json --upsert --json
+cap masterdata org-nodes import-json --file org-nodes.json --upsert --json
+cap masterdata disciplines import-json --file disciplines.json --upsert --json
+cap masterdata frameworks import-json --file frameworks.json --upsert --json
+cap model inputs import-json --file inputs.json --upsert --json
+cap model calculations validate-batch --file calculations.json --upsert --json
+cap model calculations import-json --file calculations.json --upsert --json
+cap templates widget-templates import-json --file widget-templates.json --upsert --json
+cap templates dashboard-templates import-json --file dashboard-templates.json --upsert --json
+```
+
+Use Excel upload when users need spreadsheet review and row/cell diagnostics;
+use JSON import when agents need source-controlled payloads, dry-run plans, and
+repeatable builds.
+
+For snapshots and reviewed restore planning:
+
+```
+cap system tenants snapshot --output snapshot --json
+cap workflows show restore-from-snapshot --json
+```
+
+Snapshot export is read-only. Restore is not an automatic command; follow the
+workflow's dry-run, validate, apply, and audit sequence.
+
 ## JSON Output — Critical Details
 
 **`--json` on `get` commands** returns the entity wrapped in a domain key:
@@ -220,6 +290,15 @@ cap data time-periods list --data-interval month
 ```
 
 > **Mismatch = empty results.** If you get no data rows, verify the period format matches the widget's interval.
+
+After model or seed changes, wait for recalculation and use audit commands for
+automation-safe analysis:
+
+```
+cap data recalculation wait <target-model-version> --json
+cap reporting computed-values audit --metrics <metric-id> --data-interval month --periods <period> --include-metric-details --strict --json
+cap templates dashboard-templates audit <dashboard-template-id> --strict --json
+```
 
 ## Recipes — Read Before Multi-Step Tasks
 
@@ -295,6 +374,8 @@ For standard workflows, **read the recipe first** from `docs/recipes/`. Recipes 
 ## Tips
 
 - All commands support `--json` for machine-readable output — prefer this when parsing results
+- Run `cap schema --json` and `cap workflows list --json` before generating automation
+- Use `import-json --upsert --dry-run --json` before applying large model-build changes
 - Use `cap status` to see current auth state, tenant, and config at a glance
 - Token refresh is automatic — if a token expires mid-session, the CLI refreshes it
 - Excel import/export is available on most entities: `download-excel` and `upload-excel`

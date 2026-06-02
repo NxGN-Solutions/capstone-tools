@@ -76,6 +76,21 @@ cap auth whoami
 
 Returns your username, tenant, and accessible tenants.
 
+### Automation Error Contract
+
+Use `--json` for machine-readable workflows and branch on exit codes, not
+free-text stderr. Run `cap schema --json` for the live contract.
+
+| Exit | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Local CLI failure or user cancellation |
+| `2` | Validation/client-actionable failure, including not found and non-retriable API 4xx |
+| `3` | Authentication or tenant failure |
+| `4` | Server/API/network/rate-limit/malformed-response failure |
+| `5` | Timeout |
+| `6` | Partial result |
+
 ### Discover What's Available
 
 **Model structure:**
@@ -197,8 +212,8 @@ Always clarify before executing when user request is missing:
 | Command | Description |
 |---------|-------------|
 | `cap model metrics list` | List all metrics (inputs + calculations) |
-| `cap model inputs list/get/create/save/delete/download-excel/upload-excel` | Manage input metrics |
-| `cap model calculations list/get/create/save/delete/download-excel/upload-excel` | Manage calculations |
+| `cap model inputs list/get/get-bulk/create/save/delete/download-excel/upload-excel` | Manage input metrics |
+| `cap model calculations list/get/get-bulk/create/save/delete/download-excel/upload-excel` | Manage calculations |
 | `cap model narratives list/get/create/save/delete/delete-preview/delete-start/delete-status` | Manage text narrative definitions |
 | `cap model narrative-attribute-types list/get/create/save/delete/download-excel/upload-excel` | Custom narrative attributes |
 | `cap model narrative-overrides list/get/create/save/copy/download-excel/upload-excel` | Per-location narrative customization |
@@ -214,10 +229,10 @@ Always clarify before executing when user request is missing:
 
 | Command | Description |
 |---------|-------------|
-| `cap masterdata org-nodes list/get/create/save/delete/download-excel/upload-excel` | Organizational hierarchy |
-| `cap masterdata disciplines list/get/create/save/delete/download-excel/upload-excel` | Metric categories |
-| `cap masterdata frameworks list/get/create/save/delete/download-excel/upload-excel` | Reporting standards |
-| `cap masterdata units list/get/create/save/delete/download-excel/upload-excel` | Units of measure |
+| `cap masterdata org-nodes list/get/create/save/import-json/delete/download-excel/upload-excel` | Organizational hierarchy |
+| `cap masterdata disciplines list/get/create/save/import-json/delete/download-excel/upload-excel` | Metric categories |
+| `cap masterdata frameworks list/get/create/save/import-json/delete/download-excel/upload-excel` | Reporting standards |
+| `cap masterdata units list/get/create/save/import-json/delete/download-excel/upload-excel` | Units of measure |
 | `cap masterdata data-sources list/get/create/save/delete/download-excel/upload-excel` | External integrations |
 | `cap masterdata discipline-attribute-types list/get/create/save/delete/download-excel/upload-excel` | Custom discipline attributes |
 | `cap masterdata framework-attribute-types list/get/create/save/delete/download-excel/upload-excel` | Custom framework attributes |
@@ -232,10 +247,11 @@ Always clarify before executing when user request is missing:
 |---------|-------------|
 | `cap templates capture-templates *` | Data entry form configuration |
 | `cap templates report-templates *` | Report spreadsheet templates |
-| `cap templates widget-templates *` | Widget visualization config |
-| `cap templates dashboard-templates *` | Dashboard layout config |
+| `cap templates widget-templates list/get/get-bulk/create/save/import-json/delete/download-excel/upload-excel` | Widget visualization config |
+| `cap templates dashboard-templates list/get/create/save/import-json/audit/delete/download-excel/upload-excel` | Dashboard layout config |
 | `cap templates org-node-templates *` | Alternate org projections |
-| `cap templates lookups <name>` | Template enum values |
+| `cap meta lookups list/get` | Cross-domain enum and reference lookup discovery |
+| `cap templates lookups get <name>` | Template enum values |
 
 ### data — Values & Workflows
 
@@ -258,6 +274,7 @@ Always clarify before executing when user request is missing:
 | Command | Description |
 |---------|-------------|
 | `cap reporting computed-values list` | Period-scoped computed values (requires `--template`, `--data-interval`) |
+| `cap reporting computed-values audit` | Post-build audit for expected metrics, stale model state, and no-data/no-value findings |
 | `cap reporting computed-values download-excel` | Export computed values to Excel |
 | `cap reporting dashboards get-data <id>` | All widget data for a dashboard |
 | `cap reporting dashboards get-insights <id>` | AI-generated insights for a dashboard |
@@ -266,7 +283,7 @@ Always clarify before executing when user request is missing:
 | `cap reporting widgets xy-chart <id>` | Line/bar/area chart data (JSON-only) |
 | `cap reporting widgets table <id>` | Table widget render data |
 
-**Note:** Most reporting commands require `--data-interval` and `--periods`. Exception: `widgets get-data` auto-detects the data interval from the widget template and uses `--org-node` (singular). Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`) require `--org-nodes` (plural). Use `cap data time-periods list --data-interval <interval>` to discover available period names.
+**Note:** Most reporting commands require `--data-interval` and `--periods`. Exception: `widgets get-data` auto-detects the data interval from the widget template and uses `--org-node` (singular). Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`) require `--org-nodes` (plural). Use `cap data time-periods list --data-interval <interval>` to discover available period names. After model or seed changes, prefer `cap reporting computed-values audit --metrics <ids> --strict --json` for automation-safe verification; it reports stale model state, missing metrics, and no-data findings.
 
 ### security — Users & Access (Planned)
 
@@ -278,7 +295,7 @@ Always clarify before executing when user request is missing:
 | `cap security roles list` | Role definitions | ⏳ Planned |
 | `cap security version get` | API version info | ⏳ Planned |
 
-### system — Administration (Planned)
+### system — Administration
 
 **Purpose:** System-level configuration: languages, translations, tenants.
 
@@ -286,7 +303,8 @@ Always clarify before executing when user request is missing:
 |---------|-------------|--------|
 | `cap system languages list/get/create/save/delete` | Language config | ⏳ Planned |
 | `cap system translations *` | Translation management | ⏳ Planned |
-| `cap system tenants list/get/create/save/delete` | Tenant CRUD | ⏳ Planned |
+| `cap system tenants list/get/create/save/delete/bootstrap-local` | Tenant CRUD and local automation bootstrap | Available |
+| `cap system tenants snapshot --output snapshot --json` | Export import-ready current-tenant model-build JSON plus manifest | Available |
 | `cap system model-state get` | Model state info | ⏳ Planned |
 
 ---
@@ -311,6 +329,66 @@ cap <domain> <entity> delete <id>             # Delete by ID
 cap <domain> <entity> download-excel --output file.xlsx
 cap <domain> <entity> upload-excel --file file.xlsx
 ```
+
+### Import And Upsert Identity
+
+Use the same identity contract for JSON batch/upsert work and Excel upload
+work:
+
+| Entity shape | Match key |
+|--------------|-----------|
+| Flat entities | Exact full name only after trimming leading/trailing whitespace; case-sensitive |
+| Tree entities | Exact full path only after trimming leading/trailing whitespace; case-sensitive |
+
+Names are unique for flat entities; paths are unique for tree entities. Do not
+use fuzzy matching, aliases, partial names, or tree-node short names when
+planning imports. Read `cap schema --json` and use the `upsertIdentity` section
+when an agent needs to confirm the current contract. `upsertIdentity.surfaces`
+describes the two parallel ingestion paths: `json-batch-upsert` for rerunnable
+JSON payloads and `excel-upload` for spreadsheet workflows that need row/cell
+diagnostics.
+
+For masterdata, model definition, and widget/dashboard template JSON imports,
+prefer explicit upsert for rerunnable builds:
+
+```bash
+cap model inputs import-json --file inputs.json --upsert --json
+cap model calculations validate-batch --file calculations.json --upsert --json
+cap model calculations import-json --file calculations.json --upsert --json
+cap masterdata org-nodes import-json --file org-nodes.json --upsert --json
+cap masterdata disciplines import-json --file disciplines.json --upsert --json
+cap masterdata frameworks import-json --file frameworks.json --upsert --json
+cap masterdata units import-json --file units.json --upsert --json
+cap templates widget-templates import-json --file widget-templates.json --upsert --json
+cap templates dashboard-templates import-json --file dashboard-templates.json --upsert --json
+```
+
+Use `--dry-run --upsert` to preview `would-create` and `would-update` actions
+before mutating a tenant.
+
+Use snapshot export when you need a reviewable or versionable copy of the current
+tenant's model-building surface:
+
+```bash
+cap system tenants snapshot --output snapshot --json
+```
+
+The snapshot command hydrates full DTOs for units, org nodes, disciplines,
+frameworks, inputs, calculations, widget templates, and dashboard templates. It
+writes JSON arrays that can be re-imported with the matching `import-json
+--upsert` commands listed in `manifest.json`. Snapshot is read-only against the
+API; restore is the explicit import/upsert path after review.
+
+For restore planning, ask the CLI for the reviewed workflow instead of looking
+for an automatic restore command:
+
+```bash
+cap workflows show restore-from-snapshot --json
+```
+
+Follow its dry-run first sequence, validate calculation batches before applying
+them, and verify the restored model with recalculation wait plus computed-value
+and dashboard-template audits.
 
 ### Capture Template Preflight Checklist
 
