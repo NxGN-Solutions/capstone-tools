@@ -39,6 +39,8 @@
 | 4 | Min | Minimum value across periods |
 | 5 | Max | Maximum value across periods |
 
+For widget templates, set this at both the widget default and data-item override when a Dynamic widget collapses a selected range into one displayed value. Use None only for deliberate time-series output or explicit single-period offsets. See [Widget Time Period Aggregation](./widget-time-aggregation.md).
+
 ### Calculation Phases
 
 | ID | Name | Description |
@@ -181,6 +183,77 @@
 
 ---
 
+## Aggregation Execution Semantics
+
+### Org and Time Composition
+
+Metric aggregation has two independent dimensions:
+
+- **Org structure aggregation** flows up the org-node hierarchy from child nodes to parent nodes.
+- **Time period aggregation** combines values across the selected reporting periods for the requested data interval.
+
+When both are involved, report reads compose them for the requested view. For example, a company-level quarterly report for a monthly Sum/Sum metric rolls site values up through the org tree and combines the selected months into the quarter result.
+
+### Calculation Phases
+
+Calculation phase controls when a calculation metric is evaluated relative to rollup:
+
+| Phase | Use When |
+|-------|----------|
+| Before Aggregations | The calculation should be computed at the source org/period level first, then rolled up. Use for conversions and site-level values that can aggregate safely. |
+| After Aggregations | The calculation should use already rolled-up input values. Use for ratios of totals, company-wide rates, and metrics where summing precomputed ratios would be wrong. |
+
+For ratios such as emissions intensity or cost per unit, prefer After Aggregations with `orgStructureAggregationMethod = None` and `timePeriodAggregationMethod = None`, so the ratio is recomputed from aggregated numerator and denominator values.
+
+### Dense Matrix and Build Order
+
+Report output depends on the template, metric set, org scope, time periods, and available input values. For repeatable tenant builds, treat the required data as a metric x org-node x period matrix:
+
+1. Create org nodes, disciplines/frameworks, units, inputs, calculations, and templates.
+2. Resolve selectable periods with `cap data time-periods list --data-interval <type> --json`; use the returned `startDate` values when saving input values.
+3. Load leaf input values for every metric, org node, and period needed by the report or by formulas the report depends on.
+4. Wait for recalculation settlement before verifying report output.
+
+Sparse data can be valid, but it should be intentional. If a parent report row is missing or empty, first check whether the leaf cells and formula dependencies exist for the selected period names.
+
+### Recalculation Settlement
+
+Model changes and input-value saves can update model state asynchronously. JSON mutation responses that include `modelVersion` also include a `recommendedRecalculationWaitCommand` when the CLI can derive one.
+
+Use these commands before reading reports:
+
+```bash
+cap data recalculation status --json
+cap data recalculation wait <target-model-version> --json
+```
+
+`settled = true` means the calculation version has reached the target model version, calculation succeeded, and results were persisted. Report reads before settlement can show stale or missing computed values.
+
+### Reporting Fetch Surfaces
+
+Use report-template surfaces to verify saved report shape and parent rollups:
+
+```bash
+cap reporting computed-values list \
+  --template <report-template-id> \
+  --data-interval month \
+  --periods "Jan 2026" \
+  --json
+
+cap reporting computed-values download-excel \
+  --template <report-template-id> \
+  --data-interval month \
+  --periods "Jan 2026" \
+  --output report.xlsx \
+  --json
+```
+
+`reporting computed-values query` is an inline direct metric query. It is useful for targeted diagnostics, but it is not the full report-template/export lens and should not be used as the only proof that a saved report template renders correctly.
+
+Use `cap reporting computed-values audit --metrics <metric-id> --data-interval <type> --periods <period> --include-metric-details --strict --json` to diagnose stale model state, missing metric details, no rows, or all-null values.
+
+---
+
 ## Payload Templates
 
 ### Create Narrative Definition
@@ -217,9 +290,9 @@ EOF
 ```
 
 Use `cap model narratives lookup --capture-interval quarter --org-nodes <id>
---disciplines <id> --json` before capture workflows. Lock and governed edit
+--discipline-nodes <id> --json` before capture workflows. Lock and governed edit
 workflows use `cap data data-lock lock|unlock` and
-`cap data narrative-change-requests`.
+the unified `cap data change-requests` surface.
 
 ### Create Input
 
@@ -638,7 +711,30 @@ DIV(a, b), SUMPRODUCT(r1, r2)    Safe division, sum of products
 IF [Denominator] <> 0 THEN [Numerator] / [Denominator] ELSE 0
 ```
 
-Use `cap model formula-validation validate --json` to verify formula syntax before saving a calculation.
+Use `cap model formula-validation validate <calculation-name> --formula '<formula>' --json` to verify formula syntax before saving a calculation.
+
+### Formula Parser Provenance
+
+The formula language is parser-backed. Runtime parsing and core formula behavior come from the `Formula.Parser` v1.4.1 package, implemented with F#/FParsec. This bundled CLI reference is a curated subset for common Capstone usage, not a full grammar specification. If a construct is not listed here, validate it before use rather than assuming the document is exhaustive.
+
+Capstone registers these additional time functions:
+
+```
+NOW, YEARSTART, YEAREND, MONTHSTART, MONTHEND, DATEOFFSET,
+MONTH, YEAR, DAYS, WEEKS, MONTHS, QUARTERS, YEARS, ISFUTURE
+```
+
+The authoritative pre-save check is the API validation endpoint exposed by the CLI:
+
+```bash
+cap model formula-validation validate <calculation-name> --formula '<formula>' --json
+```
+
+You can also pipe the formula through stdin:
+
+```bash
+echo '[A] + [B]' | cap model formula-validation validate Total --json
+```
 
 ---
 

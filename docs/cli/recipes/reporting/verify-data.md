@@ -82,7 +82,7 @@ cap reporting widgets xy-chart <widget-template-id> \
   --periods "2026-01-20,2026-01-21,2026-01-22" \
   --json
 
-# Table — returns dashboard render columns, rows, cells, budgets, and warnings
+# Table — returns dashboard table grid rows, period columns, metadata columns, and totals
 cap reporting widgets table <widget-template-id> \
   --org-nodes <org-node-id> \
   --data-interval quarter \
@@ -92,7 +92,7 @@ cap reporting widgets table <widget-template-id> \
 
 > **Note:** Type-specific commands use `--org-nodes` (plural, comma-separated) and require `--data-interval`. The `get-data` command uses `--org-node` (singular) and auto-detects the interval.
 
-For Table widgets, use both paths when validating full functionality: `widgets table` verifies the dashboard render contract, while `widgets get-data` verifies the generic CSV/AI extraction output.
+For Table widgets, use both paths when validating full functionality: `widgets table` verifies the dashboard render contract, while `widgets get-data` verifies the legacy CSV compatibility output.
 
 ---
 

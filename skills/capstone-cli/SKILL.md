@@ -42,7 +42,7 @@ Capstone is a **data management platform** for organizations that need to consol
 | External connection, integration | Data Source | `masterdata data-sources` | MQTT, SQL, REST integrations |
 | Warehouse export, outbound feed | Data Export | `masterdata data-exports` | Outbound data to external systems |
 | Edit request, correction request | Change Request | `data change-requests` | Audit-tracked data modifications |
-| Locked text correction request | Narrative Change Request | `data narrative-change-requests` | Governed edits for locked narrative values |
+| Locked text correction request | Change Request | `data change-requests` | Governed edits for locked input or narrative values |
 | Period freeze, lock, close period | Data Lock | `data data-lock` | Prevents changes to locked periods |
 | Account, person, login | User | `security users` | System user with permissions |
 | Permission set, access level | Role | `security roles` | Feature access control |
@@ -117,6 +117,17 @@ cap data time-periods list --data-interval quarter --json # Quarterly periods
 cap data time-periods list --data-interval year --json    # Annual periods
 ```
 
+**Canonical option names:**
+
+| Concept | Use |
+|---------|-----|
+| Reporting period interval | `--data-interval <day|week|month|quarter|year>` |
+| One org node | `--org-node <id>` |
+| One or more org nodes | `--org-nodes <id>[,<id>]` |
+| Discipline tree filters | `--discipline-nodes <id>[,<id>]` |
+| Framework tree filters | `--framework-nodes <id>[,<id>]` |
+| Capture/report template | `--template <id>` |
+
 ### Get Actual Data
 
 ```bash
@@ -182,130 +193,23 @@ Always clarify before executing when user request is missing:
 
 ## CLI Domains Overview
 
-### status & config — Context & Configuration
+Use this section for routing. For full implemented command inventory and
+status, run `cap schema --json` or read [reference/commands.md](./reference/commands.md).
 
-**Purpose:** View current context and manage CLI settings.
+| Domain | Use For | High-Value Commands |
+|--------|---------|---------------------|
+| `status`, `config`, `auth` | Context, login, tenants, API keys | `status`, `auth whoami`, `auth tenants`, `auth switch-tenant`, `auth apikey *` |
+| `model` | Metric, input, calculation, narrative definitions | `metrics list/get`, `inputs *`, `calculations *`, `narratives *`, `*-overrides *`, `formula-validation validate` |
+| `masterdata` | Org nodes, disciplines, frameworks, units, data sources | `org-nodes *`, `disciplines *`, `frameworks *`, `units *`, `data-sources *` |
+| `templates` | Capture/report/widget/dashboard configuration | `capture-templates *`, `report-templates *`, `widget-templates *`, `dashboard-templates *`, `lookups get` |
+| `data` | Captured values, narratives, change requests, locks | `time-periods list`, `input-values *`, `narrative-values *`, `change-requests *`, `data-lock lock|unlock` |
+| `reporting` | Computed values and dashboard/widget output | `computed-values list/query/audit`, `widgets info-card/pie-chart/xy-chart/table`, `dashboards get-data/get-insights` |
+| `security`, `system` | User Excel import/export and tenant administration | `security users download-excel/upload-excel`, `system tenants *`, `system tenants fiscal-config update` |
 
-| Command | Description |
-|---------|-------------|
-| `cap status` | Show current auth, tenant, and config context |
-| `cap config get [key]` | View one or all configuration settings |
-| `cap config set <key> <value>` | Set configuration value |
-| `cap config unset <key>` | Reset setting to default |
-
-### auth — Authentication & Tenant Management
-
-**Purpose:** Login, logout, and tenant switching.
-
-| Command | Description |
-|---------|-------------|
-| `cap auth login` | OAuth login or API key authentication |
-| `cap auth logout` | Clear stored credentials |
-| `cap auth whoami` | Show current user and tenant |
-| `cap auth tenants` | List accessible tenants |
-| `cap auth switch-tenant <id>` | Change active tenant |
-
-### model — Metric Definitions
-
-**Purpose:** Define what you want to measure (inputs, calculations, formulas).
-
-| Command | Description |
-|---------|-------------|
-| `cap model metrics list` | List all metrics (inputs + calculations) |
-| `cap model inputs list/get/get-bulk/create/save/delete/download-excel/upload-excel` | Manage input metrics |
-| `cap model calculations list/get/get-bulk/create/save/delete/download-excel/upload-excel` | Manage calculations |
-| `cap model narratives list/get/create/save/delete/delete-preview/delete-start/delete-status` | Manage text narrative definitions |
-| `cap model narrative-attribute-types list/get/create/save/delete/download-excel/upload-excel` | Custom narrative attributes |
-| `cap model narrative-overrides list/get/create/save/copy/download-excel/upload-excel` | Per-location narrative customization |
-| `cap model metric-attribute-types list/get/create/save/delete/download-excel/upload-excel` | Custom metric attributes |
-| `cap model metric-framework-nodes list/save/copy/download-excel/upload-excel` | Metric-to-framework associations |
-| `cap model input-overrides *` | Per-location input customization |
-| `cap model calculation-overrides *` | Per-location formula overrides |
-| `cap model formula-validation validate` | Validate formula syntax |
-
-### masterdata — Reference Data
-
-**Purpose:** Core reference data: locations, categories, frameworks, units.
-
-| Command | Description |
-|---------|-------------|
-| `cap masterdata org-nodes list/get/create/save/import-json/delete/download-excel/upload-excel` | Organizational hierarchy |
-| `cap masterdata disciplines list/get/create/save/import-json/delete/download-excel/upload-excel` | Metric categories |
-| `cap masterdata frameworks list/get/create/save/import-json/delete/download-excel/upload-excel` | Reporting standards |
-| `cap masterdata units list/get/create/save/import-json/delete/download-excel/upload-excel` | Units of measure |
-| `cap masterdata data-sources list/get/create/save/delete/download-excel/upload-excel` | External integrations |
-| `cap masterdata discipline-attribute-types list/get/create/save/delete/download-excel/upload-excel` | Custom discipline attributes |
-| `cap masterdata framework-attribute-types list/get/create/save/delete/download-excel/upload-excel` | Custom framework attributes |
-| `cap masterdata org-node-attribute-types list/get/create/save/delete/download-excel/upload-excel` | Custom org node attributes |
-| `cap masterdata data-exports list/get/create/save/delete` | Outbound data feeds (Planned) |
-
-### templates — Configuration Templates
-
-**Purpose:** Configure how data is captured, displayed, and reported.
-
-| Command | Description |
-|---------|-------------|
-| `cap templates capture-templates *` | Data entry form configuration |
-| `cap templates report-templates *` | Report spreadsheet templates |
-| `cap templates widget-templates list/get/get-bulk/create/save/import-json/delete/download-excel/upload-excel` | Widget visualization config |
-| `cap templates dashboard-templates list/get/create/save/import-json/audit/delete/download-excel/upload-excel` | Dashboard layout config |
-| `cap templates org-node-templates *` | Alternate org projections |
-| `cap meta lookups list/get` | Cross-domain enum and reference lookup discovery |
-| `cap templates lookups get <name>` | Template enum values |
-
-### data — Values & Workflows
-
-**Purpose:** Capture data, manage approvals, control periods.
-
-| Command | Description |
-|---------|-------------|
-| `cap data time-periods list <type>` | Discover available periods |
-| `cap data input-values list/get/create/save/validate` | Data entry operations |
-| `cap data input-values download-excel/upload-excel` | Bulk data import/export |
-| `cap data change-requests list/get/create/save/delete/validate` | Edit request workflow |
-| `cap data narrative-values list/get/save/submit/validate/approved-read/history` | Narrative text capture, validation, approved reads, and audit history |
-| `cap data narrative-change-requests list/get/lookup/create/save/delete/validate` | Governed narrative edits while data is locked |
-| `cap data data-lock lock|unlock` | Lock/unlock data periods |
-
-### reporting — Analysis & Output
-
-**Purpose:** Retrieve computed values and dashboard data for analysis.
-
-| Command | Description |
-|---------|-------------|
-| `cap reporting computed-values list` | Period-scoped computed values (requires `--template`, `--data-interval`) |
-| `cap reporting computed-values audit` | Post-build audit for expected metrics, stale model state, and no-data/no-value findings |
-| `cap reporting computed-values download-excel` | Export computed values to Excel |
-| `cap reporting dashboards get-data <id>` | All widget data for a dashboard |
-| `cap reporting dashboards get-insights <id>` | AI-generated insights for a dashboard |
-| `cap reporting widgets info-card <id>` | Info card widget data (requires `--org-nodes`, `--data-interval`) |
-| `cap reporting widgets pie-chart <id>` | Pie chart widget data |
-| `cap reporting widgets xy-chart <id>` | Line/bar/area chart data (JSON-only) |
-| `cap reporting widgets table <id>` | Table widget render data |
-
-**Note:** Most reporting commands require `--data-interval` and `--periods`. Exception: `widgets get-data` auto-detects the data interval from the widget template and uses `--org-node` (singular). Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`) require `--org-nodes` (plural). Use `cap data time-periods list --data-interval <interval>` to discover available period names. After model or seed changes, prefer `cap reporting computed-values audit --metrics <ids> --strict --json` for automation-safe verification; it reports stale model state, missing metrics, and no-data findings.
-
-### security — Users & Access (Planned)
-
-**Purpose:** User management and access control.
-
-| Command | Description | Status |
-|---------|-------------|--------|
-| `cap security users list/get/create/save/delete` | User management | ⏳ Planned |
-| `cap security roles list` | Role definitions | ⏳ Planned |
-| `cap security version get` | API version info | ⏳ Planned |
-
-### system — Administration
-
-**Purpose:** System-level configuration: languages, translations, tenants.
-
-| Command | Description | Status |
-|---------|-------------|--------|
-| `cap system languages list/get/create/save/delete` | Language config | ⏳ Planned |
-| `cap system translations *` | Translation management | ⏳ Planned |
-| `cap system tenants list/get/create/save/delete/bootstrap-local` | Tenant CRUD and local automation bootstrap | Available |
-| `cap system tenants snapshot --output snapshot --json` | Export import-ready current-tenant model-build JSON plus manifest | Available |
-| `cap system model-state get` | Model state info | ⏳ Planned |
+Most reporting commands require `--data-interval` and `--periods`. Type-specific
+widget commands use `--org-nodes` (plural). `widgets get-data` is the legacy CSV
+compatibility path with singular `--org-node`; prefer `computed-values` or typed
+widget commands for automation-safe checks.
 
 ---
 
@@ -459,51 +363,11 @@ Validation errors return details about what failed:
 
 ---
 
-## Feature-to-CLI Mapping
-
-| Feature (docs/features/) | CLI Domain | Key Commands |
-|--------------------------|------------|--------------|
-| metrics/ | `model` | `metrics list/get`, `inputs *`, `calculations *` |
-| org-nodes/ | `masterdata` | `org-nodes list/get/create/save/delete` |
-| disciplines/ | `masterdata` | `disciplines list/get/create/save/delete` |
-| frameworks/ | `masterdata` | `frameworks list/get/create/save/delete` |
-| units-of-measure/ | `masterdata` | `units list/get/create/save/delete` |
-| data-sources/ | `masterdata` | `data-sources list/get/create/save/delete` |
-| data-exports/ | `masterdata` | `data-exports list/get/create/save/delete` |
-| time-periods/ | `data` | `time-periods list` |
-| data-management/ | `data` | `input-values *`, `change-requests *`, `data-lock` |
-| reporting/ | `reporting` | `computed-values list`, `widgets get-data` |
-| dashboards/ | `reporting` | `widgets info-card/pie-chart/xy-chart/table` |
-| widget-templates/ | `templates` | `widget-templates list/get/create/save/delete` |
-| dashboard-templates/ | `templates` | `dashboard-templates list/get/create/save/delete` |
-| spreadsheet-templates/ | `templates` | `capture-templates *`, `report-templates *` |
-| org-node-templates/ | `templates` | `org-node-templates list/get/create/save/delete` |
-| users/ | `security` | `users list/get/create/save/delete`, `roles list` |
-| tenants/ | `auth` + `system` | `auth tenants`, `system tenants *` |
-| localisation/ | `system` | `languages *`, `translations *` |
-
----
-
-## CLI Implementation Status
-
-| Domain | Status | Features |
-|--------|--------|----------|
-| auth, model, masterdata, templates, data | ✅ Complete | Full CRUD + Excel for all core entities |
-| Excel commands | ✅ Complete | download-excel, upload-excel for all entities |
-| Overrides | ✅ Complete | input-overrides, calculation-overrides, formula-validation |
-| Attribute types | ✅ Complete | metric, discipline, framework, org-node attribute types + metric-framework-nodes |
-| Reporting | ✅ Complete | computed-values, widgets, dashboards |
-| Security | Planned | users, roles, version |
-| System | Planned | languages, translations, tenants CRUD |
-
-**Impact:** Full CRUD + Excel support for all model, masterdata, and template entities. Analysis recipes work with reporting complete.
-
----
-
 ## See Also
 
 - [Recipes](./recipes/README.md) - Step-by-step workflows
 - [Commands Reference](./reference/commands.md) - Quick command lookup
 - [Template Selection Guide](./reference/template-selection.md) - Decide capture vs report vs widget vs dashboard workflows
+- [Widget Time Aggregation](./reference/widget-time-aggregation.md) - Choose widget-level and data-item time aggregation methods
 - [Glossary](./reference/glossary.md) - Detailed term mapping
 - [Output Formats](./reference/output-formats.md) - Table vs JSON output examples

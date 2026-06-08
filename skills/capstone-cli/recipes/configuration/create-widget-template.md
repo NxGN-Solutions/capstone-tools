@@ -101,6 +101,7 @@ cap model metrics list --json
 - `dataRangeMode` - { id: 1, name: "Static" } or { id: 0, name: "Dynamic" }
 - `dataInterval` - { id: 2, name: "Month" }, { id: 3, name: "Quarter" }, etc.
 - `metricSelectionMode` - { id: 0, name: "Static" } (explicit metrics) or { id: 1, name: "Dynamic" }
+- `timePeriodAggregationMethod` - Required for Dynamic widgets that collapse multiple selected periods into one value. Use Sum for additive metrics, Average for rates/percentages, Last Value for snapshots, and None only for deliberate time-series output.
 - `dataItems` - Array of metric configurations
 
 **Required fields for Table widgets:**
@@ -202,10 +203,14 @@ The legend entry would redundantly show "Cola Price Premium %" under a chart alr
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
+  "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
   "dataItems": [
     {
       "metric": { "id": "<metric-id>", "name": "Electricity Consumption" },
-      "aggregationMethod": { "id": 1, "name": "Sum" }
+      "metricPartitioningMode": { "id": 0, "name": "None" },
+      "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+      "partitioningRankMode": { "id": 0, "name": "None" },
+      "partitioningRankLimit": null
     }
   ]
 }
@@ -253,7 +258,7 @@ This pattern shows two data items (current vs previous period) with a trend indi
 - `dataRangeMode: Static` — required for period offsets to work
 - `dataPeriodStart` / `dataPeriodEnd` — `0` = last period with data, `-1` = previous period
 - `displayName` — use `@[period]` tokens so labels show the actual period name
-- `timePeriodAggregationMethod: None` — each data item shows a single period's value
+- `timePeriodAggregationMethod: None` is intentional here because each data item resolves exactly one static period by offset. Do not copy `None` to Dynamic cards that summarize a user-selected range; choose Sum, Average, or Last Value by metric role.
 
 **Naming convention:** `{Metric} | Comparison | {Interval} | Card`
 
@@ -264,18 +269,48 @@ This pattern shows two data items (current vs previous period) with a trend indi
   "title": "Waste Distribution",
   "widgetType": { "id": 1, "name": "PieChart" },
   "discipline": { "id": "<discipline-id>" },
-  "dataRangeMode": { "id": 1, "name": "Static" },
+  "dataRangeMode": { "id": 0, "name": "Dynamic" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
+  "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
   "showLegend": true,
-  "pieChartWidgetTemplateType": { "id": 0, "name": "Standard" },
+  "pieChartWidgetTemplateType": { "id": 0, "name": "Pie Chart" },
   "dataItems": [
-    { "metric": { "id": "<metric-id>", "name": "Recycled Waste" } },
-    { "metric": { "id": "<metric-id>", "name": "Landfill Waste" } },
-    { "metric": { "id": "<metric-id>", "name": "Composted Waste" } }
+    {
+      "metric": { "id": "<metric-id>", "name": "Recycled Waste" },
+      "metricPartitioningMode": { "id": 0, "name": "None" },
+      "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+      "partitioningRankMode": { "id": 0, "name": "None" },
+      "partitioningRankLimit": null,
+      "showInLegend": true,
+      "showTooltip": true,
+      "sortOrder": 1
+    },
+    {
+      "metric": { "id": "<metric-id>", "name": "Landfill Waste" },
+      "metricPartitioningMode": { "id": 0, "name": "None" },
+      "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+      "partitioningRankMode": { "id": 0, "name": "None" },
+      "partitioningRankLimit": null,
+      "showInLegend": true,
+      "showTooltip": true,
+      "sortOrder": 2
+    },
+    {
+      "metric": { "id": "<metric-id>", "name": "Composted Waste" },
+      "metricPartitioningMode": { "id": 0, "name": "None" },
+      "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+      "partitioningRankMode": { "id": 0, "name": "None" },
+      "partitioningRankLimit": null,
+      "showInLegend": true,
+      "showTooltip": true,
+      "sortOrder": 3
+    }
   ]
 }
 ```
+
+Pie and donut charts collapse the selected range into one slice value per data item, so a Dynamic pie must set a non-None time aggregation method. Keep `showInLegend` true on each data item when `showLegend` is true.
 
 #### XYChart Example:
 
@@ -307,12 +342,15 @@ This pattern shows two data items (current vs previous period) with a trend indi
       "showInLegend": true,
       "showTooltip": true,
       "isStacked": false,
+      "timePeriodAggregationMethod": { "id": 0, "name": "None" },
       "sortOrder": 1
     }
   ],
   "timePeriodAggregationMethod": { "id": 0, "name": "None" }
 }
 ```
+
+`None` is correct for this XY example because it is a time series and should render one point per selected month. For an aggregated XY summary, set both the widget and each data item to Sum, Average, Last Value, Min, or Max.
 
 #### Table Example:
 
@@ -327,7 +365,7 @@ Table widgets are the dashboard grid/table widget type. They use normal Input an
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 3, "name": "Quarter" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
-  "timePeriodAggregationMethod": { "id": 0, "name": "None" },
+  "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
   "tableVersion": 1,
   "missingValuePlaceholder": "-",
   "projectedRowBudget": 25,
@@ -338,8 +376,9 @@ Table widgets are the dashboard grid/table widget type. They use normal Input an
       "metric": { "id": "<metric-id>", "name": "Ambient Noise Day Time" },
       "sortOrder": 0,
       "metricPartitioningMode": { "id": 1, "name": "Children" },
-      "timePeriodAggregationMethod": { "id": 0, "name": "None" },
-      "partitioningRankMode": { "id": 0, "name": "None" }
+      "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+      "partitioningRankMode": { "id": 0, "name": "None" },
+      "partitioningRankLimit": null
     }
   ],
   "rowFields": [
@@ -366,7 +405,7 @@ Table widgets are the dashboard grid/table widget type. They use normal Input an
       "bindingMode": { "id": 0, "name": "RowMetricValue" },
       "headerTranslations": [{ "value": "Current Value", "language": { "code": "en" } }],
       "periodOffset": 0,
-      "aggregationMethod": { "id": 0, "name": "None" },
+      "aggregationMethod": { "id": 1, "name": "Sum" },
       "formatter": { "id": 0, "name": "Number" },
       "precision": 2,
       "unitMode": { "id": 3, "name": "Cell" },
@@ -412,7 +451,17 @@ echo '{
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
-  "dataItems": []
+  "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+  "dataItems": [
+    {
+      "metric": { "id": "<metric-id>", "name": "Total Energy Consumption" },
+      "metricPartitioningMode": { "id": 0, "name": "None" },
+      "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+      "partitioningRankMode": { "id": 0, "name": "None" },
+      "partitioningRankLimit": null,
+      "sortOrder": 1
+    }
+  ]
 }' | cap templates widget-templates create --json
 ```
 
@@ -458,7 +507,7 @@ cap reporting widgets table <new-id> \
   --json
 ```
 
-Use the type-specific Table command when you need to validate `columns`, `columnGroups`, `rows`, budgets, truncation, and warnings. Use `widgets get-data` when you need the generic CSV/AI extraction payload.
+Use the type-specific Table command when you need to validate `timePeriodColumns`, `metricColumns`, `gridRows`, `metadataColumns`, `totalCount`, and paging. Use `widgets get-data` when you need the legacy CSV compatibility payload.
 
 **Present confirmation:**
 ```
@@ -517,10 +566,15 @@ echo '{
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
+  "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
   "dataItems": [
     {
       "metric": { "id": "<id>", "name": "Electricity Consumption" },
-      "aggregationMethod": { "id": 1, "name": "Sum" }
+      "metricPartitioningMode": { "id": 0, "name": "None" },
+      "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+      "partitioningRankMode": { "id": 0, "name": "None" },
+      "partitioningRankLimit": null,
+      "sortOrder": 1
     }
   ]
 }' | cap templates widget-templates create --json
@@ -592,9 +646,10 @@ This is useful for:
 
 Get valid enum values:
 ```bash
-cap templates lookups widget-types --json
-cap templates lookups data-range-modes --json
-cap templates lookups metric-selection-modes --json
+cap templates lookups get widget-types --json
+cap templates lookups get data-range-modes --json
+cap templates lookups get metric-selection-modes --json
+cap templates lookups get timePeriodAggregationMethod --json
 ```
 
 ---
@@ -610,6 +665,8 @@ cap templates lookups metric-selection-modes --json
 | 3 | Last Value | Current state, point-in-time snapshots |
 | 4 | Min | Minimum values |
 | 5 | Max | Peak values |
+
+See [Widget Time Period Aggregation](../../reference/widget-time-aggregation.md) for widget-level and per-data-item guidance.
 
 ### Data Range Modes
 | ID | Name | Description |

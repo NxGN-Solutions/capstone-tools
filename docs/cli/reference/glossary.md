@@ -425,10 +425,10 @@ cap auth switch-tenant <id>          # Change active tenant
 
 **Definition:** A system user with authentication credentials and assigned roles/permissions.
 
-**CLI:** (Planned)
+**CLI:**
 ```bash
-cap security users list --json
-cap security users get <id> --json
+cap security users download-excel -o users.xlsx
+cap security users upload-excel users.xlsx --json
 ```
 
 

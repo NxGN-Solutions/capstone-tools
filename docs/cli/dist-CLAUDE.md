@@ -334,6 +334,7 @@ For standard workflows, **read the recipe first** from `docs/recipes/`. Recipes 
 | `docs/reference/commands.md` | Quick command lookup |
 | `docs/reference/glossary.md` | Term definitions with examples |
 | `docs/reference/model-building.md` | Enum lookup tables, payload templates |
+| `docs/reference/widget-time-aggregation.md` | Widget time aggregation rules for Dynamic cards, pies, tables, and XY charts |
 | `docs/reference/output-formats.md` | Table vs JSON output format details |
 | `docs/reference/template-selection.md` | Choose the right template workflow |
 

@@ -175,7 +175,7 @@ Everything else looks normal. Would you like details on any flagged item?
 
 Limit to specific discipline:
 ```bash
---discipline environmental
+--discipline-nodes <discipline-node-id>
 ```
 
 ### Sensitivity Adjustment

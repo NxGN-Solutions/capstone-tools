@@ -255,7 +255,7 @@ inside CLI envelopes:
 | `cap data narrative-values list --json` | `{ "tenant": "...", "data": GetNarrativeValueTreeGridListResponse }` |
 | `cap data narrative-values get <id> --json` | `{ "tenant": "...", "narrativeValue": NarrativeValueDTO }` |
 | `cap data narrative-values history <id> --json` | `{ "tenant": "...", "narrativeValueId": "...", "changes": [NarrativeValueChangeDTO] }` |
-| `cap data narrative-change-requests list --json` | `{ "tenant": "...", "data": [NarrativeChangeRequestGridRow], "pagination": {...} }` |
+| `cap data change-requests list --json` | `{ "tenant": "...", "data": [ChangeRequestGridRow], "pagination": {...} }` |
 | `cap data data-lock lock|unlock --json` | `{ "tenant": "...", "success": true, "id": "...", "action": "lock|unlock", ... }` |
 
 Use `--json` for every step in an automated narrative workflow. Table output is
@@ -332,7 +332,7 @@ Widget commands have two output families:
 
 | Command | Output Shape | Use Case |
 |---------|--------------|----------|
-| `cap reporting widgets get-data` | CSV string, wrapped as `{ "csv": "..." }` in JSON mode | AI/automation extraction across widget types |
+| `cap reporting widgets get-data` | Legacy CSV compatibility object with `format`, `periods`, `sourceMetadata`, and `csvCompatibility.rawCsv` | Backward-compatible widget extraction when typed render commands are not available |
 | `cap reporting widgets info-card` | Typed info-card DTO | Dashboard card render validation |
 | `cap reporting widgets pie-chart` | Typed pie-chart DTO | Slice/percentage validation |
 | `cap reporting widgets xy-chart` | Typed XY-chart DTO, JSON-first | Series/category/value validation |
@@ -340,57 +340,52 @@ Widget commands have two output families:
 
 ### Table Widget JSON Mode
 
-`cap reporting widgets table <id> --json` returns the shared dashboard render contract:
+`cap reporting widgets table <id> --json` returns the shared table/grid render contract:
 
 ```json
 {
-  "id": "<id>",
   "title": "Ambient Noise by Site",
-  "columns": [
-    { "stableKey": "org-node", "header": "Org Node", "widthMode": { "id": 2, "name": "Fill" } },
-    { "stableKey": "current-value", "header": "Current Value", "formatter": { "id": 0, "name": "Number" }, "unit": "dB(A)", "precision": 2 }
+  "timePeriodColumns": [
+    { "name": "Q1 FY 26", "timePeriodType": 3, "startDate": "2026-01-01T00:00:00", "endDate": "2026-03-31T00:00:00" }
   ],
-  "columnGroups": [],
-  "rows": [
+  "metricColumns": [],
+  "metadataColumns": [
+    { "field": "unitOfMeasure", "headerName": "Unit" }
+  ],
+  "gridRows": [
     {
-      "rowKey": "row-1",
-      "headers": { "org-node": "Site A" },
-      "cells": [
-        {
-          "columnKey": "current-value",
-          "rawValue": 61,
-          "displayValue": "61.00 dB(A)",
-          "hasValue": true,
-          "isComputed": false
-        }
-      ]
+      "id": "<metric-id>",
+      "name": "Ambient Noise",
+      "path": "Environment -> Ambient Noise",
+      "isDataRow": true,
+      "unitOfMeasure": { "id": "<unit-id>", "name": "dB(A)" },
+      "precision": 2,
+      "timePeriodColumns": [
+        { "metricValue": 61, "precision": 2 }
+      ],
+      "metadataValues": { "unitOfMeasure": "dB(A)" }
     }
   ],
-  "totalResolvedRowCount": 1,
-  "renderedRowCount": 1,
-  "renderedColumnCount": 2,
-  "totalResolvedColumnCount": 2,
-  "projectedCellCount": 2,
-  "configuredCellBudget": 2000,
-  "truncated": false,
-  "warnings": []
+  "totalCount": 1,
+  "orgNodeId": "<org-node-id>",
+  "missingValuePlaceholder": "-"
 }
 ```
 
 ### Table Widget Table Mode
 
-Without `--json`, the CLI prints a readable table using the returned `columns` and `rows`, followed by row/column/cell counts. Warnings and truncation notices are written as warnings.
+Without `--json`, the CLI prints a readable table using `gridRows`,
+`metadataColumns`, `timePeriodColumns`, and `metricColumns`, followed by row
+counts.
 
 ```text
-Tenant: Example Tenant
-
 Ambient Noise by Site
 
-Org Node | Current Value
----------|--------------
-Site A   | 61.00 dB(A)
+Name          | Unit  | Q1 FY 26
+--------------+-------+---------
+Ambient Noise | dB(A) | 61
 
-Rows: 1/1, Columns: 2, Cells: 2
+1 row(s) shown
 ```
 
 `widgets table` requires `--data-interval` and plural `--org-nodes`. `widgets get-data` uses singular `--org-node` and auto-detects the data interval from the widget template.

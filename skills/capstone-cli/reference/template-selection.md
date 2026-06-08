@@ -126,7 +126,7 @@ cap reporting widgets table <widget-template-id> \
   --json
 ```
 
-Use `widgets table` when validating the dashboard render shape (`columns`, `columnGroups`, `rows`, budgets, truncation, and warnings). Use `widgets get-data` when an agent needs the generic CSV extraction payload and does not need dashboard table-render metadata.
+Use `widgets table` when validating the dashboard table contract (`timePeriodColumns`, `metricColumns`, `gridRows`, `metadataColumns`, and `totalCount`). Use `widgets get-data` when an agent needs the legacy CSV compatibility payload and does not need dashboard table-render metadata.
 
 ### 4. Dashboard Composition Flow (Dashboard Templates)
 

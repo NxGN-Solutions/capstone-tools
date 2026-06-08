@@ -157,7 +157,9 @@ cat <<'EOF' | cap templates dashboard-templates create --json
       "isWidget": true,
       "sortOrder": 1,
       "parent": { "id": "<id>" },
-      "widgetTemplate": { "id": "<widget-1-id>" }
+      "widgetTemplate": { "id": "<widget-1-id>" },
+      "widgetType": { "id": 0, "name": "InfoCard" },
+      "widgetSize": { "id": 2, "name": "50%" }
     },
     {
       "id": "<id>",
@@ -165,7 +167,9 @@ cat <<'EOF' | cap templates dashboard-templates create --json
       "isWidget": true,
       "sortOrder": 2,
       "parent": { "id": "<id>" },
-      "widgetTemplate": { "id": "<widget-2-id>" }
+      "widgetTemplate": { "id": "<widget-2-id>" },
+      "widgetType": { "id": 0, "name": "InfoCard" },
+      "widgetSize": { "id": 2, "name": "50%" }
     },
     {
       "id": "<id>",
@@ -173,7 +177,9 @@ cat <<'EOF' | cap templates dashboard-templates create --json
       "isWidget": true,
       "sortOrder": 3,
       "parent": { "id": "<id>" },
-      "widgetTemplate": { "id": "<widget-3-id>" }
+      "widgetTemplate": { "id": "<widget-3-id>" },
+      "widgetType": { "id": 0, "name": "InfoCard" },
+      "widgetSize": { "id": 2, "name": "50%" }
     },
     {
       "id": "<id>",
@@ -188,7 +194,9 @@ cat <<'EOF' | cap templates dashboard-templates create --json
       "isWidget": true,
       "sortOrder": 1,
       "parent": { "id": "<id>" },
-      "widgetTemplate": { "id": "<widget-4-id>" }
+      "widgetTemplate": { "id": "<widget-4-id>" },
+      "widgetType": { "id": 2, "name": "XYChart" },
+      "widgetSize": { "id": 5, "name": "100%" }
     },
     {
       "id": "<id>",
@@ -203,7 +211,9 @@ cat <<'EOF' | cap templates dashboard-templates create --json
       "isWidget": true,
       "sortOrder": 1,
       "parent": { "id": "<id>" },
-      "widgetTemplate": { "id": "<widget-5-id>" }
+      "widgetTemplate": { "id": "<widget-5-id>" },
+      "widgetType": { "id": 1, "name": "PieChart" },
+      "widgetSize": { "id": 1, "name": "33%" }
     },
     {
       "id": "<id>",
@@ -211,7 +221,9 @@ cat <<'EOF' | cap templates dashboard-templates create --json
       "isWidget": true,
       "sortOrder": 2,
       "parent": { "id": "<id>" },
-      "widgetTemplate": { "id": "<widget-6-id>" }
+      "widgetTemplate": { "id": "<widget-6-id>" },
+      "widgetType": { "id": 1, "name": "PieChart" },
+      "widgetSize": { "id": 1, "name": "33%" }
     }
   ]
 }
@@ -223,6 +235,20 @@ EOF
 - Widgets (`isWidget: true`) reference a section via `parent: { "id": "<section-id>" }`
 - `sortOrder` controls display order within each section
 - Use sequential zero IDs for `id` on create — the API assigns real IDs
+
+**Narrative widget shape:**
+```json
+{
+  "id": "<id>",
+  "name": "Executive Summary",
+  "isWidget": true,
+  "sortOrder": 1,
+  "parent": { "id": "<section-id>" },
+  "narrative": { "id": "<narrative-definition-id>", "name": "Executive Summary" },
+  "widgetType": { "id": 5, "name": "Narrative" },
+  "widgetSize": { "id": 5, "name": "100%" }
+}
+```
 - The CLI `save` command accepts both bare JSON and the `get --json` wrapper format (`{"tenant": "...", "dashboardTemplate": {...}}`) — it auto-unwraps the `dashboardTemplate` property
 
 **What to look for:**
@@ -588,6 +614,7 @@ The `DashboardTemplateTreeItemDTO` defines the SAVE format:
 DashboardTemplateTreeItemDTO extends TreeNodeDTO:
   IsWidget: bool
   WidgetTemplate: NamedDTO?       ← { "id": "id", "name": "template name" }
+  Narrative: NamedDTO?            ← { "id": "id", "name": "narrative name" }
   WidgetType: EnumDTO?            ← { "id": 2, "name": "XYChart" }
   WidgetSize: EnumDTO?            ← { "id": 2, "name": "50%" }
   SortOrder: int
@@ -604,18 +631,20 @@ TreePathDTO extends NamedDTO:
 
 #### Widget Type Rules (CRITICAL)
 
-`widgetType` is **REQUIRED on ALL widgets**. The `DashboardTemplateDTOMapper` always populates it. Without it, the API defaults to InfoCard (id=0), causing the frontend to request InfoCard data for XY Chart/Pie Chart templates — resulting in "Widget template not found" errors.
+`widgetType` is **REQUIRED on ALL widgets**. The validator rejects widget placements that omit it because the frontend and reporting endpoints route by widget type.
 
-There are two kinds of widgets:
+There are three kinds of widgets:
 
 | Widget Kind | Has `widgetTemplate`? | Has `widgetType`? | Extra fields |
 |-------------|----------------------|-------------------|-------------|
 | **Regular widget** (InfoCard, PieChart, XYChart, Table) | Yes — `{ "id": "<id>" }` | Yes — REQUIRED | `widgetSize` |
 | **AI Summary** | No — omit entirely | Yes — `{ "id": 3, "name": "AISummary" }` | `aiSummaryContext`, `widgetSize` |
+| **Narrative** | No — use `narrative` instead | Yes — `{ "id": 5, "name": "Narrative" }` | `narrative`, `widgetSize` |
 
 > **Common errors:**
-> - **Missing `widgetType` on regular widgets:** Save succeeds but frontend breaks — all widgets render as InfoCards, causing "Widget template not found" on the GetInfoCardData endpoint.
-> - **Missing `widgetTemplate` on regular widgets:** API returns HTTP 500: `"WidgetTemplate can't be null if WidgetType != AISummary"`.
+> - **Missing `widgetType` on regular widgets:** validation fails; all widget placements must declare their type.
+> - **Missing `widgetTemplate` on regular widgets:** validation fails.
+> - **Missing `narrative` on Narrative widgets:** validation fails. Use `cap model narratives list --json` to discover narrative definition IDs.
 
 #### Enum Reference Tables
 
@@ -639,6 +668,7 @@ There are two kinds of widgets:
 | `XY Chart` | `{"id": 2, "name": "XYChart"}` |
 | `AI Summary` | `{"id": 3, "name": "AISummary"}` |
 | `Table` | `{"id": 4, "name": "Table"}` |
+| `Narrative` | `{"id": 5, "name": "Narrative"}` |
 
 **AI Summary Context** (`AISummaryContext` EnumDTO):
 

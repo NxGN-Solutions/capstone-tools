@@ -18,6 +18,19 @@ These flags work across most commands:
 
 > **Tip:** Use `cap data time-periods list --data-interval <interval>` to discover available period names before running reporting commands.
 
+## Naming Conventions
+
+Use the same option names across commands:
+
+| Concept | Option | Notes |
+|---------|--------|-------|
+| Reporting period interval | `--data-interval <day|week|month|quarter|year>` | Used for input values, computed values, dashboards, and typed widgets |
+| One org node | `--org-node <id>` | Used when the API accepts exactly one org node |
+| One or more org nodes | `--org-nodes <id>[,<id>]` | Comma-separated tree node IDs |
+| Discipline tree filters | `--discipline-nodes <id>[,<id>]` | Use this for discipline node IDs, even when filtering by one node |
+| Framework tree filters | `--framework-nodes <id>[,<id>]` | Use this for framework node IDs, even when filtering by one node |
+| Capture or report template | `--template <id>` | Command context determines capture vs report template |
+
 ---
 
 ## Performance Diagnostics
@@ -90,6 +103,71 @@ cap update check --json            # Explicit update availability check; no inst
 
 ---
 
+## Schema-Derived Command Surface
+
+`cap schema --json` is the authoritative argument-level contract. This table is
+a compact prefix map refreshed from schema output during documentation updates so
+public users and agents can see the implemented command families without source
+access. Use the action-first sections below when choosing a workflow; use this
+map when checking whether a command family exists.
+
+| Prefix | Commands |
+|--------|----------|
+| `auth` | `doctor`, `languages`, `login`, `logout`, `switch-tenant`, `tenants`, `whoami` |
+| `auth apikey` | `create`, `list`, `prune`, `revoke` |
+| `config` | `get`, `set`, `unset` |
+| `data` | `availability` |
+| `data change-requests` | `create`, `delete`, `get`, `list`, `save`, `validate` |
+| `data data-lock` | `lock`, `unlock` |
+| `data input-values` | `create`, `download-excel`, `get`, `list`, `save`, `upload-excel`, `validate` |
+| `data lookups` | `get` |
+| `data narrative-values` | `get`, `get-by-context`, `get-by-metric-context`, `history`, `list`, `save`, `submit`, `validate` |
+| `data recalculation` | `status`, `wait` |
+| `data time-periods` | `diagnose`, `list` |
+| `masterdata data-sources` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `masterdata discipline-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `masterdata disciplines` | `create`, `delete`, `download-excel`, `get`, `import-json`, `list`, `save`, `upload-excel` |
+| `masterdata framework-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `masterdata frameworks` | `create`, `delete`, `download-excel`, `get`, `import-json`, `list`, `save`, `upload-excel` |
+| `masterdata org-node-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `masterdata org-nodes` | `create`, `delete`, `download-excel`, `get`, `import-json`, `list`, `save`, `upload-excel` |
+| `masterdata units` | `create`, `delete`, `download-excel`, `get`, `import-json`, `list`, `save`, `upload-excel` |
+| `meta lookups` | `get`, `list` |
+| `model calculation-overrides` | `copy`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `model calculations` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `import-json`, `list`, `save`, `upload-excel`, `validate-batch` |
+| `model disciplines` | `list` |
+| `model formula-validation` | `validate` |
+| `model frameworks` | `list` |
+| `model input-overrides` | `copy`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `model inputs` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `import-json`, `list`, `save`, `upload-excel` |
+| `model lookups` | `get`, `list` |
+| `model metric-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `model metric-framework-nodes` | `copy`, `download-excel`, `list`, `save`, `upload-excel` |
+| `model metric-org-node-exclusions` | `copy`, `list`, `save` |
+| `model metrics` | `delete-eval`, `explain`, `get`, `graph`, `list` |
+| `model narrative-attribute-types` | `create`, `delete`, `download-excel`, `get`, `get-all`, `list`, `lookup`, `save`, `upload-excel` |
+| `model narrative-overrides` | `copy`, `create`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `model narratives` | `create`, `delete`, `delete-preview`, `delete-start`, `delete-status`, `distinct-values`, `get`, `list`, `lookup`, `save` |
+| `model org-nodes` | `list` |
+| `notifications templates` | `create`, `delete`, `get`, `list`, `save` |
+| `perf` | `memory-throughput` |
+| `reporting computed-values` | `audit`, `download-excel`, `list`, `query` |
+| `reporting dashboards` | `get-data`, `get-insights` |
+| `reporting widgets` | `get-data`, `info-card`, `pie-chart`, `table`, `xy-chart` |
+| `root` | `concepts`, `schema`, `status`, `version` |
+| `security users` | `download-excel`, `upload-excel` |
+| `system tenants` | `bootstrap-local`, `create`, `delete`, `fiscal-config update`, `get`, `list`, `sample`, `save`, `schema`, `snapshot`, `teardown` |
+| `templates capture-templates` | `create`, `delete`, `download-excel`, `get`, `list`, `sample`, `save`, `schema`, `upload-excel` |
+| `templates dashboard-templates` | `audit`, `create`, `delete`, `download-excel`, `get`, `import-json`, `list`, `rename`, `sample`, `save`, `schema`, `upload-excel` |
+| `templates lookups` | `get` |
+| `templates org-node-templates` | `create`, `delete`, `download-excel`, `get`, `list`, `sample`, `save`, `schema`, `upload-excel` |
+| `templates report-templates` | `create`, `delete`, `download-excel`, `get`, `list`, `sample`, `save`, `schema`, `upload-excel` |
+| `templates widget-templates` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `import-json`, `list`, `sample`, `save`, `schema`, `upload-excel` |
+| `update` | `check` |
+| `workflows` | `list`, `show` |
+
+---
+
 ## Discovery Commands
 
 Commands for exploring and querying data.
@@ -128,8 +206,7 @@ cap <domain> <entity> list [--json]
 | Org Node Templates | `cap templates org-node-templates list` | Alternate org views |
 | Input Values | `cap data input-values list --template <id> --data-interval week --periods "..."` | Requires template + data-interval + periods |
 | Narrative Values | `cap data narrative-values list --capture-interval quarter --periods "..."` | Text capture/validation rows |
-| Change Requests | `cap data change-requests list` | Edit requests |
-| Narrative Change Requests | `cap data narrative-change-requests list --data-interval quarter --periods "..."` | Locked narrative edit requests |
+| Change Requests | `cap data change-requests list --data-interval quarter --periods "..."` | Governed input and narrative edit requests |
 | Data Locks | `cap data data-lock lock --data-interval quarter --periods "Q1 FY 25" --org-nodes <id> --discipline-nodes <id>` | Lock/unlock scoped data periods |
 
 ### Get Single Item
@@ -137,6 +214,8 @@ cap <domain> <entity> list [--json]
 ```bash
 cap <domain> <entity> get <id> [--json]
 ```
+
+`cap masterdata org-nodes get <id> --json` returns selected attribute values by default. Add `--include-values` only when you need the full available value lists for each attribute type.
 
 **Example:**
 ```bash
@@ -165,6 +244,7 @@ cap model metrics graph --roots <metric-id> --direction both --max-depth 2 --jso
 
 ```bash
 cap templates widget-templates get-bulk <id1> <id2> ... [--json]
+cap templates widget-templates get-bulk "<id1>,<id2>" [--json]
 cap model inputs get-bulk <id1> <id2> ... --json
 cap model calculations get-bulk <id1> <id2> ... --json
 ```
@@ -262,7 +342,7 @@ The workflow order is:
 ### Discover Time Periods
 
 ```bash
-cap data time-periods list <type> [--json]
+cap data time-periods list --data-interval <type> [--json]
 cap data availability --data-interval month [--org-nodes "<id>"] [--json]
 ```
 
@@ -294,7 +374,7 @@ available for direct lookup calls.
 
 ### Reporting Commands
 
-Computed values, dashboards, and widgets. Most require `--data-interval` and `--periods` (exceptions: `widgets get-data` auto-detects the interval from the widget template; `computed-values query` and `computed-values audit` can resolve recent periods with `--period-count`).
+Computed values, dashboards, and widgets. Most require `--data-interval` and `--periods` (exceptions: `widgets get-data` auto-detects the interval from the widget template but still requires `--periods`; `computed-values query` and `computed-values audit` can resolve recent periods with `--period-count`).
 
 ```bash
 # Computed values (via report template filter lens)
@@ -330,7 +410,7 @@ cap reporting widgets pie-chart <widget-template-id> --org-nodes <id> --data-int
 cap reporting widgets xy-chart <widget-template-id> --org-nodes <id> --data-interval month --periods "Jan 25" [--json]
 cap reporting widgets table <widget-template-id> --org-nodes <id> --data-interval quarter --periods "Q1 FY 25" [--json]
 
-# Widget data (type-agnostic, returns CSV/AI extraction data, not dashboard Table render JSON)
+# Widget data (legacy CSV compatibility payload, not dashboard Table render JSON)
 cap reporting widgets get-data <widget-template-id> --org-node <id> --periods "FY 24, FY 25" [--json]
 
 # Dashboard data
@@ -341,7 +421,7 @@ cap reporting dashboards get-insights <dashboard-template-id> <layout-node-id> -
 cap templates dashboard-templates audit <dashboard-template-id> --strict --json
 ```
 
-> **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`) use `--org-nodes` (plural, comma-separated) and require `--data-interval`. These commands return typed dashboard render JSON for their widget type. The `get-data` command uses `--org-node` (singular ID), auto-detects the data interval from the widget template, and returns the type-agnostic CSV/AI extraction payload, not the Table dashboard render response. Use `cap data time-periods list` to discover available period names.
+> **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`) use `--org-nodes` (plural, comma-separated) and can infer `--data-interval`/static periods from the widget template when configured. The `get-data` command uses `--org-node` (singular ID), auto-detects the data interval from the widget template, requires `--periods`, and returns the legacy CSV compatibility envelope, not the Table dashboard render response. Prefer `reporting computed-values` or typed widget commands for automation-safe checks. Use `cap data time-periods list --data-interval <interval>` to discover available period names.
 
 **Table widget command discovery for agents:**
 
@@ -362,7 +442,7 @@ cap reporting widgets table --help
 cap reporting widgets get-data --help
 ```
 
-Use `cap reporting widgets table ... --json` when an agent needs the shared dashboard render contract with `columns`, `rows`, `rowContextCells`, `cells`, warnings, and truncation metadata. Use `cap reporting widgets get-data ... --json` when an agent needs the existing CSV extraction envelope for analysis workflows.
+Use `cap reporting widgets table ... --json` when an agent needs the shared dashboard table contract with `timePeriodColumns`, `metricColumns`, `gridRows`, `metadataColumns`, `totalCount`, and paging support. Use `cap reporting widgets get-data ... --json` when an agent needs the legacy CSV compatibility envelope for analysis workflows.
 
 ---
 
@@ -385,7 +465,7 @@ echo '{...}' | cap <domain> <entity> create [--json]
 - `masterdata units`, `masterdata data-sources`
 - `templates capture-templates`, `templates report-templates`
 - `templates widget-templates`, `templates dashboard-templates`, `templates org-node-templates`
-- `data input-values`, `data change-requests`, `data narrative-change-requests`
+- `data input-values`, `data change-requests`
 
 ### Update Existing Item
 
@@ -410,8 +490,16 @@ echo '{
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
+  "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
   "dataItems": [
-    { "metric": { "id": "<metric-id>" }, "sortOrder": 1 }
+    {
+      "metric": { "id": "<metric-id>" },
+      "metricPartitioningMode": { "id": 0, "name": "None" },
+      "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+      "partitioningRankMode": { "id": 0, "name": "None" },
+      "partitioningRankLimit": null,
+      "sortOrder": 1
+    }
   ]
 }' | cap templates widget-templates create --json
 
@@ -425,10 +513,22 @@ echo '{
   "metricSelectionMode": { "id": 0, "name": "Static" },
   "showLegend": true,
   "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
-  "dataItems": []
+  "dataItems": [
+    {
+      "metric": { "id": "<metric-id>" },
+      "metricPartitioningMode": { "id": 0, "name": "None" },
+      "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+      "partitioningRankMode": { "id": 0, "name": "None" },
+      "partitioningRankLimit": null,
+      "showInLegend": true,
+      "showTooltip": true,
+      "sortOrder": 1
+    }
+  ]
 }' | cap templates widget-templates create --json
 
-# XYChart (time series) - axes required, each data item must reference an axis
+# XYChart (time series) - axes required, each data item must reference an axis.
+# None is intentional here because the chart keeps one point per period.
 echo '{
   "name": "Monthly Trend",
   "widgetType": { "id": 2, "name": "XYChart" },
@@ -440,7 +540,17 @@ echo '{
   "invertAxes": false,
   "axes": [{ "name": "Value", "dynamicAxis": true }],
   "timePeriodAggregationMethod": { "id": 0, "name": "None" },
-  "dataItems": []
+  "dataItems": [
+    {
+      "metric": { "id": "<metric-id>" },
+      "xyChartWidgetTemplateDataItemType": { "id": 2, "name": "Line" },
+      "xyChartWidgetTemplateAxis": { "name": "Value", "dynamicAxis": true },
+      "timePeriodAggregationMethod": { "id": 0, "name": "None" },
+      "showInLegend": true,
+      "showTooltip": true,
+      "sortOrder": 1
+    }
+  ]
 }' | cap templates widget-templates create --json
 
 # Table (dimensional dashboard table)
@@ -564,7 +674,6 @@ cap model inputs delete <id>
 cap data input-values validate <id> --result <approve|reject> [--comments "..."] [--json]
 cap data change-requests validate <id> --result <approve|reject> [--comments "..."] [--json]
 cap data narrative-values validate <id> --result <approve|reject> [--comments "..."] [--json]
-cap data narrative-change-requests validate <id> --result <approve|reject> [--comments "..."] [--json]
 ```
 
 | Result | Description |
@@ -575,21 +684,22 @@ cap data narrative-change-requests validate <id> --result <approve|reject> [--co
 ### Narrative Workflow
 
 ```bash
-cap model narratives lookup --capture-interval quarter --org-nodes <id> --disciplines <id> --json
+cap model narratives lookup --capture-interval quarter --org-nodes <id> --discipline-nodes <id> --json
 cap data narrative-values save --file narrative-value.json --json
 cap data narrative-values submit <value-id> --json
 cap data narrative-values validate <value-id> --result approve --comments "Approved" --json
-cap data narrative-values approved-read --narrative <id> --org-node <id> --period-type quarter --start-date 2026-01-01 --json
+cap data narrative-values get-by-context --narrative <id> --org-node <id> --period-type quarter --start-date 2026-01-01 --json
 cap data narrative-values history <value-id> --json
 ```
 
-For locked periods, apply the data lock first, then use narrative change
-requests:
+For locked periods, apply the data lock first, then use the unified change
+request workflow. Change requests can carry narrative edits in the same
+contract surface as input edits:
 
 ```bash
 cap data data-lock lock --data-interval quarter --periods "Q1 FY 25" --org-nodes <id> --discipline-nodes <id> --description "Close narrative capture" --json
-cap data narrative-change-requests create --file change-request.json --json
-cap data narrative-change-requests validate <request-id> --result approve --comments "Approved" --json
+cap data change-requests create --file change-request.json --json
+cap data change-requests validate <request-id> --result approve --comments "Approved" --json
 cap data data-lock unlock --data-interval quarter --periods "Q1 FY 25" --org-nodes <id> --discipline-nodes <id> --description "Reopen narrative capture" --json
 ```
 
@@ -713,26 +823,34 @@ cap auth login --with-api-key
 
 ---
 
-## Command Status
+## Command Status Summary
+
+The schema-derived command surface above is the exact implemented command list.
+This table is a high-level availability summary only.
 
 | Domain | Commands | Status |
 |--------|----------|--------|
-| `root` | schema, concepts, version | ✅ Available |
+| `root` | schema, concepts, status, version | ✅ Available |
 | `workflows` | list, show | ✅ Available |
 | `update` | check | ✅ Available |
-| `auth` | All | ✅ Available |
-| `model` | metrics, inputs, calculations | ✅ Available |
-| `model` | metric-attribute-types | ✅ Available |
-| `model` | metric-framework-nodes | ✅ Available |
-| `model` | input-overrides, calculation-overrides, formula-validation | ✅ Available |
+| `config` | set, get, unset | ✅ Available |
+| `auth` | Login, logout, tenant selection, current-user context, API key management, available language list | ✅ Available |
+| `meta` | cross-domain lookups | ✅ Available |
+| `model` | metrics, inputs, calculations, narratives, model tree aliases, lookups | ✅ Available |
+| `model` | metric/narrative attribute types, framework nodes, org-node exclusions, input/calculation/narrative overrides, formula validation | ✅ Available |
 | `masterdata` | org-nodes, disciplines, frameworks, units, data-sources | ✅ Available |
 | `masterdata` | Excel commands for above entities | ✅ Available |
 | `masterdata` | discipline-attribute-types, framework-attribute-types, org-node-attribute-types | ✅ Available |
-| `templates` | All CRUD + Excel | ✅ Available |
-| `data` | time-periods, input-values, change-requests | ✅ Available |
+| `masterdata` | data-exports | ⏳ Planned |
+| `templates` | All CRUD + Excel, schema/sample helpers, dashboard audit/rename | ✅ Available |
+| `data` | availability, lookups, time-periods, recalculation, input-values, narrative-values, change-requests, data-lock | ✅ Available |
 | `reporting` | computed-values, dashboards, widgets | ✅ Available |
-| `security` | users, roles, version | ⏳ Planned |
-| `system` | languages, translations, tenants | ⏳ Planned |
+| `notifications` | notification templates | ✅ Available |
+| `perf` | memory-throughput diagnostics | ✅ Available |
+| `security` | users Excel import/export | ✅ Available |
+| `security` | user CRUD, roles, version | ⏳ Planned |
+| `system` | tenant CRUD, schema/sample, teardown, tenant fiscal config, local bootstrap, snapshot; language list via `auth languages` | ✅ Available |
+| `system` | language CRUD, translations | ⏳ Planned |
 
 ---
 
