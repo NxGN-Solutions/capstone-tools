@@ -205,8 +205,6 @@ cat <<'EOF' | cap model calculations create --json
   "orgStructureAggregationMethod": { "id": 3, "name": "None" },
   "timePeriodAggregationMethod": { "id": 0, "name": "None" },
   "formula": "IF [<id>] <> 0 THEN [<id>] / [<id>] ELSE 0",
-  "translatedNames": [],
-  "translatedDescriptions": [],
   "attributeValues": []
 }
 EOF
@@ -302,8 +300,6 @@ cat <<'EOF' | cap model calculations create --json
   "orgStructureAggregationMethod": { "id": 0, "name": "Sum" },
   "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
   "formula": "[<id>] * 2.68",
-  "translatedNames": [],
-  "translatedDescriptions": [],
   "attributeValues": []
 }
 EOF

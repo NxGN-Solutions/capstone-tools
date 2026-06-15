@@ -147,7 +147,7 @@ map when checking whether a command family exists.
 | `model metrics` | `delete-eval`, `explain`, `get`, `graph`, `list` |
 | `model narrative-attribute-types` | `create`, `delete`, `download-excel`, `get`, `get-all`, `list`, `lookup`, `save`, `upload-excel` |
 | `model narrative-overrides` | `copy`, `create`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `model narratives` | `create`, `delete`, `delete-preview`, `delete-start`, `delete-status`, `distinct-values`, `get`, `list`, `lookup`, `save` |
+| `model narratives` | `create`, `delete`, `delete-preview`, `delete-start`, `delete-status`, `distinct-values`, `download-excel`, `get`, `list`, `lookup`, `save`, `upload-excel` |
 | `model org-nodes` | `list` |
 | `notifications templates` | `create`, `delete`, `get`, `list`, `save` |
 | `perf` | `memory-throughput` |
@@ -156,7 +156,7 @@ map when checking whether a command family exists.
 | `reporting widgets` | `get-data`, `info-card`, `pie-chart`, `table`, `xy-chart` |
 | `root` | `concepts`, `schema`, `status`, `version` |
 | `security users` | `download-excel`, `upload-excel` |
-| `system tenants` | `bootstrap-local`, `create`, `delete`, `fiscal-config update`, `get`, `list`, `sample`, `save`, `schema`, `snapshot`, `teardown` |
+| `system tenants` | `bootstrap-local`, `create`, `delete`, `delete-status`, `delete-watch`, `fiscal-config update`, `get`, `list`, `sample`, `save`, `schema`, `snapshot`, `teardown` |
 | `templates capture-templates` | `create`, `delete`, `download-excel`, `get`, `list`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates dashboard-templates` | `audit`, `create`, `delete`, `download-excel`, `get`, `import-json`, `list`, `rename`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates lookups` | `get` |
@@ -180,9 +180,9 @@ cap <domain> <entity> list [--json]
 
 | Entity | Command | Notes |
 |--------|---------|-------|
-| Metrics (all) | `cap model metrics list` | Includes inputs + calculations; use `--rich` for formulas and aggregation metadata |
-| Inputs | `cap model inputs list` | Input metrics only |
-| Calculations | `cap model calculations list` | Calculated metrics only |
+| Metrics (all) | `cap model metrics list` | Includes inputs + calculations; output includes `friendlyName`; use `--rich` for formulas and aggregation metadata |
+| Inputs | `cap model inputs list` | Input metrics only; output includes `friendlyName` |
+| Calculations | `cap model calculations list` | Calculated metrics only; output includes `friendlyName` |
 | Narrative Definitions | `cap model narratives list` | Text narrative definitions |
 | Narrative Attribute Types | `cap model narrative-attribute-types list` | Custom narrative attributes |
 | Narrative Overrides | `cap model narrative-overrides list` | Org-node narrative customizations |
@@ -238,7 +238,13 @@ cap model metrics graph --roots <metric-id>[,<metric-id>] --direction dependenci
 cap model metrics graph --roots <metric-id> --direction both --max-depth 2 --json
 ```
 
-`model metrics get` and rich list output include `metricType`, `formula`, `calculationPhase`, `orgStructureAggregationMethod`, and `timePeriodAggregationMethod`. Formula graph commands resolve both ID tokens and display-name tokens such as `[Sample Metric]`.
+`model metrics get` and rich list output include `friendlyName`, `metricType`,
+`formula`, `calculationPhase`, `orgStructureAggregationMethod`, and
+`timePeriodAggregationMethod`. Input and calculation `get`/`list` text output
+shows a **Friendly Name** field when one is set; JSON payloads include
+`friendlyName` for create/save round trips.
+Formula graph commands resolve both ID tokens and display-name tokens such as
+`[Sample Metric]`.
 
 ### Get Multiple Items (Bulk)
 
@@ -380,6 +386,9 @@ Computed values, dashboards, and widgets. Most require `--data-interval` and `--
 # Computed values (via report template filter lens)
 cap reporting computed-values list --template <report-template-id> --data-interval day --periods "Jan 25" [--json]
 
+# Framework-grouped report template, optionally narrowed to a framework node
+cap reporting computed-values list --template <framework-report-template-id> --framework-nodes <framework-node-id> --data-interval year --periods "FY 2026" --json
+
 # Computed values (ad-hoc metric query, no saved report template required)
 cap reporting computed-values query --metrics <metric-id>[,<metric-id>] --data-interval month --period-count 3 --include-metric-details --json
 
@@ -395,6 +404,8 @@ cap reporting computed-values audit --metrics <metric-id>[,<metric-id>] --data-i
 | `--periods "<names>"` | Comma-separated period names | Yes for `list`; optional for `query`/`audit` when `--period-count` is supplied |
 | `--period-count <n>` | Resolve the most recent N periods for `computed-values query`/`audit` | No |
 | `--org-nodes "<id>"` | Filter to specific org node | No |
+| `--discipline-nodes "<id>"` | Narrow the report template discipline scope | No |
+| `--framework-nodes "<id>"` | Narrow the report template framework scope; framework-grouped reports render metrics under framework paths | No |
 | `--metric-types "<types>"` | `input`, `calculation` (comma-separated) | No |
 
 `computed-values audit --json` returns `ComputedValueAuditResult` with
@@ -668,6 +679,65 @@ cap <domain> <entity> delete <id> [--json]
 cap model inputs delete <id>
 ```
 
+### Delete Tenant
+
+```bash
+cap system tenants delete <tenant-id-or-exact-name> [--force] [--yes] [--timeout-seconds 300] [--json]
+cap system tenants delete-status <operation-id> [--json]
+cap system tenants delete-watch <operation-id> [--timeout-seconds 300] [--json]
+```
+
+`cap system tenants delete` accepts a tenant ID or exact tenant name. The
+command is destructive and the server requires the all-tenants administrator
+claim.
+
+| Flag | Description |
+|------|-------------|
+| `--force` | Use the async force-delete operation flow. The CLI previews row counts, starts an operation with the preview confirmation phrase, then watches status. |
+| `--yes` | Skip confirmation prompts for automation. The destructive preview is still printed before the operation starts. |
+| `--timeout-seconds` | Maximum seconds to watch the async operation before returning timeout exit code `5`. The operation continues server-side; resume with `delete-watch`. |
+| `--json` | Output JSON, including blocker details when the delete is blocked. |
+
+Default flow:
+
+```bash
+cap system tenants delete "E2E Force Delete 20260612"
+```
+
+1. Prompts for confirmation unless `--yes` is supplied.
+2. Sends `DELETE System/Tenants` with `{ "entityKeys": ["<id>"], "force": false }`.
+3. On success, exits `0` and prints `Tenant deleted.` plus any warnings.
+4. On `409 TENANT_DELETE_BLOCKED`, prints the blocker table and exits with `EXIT_BLOCKED` (`7`).
+
+Force flow:
+
+```bash
+cap system tenants delete "E2E Force Delete 20260612" --force --timeout-seconds 600
+```
+
+1. Calls `POST System/Tenants/Delete/Preview` and prints the target, blocker, and row-count preview.
+2. Prompts for the exact confirmation phrase unless `--yes` is supplied.
+3. Calls `POST System/Tenants/Delete/Operations` with the expected total row count and confirmation phrase.
+4. Polls `GET System/Tenants/Delete/Operations/{operationId}/Status` until terminal status or timeout.
+5. On success, prints the operation ID and per-table deleted row counts. On timeout, exits `5` and prints a resume command.
+
+Resume or inspect an operation:
+
+```bash
+cap system tenants delete-status <operation-id> --json
+cap system tenants delete-watch <operation-id> --timeout-seconds 600
+```
+
+Exit codes:
+
+| Scenario | Exit Code | Notes |
+|----------|-----------|-------|
+| Deleted or user declined a prompt | `0` | Decline prints `Aborted.` and sends no further destructive request. |
+| Blocked by tenant data or residual guard | `7` (`EXIT_BLOCKED`) | JSON output includes `blockers`; text output prints a blocker table. |
+| Async force delete watch timeout | `5` | Operation continues server-side. Use `delete-status` or `delete-watch <operation-id>` to resume. |
+| Validation or non-interactive prompt without `--yes` | `2` | Use `--yes` for scripts and CI. |
+| Auth, tenant, API, timeout, or transport errors | Existing shared CLI exit codes | See `cap schema --json` for the current exit-code contract. |
+
 ### Validate Data
 
 ```bash
@@ -754,7 +824,7 @@ cap <domain> <entity> download-excel -o file.xlsx
 - `templates capture-templates`, `templates report-templates`
 - `templates widget-templates`, `templates dashboard-templates`, `templates org-node-templates`
 - `data input-values` (requires `--template <id>`)
-- `reporting computed-values` (requires `--template`, `--data-interval`)
+- `reporting computed-values` (requires `--template`, `--data-interval`, `--periods`)
 
 ### Upload from Excel
 

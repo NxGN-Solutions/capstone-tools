@@ -48,7 +48,7 @@ Before starting, Claude should know:
 | `templates` | dashboard-templates | `cap templates dashboard-templates` |
 | `templates` | org-node-templates | `cap templates org-node-templates` |
 | `data` | input-values | `cap data input-values` (requires `--template`) |
-| `reporting` | computed-values | `cap reporting computed-values` (requires `--template`, `--data-interval`) |
+| `reporting` | computed-values | `cap reporting computed-values` (requires `--template`, `--data-interval`, `--periods`) |
 
 ---
 
@@ -72,10 +72,11 @@ cap masterdata org-nodes download-excel -o org-nodes.xlsx
 # Export input values (requires capture template)
 cap data input-values download-excel --template <capture-template-id> -o values.xlsx
 
-# Export computed values (requires report template + data interval)
+# Export computed values (requires report template + data interval + periods)
 cap reporting computed-values download-excel \
   --template <report-template-id> \
   --data-interval month \
+  --periods "Jan 2026" \
   -o computed-values.xlsx
 ```
 
@@ -240,6 +241,7 @@ If the user just wants data for external use (no re-import):
 cap reporting computed-values download-excel \
   --template <report-template-id> \
   --data-interval quarter \
+  --periods "Q1 FY 2026" \
   -o q1-report.xlsx
 ```
 

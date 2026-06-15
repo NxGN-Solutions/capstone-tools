@@ -52,7 +52,7 @@ Use these patterns when the goal is fast, low-noise manual capture.
 
 | Capture Goal | Recommended Template Shape | Why |
 |---|---|---|
-| Single-location weekly entry | `DataGrouping=OrgNode`, `ShowOrgNodeFilter=true`, `AllowMultiOrgNodeSelect=false`, fixed `DataInterval` | Keeps scope to one selected location and one interval |
+| Single-location weekly entry | `DataGrouping=OrgNode`, `ShowOrgNodeFilter=true`, `AllowMultiOrgNodeSelect=false`, `AllowMultiTimePeriodSelect=true`, fixed `DataInterval` | Keeps scope to one selected location while allowing normal multi-week entry |
 | Multi-location side-by-side entry | `DataGrouping=OrgNode`, `ShowOrgNodeFilter=true`, `AllowMultiOrgNodeSelect=true` | Supports consistent entry across multiple locations |
 | Focused input set (avoid dense model noise) | Constrain by `Disciplines` and/or explicit `Metrics` | Prevents large grids from unrelated metrics |
 | Stable import/export behavior | Prefer row-based layout first (`ShowMetricsInColumns=false`) | Easier to validate and troubleshoot |
@@ -95,7 +95,26 @@ cap reporting computed-values list \
 cap reporting computed-values download-excel \
   --template <report-template-id> \
   --data-interval month \
+  --periods "Jan 2026" \
   -o computed-values.xlsx
+```
+
+For purpose-built comparison reports, prefer fixed cadence templates with
+`AllowMultiTimePeriodSelect=false` and `ShowOnlyRowsWithValues=true`. This keeps
+the report to one matching period and suppresses rows that have no values for
+that period.
+
+Framework report templates use the same computed-values read surface. Use
+`DataGrouping=Framework` on the saved report template, then optionally narrow
+the runtime framework scope:
+
+```bash
+cap reporting computed-values list \
+  --template <framework-report-template-id> \
+  --framework-nodes <framework-node-id> \
+  --data-interval year \
+  --periods "FY 2026" \
+  --json
 ```
 
 ### 3. Visualization Flow (Widget Templates)

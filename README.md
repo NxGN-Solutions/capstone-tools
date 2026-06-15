@@ -113,6 +113,26 @@ Before live dashboard checks, run `cap templates dashboard-templates audit
 <dashboard-template-id> --strict --json` to catch missing widget references or
 structural template issues.
 
+## Breaking Changes
+
+### Tenant delete force semantics
+
+`cap system tenants delete --force` now uses the async force-delete operation
+contract. The CLI calls the preview endpoint, prints row counts and blockers,
+starts an operation with the preview confirmation phrase, then watches operation
+status until terminal state or `--timeout-seconds`.
+
+`--force` no longer sends `DELETE System/Tenants` with `force: true`. Direct API
+callers must use `POST System/Tenants/Delete/Preview` and
+`POST System/Tenants/Delete/Operations`; the legacy force flag is rejected.
+
+If the watch times out, the server-side operation continues. Resume with:
+
+```bash
+cap system tenants delete-status <operation-id> --json
+cap system tenants delete-watch <operation-id> --timeout-seconds 600
+```
+
 ## MCP Quick Start
 
 Extract the MCP package and configure Claude Desktop to run the absolute path to `capstone-mcp` or `capstone-mcp.exe`.
@@ -173,4 +193,4 @@ These downloads and documents are distributed under the [Capstone Tools Distribu
 
 For help, use your Capstone implementation, support, or account contact. Security reporting guidance is in [SECURITY.md](SECURITY.md), and support request guidance is in [SUPPORT.md](SUPPORT.md).
 
-Last updated: `2026-06-10T13:10:09Z`
+Last updated: `2026-06-15T11:11:39Z`

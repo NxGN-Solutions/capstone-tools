@@ -30,7 +30,7 @@ Before starting, Claude should know:
 | Check a widget with **typed output** (JSON structure) | `cap reporting widgets info-card\|pie-chart\|xy-chart\|table` | `--org-nodes`, `--data-interval`, `--periods` |
 | Check **all widgets on a dashboard** at once | `cap reporting dashboards get-data` | `--org-node`, `--data-interval`, `--periods` |
 | Check **computed values** via report template filter | `cap reporting computed-values list` | `--template`, `--data-interval`, `--periods` |
-| **Download** computed values as Excel | `cap reporting computed-values download-excel` | `--template`, `--data-interval`, `-o file.xlsx` |
+| **Download** computed values as Excel | `cap reporting computed-values download-excel` | `--template`, `--data-interval`, `--periods`, `-o file.xlsx` |
 
 ---
 

@@ -220,8 +220,6 @@ cat <<'EOF' | cap model inputs create --json
       "orgNodeOverrides": []
     }
   ],
-  "translatedNames": [],
-  "translatedDescriptions": [],
   "attributeValues": []
 }
 EOF
@@ -323,8 +321,6 @@ cat <<'EOF' | cap model inputs create --json
   "requireValidation": false,
   "requireDataCapture": false,
   "inputDataFeeds": [],
-  "translatedNames": [],
-  "translatedDescriptions": [],
   "attributeValues": []
 }
 EOF

@@ -276,8 +276,6 @@ the definition and `data narrative-values` for captured text.
   },
   "requireValidation": true,
   "requireDataCapture": true,
-  "translatedNames": [],
-  "translatedDescriptions": [],
   "frameworkNodes": []
 }
 ```
@@ -300,6 +298,7 @@ the unified `cap data change-requests` surface.
 {
   "id": "<empty-id>",
   "name": "<metric name>",
+  "friendlyName": "<optional business label>",
   "description": "<description>",
   "discipline": {
     "id": "<discipline-id>"
@@ -334,8 +333,6 @@ the unified `cap data change-requests` surface.
       "orgNodeOverrides": []
     }
   ],
-  "translatedNames": [],
-  "translatedDescriptions": [],
   "attributeValues": []
 }
 ```
@@ -358,6 +355,7 @@ EOF
 {
   "id": "<empty-id>",
   "name": "<calculation name>",
+  "friendlyName": "<optional business label>",
   "description": "<description>",
   "discipline": {
     "id": "<discipline-id>"
@@ -383,11 +381,14 @@ EOF
     "name": "None"
   },
   "formula": "IF [Denominator] <> 0 THEN [Numerator] / [Denominator] ELSE 0",
-  "translatedNames": [],
-  "translatedDescriptions": [],
   "attributeValues": []
 }
 ```
+
+`friendlyName` is optional. Use it for user-facing labels while keeping `name`
+stable for formulas, imports, and model identity. Translation arrays are edit-UI
+metadata returned by entity GET endpoints; CLI create/save payloads should use
+the current-language `name`, `friendlyName`, and `description` fields only.
 
 > **Formula references:** Formulas can reference metrics by name (`[Metric Name]`) or by ID (`[<id>]`). IDs are recommended for CLI usage — they're unambiguous, rename-safe, and what the API stores internally. Use `cap model calculations get <id> --json` to see existing formulas with their ID references.
 
@@ -742,7 +743,7 @@ echo '[A] + [B]' | cap model formula-validation validate Total --json
 
 1. Identify the discipline, unit, and aggregation pattern with `cap masterdata disciplines list --json`, `cap masterdata units list --json`, and the aggregation tables above
 2. Copy the Input payload template
-3. Fill in name, description, discipline ID, unit ID, aggregation IDs
+3. Fill in name, optional friendlyName, description, discipline ID, unit ID, aggregation IDs
 4. Run `cat <<'EOF' | cap model inputs create --json`
 5. Verify with `cap model inputs get <new-id> --json`
 
@@ -752,7 +753,7 @@ echo '[A] + [B]' | cap model formula-validation validate Total --json
 2. Choose the calculation phase (Before/After Aggregations)
 3. Choose aggregation methods (or None for recomputed ratios) — see Common Aggregation Patterns above
 4. Copy the Calculation payload template
-5. Fill in name, description, discipline ID, unit ID, and formula using metric ID references
+5. Fill in name, optional friendlyName, description, discipline ID, unit ID, and formula using metric ID references
 6. Run `cat <<'EOF' | cap model calculations create --json`
 7. Capture the returned ID from the `--json` response — needed if other calculations reference this one
 8. Verify with `cap model calculations get <new-id> --json`
@@ -783,6 +784,7 @@ cat <<'EOF' | cap model calculations create --json
 {
   "id": "<empty-id>",
   "name": "Cost Per Unit",
+  "friendlyName": "Cost/unit",
   "discipline": { "id": "<cost-discipline-id>" },
   "unitOfMeasure": { "id": "<usd-unit-id>" },
   "dataInterval": { "id": 0, "name": "Day" },
@@ -791,8 +793,6 @@ cat <<'EOF' | cap model calculations create --json
   "orgStructureAggregationMethod": { "id": 3, "name": "None" },
   "timePeriodAggregationMethod": { "id": 0, "name": "None" },
   "formula": "IF [<id>] <> 0 THEN [<id>] / [<id>] ELSE 0",
-  "translatedNames": [],
-  "translatedDescriptions": [],
   "attributeValues": []
 }
 EOF

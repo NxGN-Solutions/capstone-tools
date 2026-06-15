@@ -217,6 +217,7 @@ cap reporting computed-values list \
 cap reporting computed-values download-excel \
   --template <report-template-id> \
   --data-interval month \
+  --periods "Jan 2026" \
   -o output.xlsx
 ```
 
