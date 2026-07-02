@@ -187,7 +187,7 @@ MCP Apps render interactive visualizations directly in the conversation. Use the
 |------|---------|-------------|
 | `apps_dashboard_render` | Full dashboard with all widgets | "Show me the ESG dashboard" |
 | `apps_widget_infoCard` | Single KPI card | "What's our emissions number?" |
-| `apps_widget_pieChart` | Pie/donut chart | "Show the energy breakdown" |
+| `apps_widget_pieChart` | Pie/donut chart with styled render metadata | "Show the energy breakdown" |
 | `apps_widget_xyChart` | Bar/line/column chart | "Show the emissions trend" |
 | `apps_widget_table` | Table widget | "Show the metric table" |
 | `apps_widget_aiSummary` | AI-generated summary card | "Summarize the dashboard insights" |
@@ -196,6 +196,9 @@ MCP Apps render interactive visualizations directly in the conversation. Use the
 - Use `apps_widget_*` when the user wants a **visual** answer
 - Use `data_computedValues_list` when you need to **analyze** or **compare** numbers
 - Use both when you want to show a chart AND provide analysis
+- Styled Pie/Donut widgets expose server-resolved style, source, presentation,
+  number-format, legend/slice-label, warning, and selection-diagnostics
+  metadata in the rendered HTML; see `reference/tools.md#apps_widget_piechart`.
 
 ---
 

@@ -701,7 +701,10 @@ Render a KPI info card as HTML showing metric values with labels, units, and tre
 
 ### `apps_widget_pieChart`
 
-Render a pie/donut chart as interactive HTML (Chart.js). Shows part-to-whole breakdowns (e.g. cost structure, revenue mix). Use when the user wants to SEE a chart. For raw numbers, use `data_computedValues_list` instead. Uses `startDate`/`endDate` (ISO yyyy-MM-dd).
+Render a pie/donut chart as interactive HTML. Shows part-to-whole breakdowns
+(e.g. cost structure, revenue mix). Use when the user wants to SEE a chart. For
+raw numbers, use `data_computedValues_list` instead. Uses `startDate`/`endDate`
+(ISO yyyy-MM-dd).
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -711,7 +714,13 @@ Render a pie/donut chart as interactive HTML (Chart.js). Shows part-to-whole bre
 | `endDate` | string | Yes | End date (ISO format) |
 | `timePeriodType` | string | No | Period type (default: `month`) |
 
-**Returns:** HTML with Chart.js pie/donut chart.
+**Returns:** HTML with the pie/donut chart and server-resolved render metadata.
+For styled templates, the metadata includes the same contract used by browser
+dashboards and CLI JSON: `styleConfiguration`, `centerNumberFormat`, `center`,
+`labelDisplay`, `legend`, `dataItems[].sourceDataItemKey`,
+`dataItems[].presentation`, `dataItems[].numberFormat`,
+`dataItems[].legendValue`, `dataItems[].sliceLabel`, style warnings, and
+`selectionDiagnostics` when value selection is configured.
 
 ---
 
@@ -863,10 +872,28 @@ Create a new widget template from JSON config. Checks for name collisions — if
 | `metricSelectionMode` | `{id: int}` | Metric selection mode |
 
 **Additional requirements by widget type:**
-- **PieChart** (`widgetType.id: 1`): Also requires `pieChartWidgetTemplateType` with `id`
+- **PieChart** (`widgetType.id: 1`): Also requires `pieChartWidgetTemplateType` with `id`.
+  Pie and Donut templates may also use bounded styling fields:
+  `styleConfiguration`, `centerNumberFormat`, `dataItems[].presentation`, and
+  `dataItems[].numberFormat`. Keep visual fields separate from
+  `valueSelectionConfig`, which controls filtering/ranking/diagnostics.
 - **XYChart** (`widgetType.id: 2`): Data items require `xyChartWidgetTemplateDataItemType` with `id`
 - **Table** (`widgetType.id: 4`): Also requires `rowFields` and `valueFields`; configured period or selected metric/calculation columns are represented as separate value fields
 - **All data items** need `metric` (with `id`) and `metricPartitioningMode` (with `id`)
+
+**Pie/Donut styling fields:**
+
+| Field | Notes |
+|-------|-------|
+| `styleConfiguration` | Template-level slots: `panel`, `title`, `description`, `footnote`, `chartArea`, `slices`, `sliceBorders`, `sliceLabels`, `ticks`, `tooltip`, `legend`, `legendMarkers`, `legendLabels`, `legendValues`, `donutCenter`, `stateMessages` |
+| `centerNumberFormat` | `{ "precision": 0..6, "magnitude": "None\|Thousands\|Millions\|Billions\|Auto" }`; valid for Metric Value donut centers |
+| `dataItems[].presentation` | Source data-item non-fill styling slots: `slice`, `sliceBorders`, `sliceLabels`, `tooltip`, `legendMarker`, `legendLabel`, `legendValue`; `dataItems[].colour` remains slice/legend-marker fill authority |
+| `dataItems[].numberFormat` | Same number-format shape as `centerNumberFormat`; applies to slice values, legend values, tooltips, MCP metadata, CLI JSON, and accessible text |
+| `valueSelectionConfig` | Filtering, ordering, Top/Bottom ranking, and diagnostics only. Style payloads inside `valueSelectionConfig` are rejected. |
+
+Unsupported style payloads such as raw CSS, HTML, callbacks, unsafe URLs,
+arbitrary chart config, generic `style` bags, `styleBag`, and `propertyBag` are
+rejected by API/MCP validation.
 
 **Returns:** Success message with the new template ID and name.
 
@@ -963,11 +990,21 @@ Get a dashboard template's full structure including all tree items with their ID
 {
   "id": "dash-id",
   "name": "ESG Executive Dashboard",
+  "dashboardStyle": {
+    "backgroundColor": "surface-canvas",
+    "contentWidth": {"id": 3, "name": "Wide"}
+  },
   "treeItems": [
     {
       "id": "item-id",
       "path": "Overview",
-      "isWidget": false
+      "isWidget": false,
+      "nodeLayout": {
+        "layoutMode": {"id": 2, "name": "Grid"}
+      },
+      "nodeStyle": {
+        "backgroundColor": "surface-muted"
+      }
     },
     {
       "id": "item-id",
@@ -976,7 +1013,13 @@ Get a dashboard template's full structure including all tree items with their ID
       "widgetTemplate": {"id": "wt-id", "name": "Energy Card"},
       "widgetType": {"id": 0, "name": "InfoCard"},
       "sortOrder": 1,
-      "widgetSize": {"id": 1}
+      "widgetSize": {"id": 1},
+      "placementLayout": {
+        "widthBehavior": {"id": 0, "name": "WidgetSizeDefault"}
+      },
+      "placementStyle": {
+        "shadow": {"id": 2, "name": "Sm"}
+      }
     }
   ]
 }
@@ -998,6 +1041,7 @@ Create a new dashboard template from JSON config. Checks for name collisions —
 |-------|------|-------|
 | `name` | string | Dashboard name |
 | `treeItems` | array | Array of tab and widget items |
+| `dashboardStyle` | object | Optional dashboard canvas style |
 
 **Tree item fields:**
 
@@ -1010,6 +1054,15 @@ Create a new dashboard template from JSON config. Checks for name collisions —
 | `sortOrder` | int | No | Display order within tab |
 | `widgetSize` | `{id: int}` | No | Widget size |
 | `aiSummaryContext` | string | No | Context for AI summary generation |
+| `nodeLayout` | object | Structural node only | Layout mode, alignment, spacing, header, and responsive metadata |
+| `nodeStyle` | object | Structural node only | Background, foreground, title, header/content, typography, border, and radius metadata |
+| `placementLayout` | object | Widget/narrative only | Width behavior, alignment, minimum height, spacing, and responsive metadata |
+| `placementStyle` | object | Widget/narrative only | Background, foreground, border, radius, and shadow metadata |
+| `callout` | object | Structural node or Narrative placement only | Variant, severity, icon, collapsible state, title/body translations |
+
+Dashboard layout metadata uses the same JSON contract as the CLI and API. `dashboardStyle` styles the dashboard canvas/page area. `nodeLayout` and `nodeStyle` apply to structural nodes. `placementLayout` and `placementStyle` apply to widget or narrative wrappers. `callout` is valid on structural nodes and Narrative placements only.
+
+Safe colors are named tokens, `#rgb`, `#rrggbb`, `#rrggbbaa`, bounded `rgb(...)`/`rgba(...)`, or `var(--token-name)`. Structured lengths are JSON objects with numeric `value` or side values and `unit: {"id": 0, "name": "Px"}` or `unit: {"id": 1, "name": "Rem"}`.
 
 **Returns:** Success message with the new dashboard ID and name.
 

@@ -335,8 +335,138 @@ Widget commands have two output families:
 | `cap reporting widgets get-data` | Legacy CSV compatibility object with `format`, `periods`, `sourceMetadata`, and `csvCompatibility.rawCsv` | Backward-compatible widget extraction when typed render commands are not available |
 | `cap reporting widgets info-card` | Typed info-card DTO | Dashboard card render validation |
 | `cap reporting widgets pie-chart` | Typed pie-chart DTO | Slice/percentage validation |
-| `cap reporting widgets xy-chart` | Typed XY-chart DTO, JSON-first | Series/category/value validation |
+| `cap reporting widgets xy-chart` | Typed XY-chart render DTO, JSON-first | Browser-aligned series, axis, value, render metadata, and metric metadata validation |
 | `cap reporting widgets table` | Typed Table render DTO | Dashboard grid/table render validation |
+
+### XY Chart JSON Mode
+
+`cap reporting widgets xy-chart <id> --json` returns the same server-owned XY render contract consumed by the browser renderer and MCP dashboard renderer. Use it for automation that needs to inspect how an XY chart will render, not just whether metric values exist.
+
+Top-level fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | GUID | Widget/template identifier from the render response |
+| `title` | string/null | Widget title |
+| `categoryAxes` | array | Category axis definitions and rendered category labels |
+| `valueAxes` | array | Value axis definitions, titles, and dynamic-axis flags |
+| `chartSeries` | array | Rendered series; each item can include legacy fields plus `renderConfig` and `metricMetadata` |
+| `styleMetadata` | array | Schema-limited style metadata for chart-internal elements such as series and axes |
+| `invertAxes` | boolean | Legacy/programmatic orientation flag; prefer series `renderConfig.orientation` for render semantics |
+| `showLegend` | boolean | Widget legend setting |
+| `warnings` | array | Human-readable warnings, including no-data guidance |
+| `noData` | object/null | Structured no-data diagnostic when selected periods return no values |
+| `diagnostics` | array | Structured render diagnostics for automation and audit |
+
+Each `chartSeries[].renderConfig` is the authoritative render contract for that series:
+
+| Field | Description |
+|-------|-------------|
+| `seriesKey` | Stable response-local identifier for diagnostics and style metadata |
+| `sourceDataItemId`, `sourceMetricId`, `sourcePartitionKey`, `sourcePartitionLabel` | Source widget data item, metric, and optional partition identity |
+| `displayLabel` | Label used by the browser/CLI/MCP renderers |
+| `configuredSeriesType`, `renderSeriesType` | Authored type and final rendered type (`Column`, `Bar`, `Line`, `Area`) |
+| `orientation` | `vertical` or `horizontal` |
+| `categoryAxisKey`, `valueAxisKey` | Axis assignment used for rendering |
+| `sortOrder`, `renderLayer` | Ordering metadata for legend/data alignment and draw layering |
+| `isStacked`, `showInLegend`, `showInTooltip`, `showBullets` | Per-series render behavior |
+| `strokeColour`, `fillColour`, `strokeWidth`, `strokeDashArray`, `bulletRadius`, `styleKey` | Per-series style metadata |
+| `singlePeriodCategoryKey`, `singlePeriodCategoryLabel` | Category labels used when each series renders as a single aggregate point |
+| `comparisonRoleKey`, `comparisonRoleLabel`, `comparisonRoleOrder`, `comparisonRoleSource` | Optional model-derived comparison semantics; labels are not used as chart logic |
+| `values` | Values aligned to the rendered categories; can contain `null` gaps |
+| `diagnostics` | Series-specific render diagnostics |
+
+Each `chartSeries[].metricMetadata` is emitted only when the metric is available in the caller's authorized reporting scope. It contains model-owned metric semantics and formatting such as `metricType`, `disciplinePath`, `frameworkPaths`, `attributeValues`, unit symbol, precision, aggregation methods, calculation phase, and formula flags. Missing or redacted metadata is reported in `diagnostics`.
+
+Minimal shape:
+
+```json
+{
+  "title": "Production Trend",
+  "categoryAxes": [
+    { "name": "Period", "categoryPropertyName": "Period", "categoryValues": ["Jan 26", "Feb 26"] }
+  ],
+  "valueAxes": [
+    { "name": "Volume", "title": "Tonnes", "dynamicAxis": true }
+  ],
+  "chartSeries": [
+    {
+      "title": "Actual tonnes",
+      "values": [55.0, 61.0],
+      "renderConfig": {
+        "seriesKey": "xy:actual",
+        "sourceMetricId": "<metric-id>",
+        "displayLabel": "Actual tonnes",
+        "renderSeriesType": { "id": 0, "name": "Column" },
+        "orientation": "vertical",
+        "categoryAxisKey": "Period",
+        "valueAxisKey": "Volume",
+        "sortOrder": 0,
+        "renderLayer": 10,
+        "showInLegend": true,
+        "showInTooltip": true,
+        "strokeColour": "#1e88e5",
+        "values": [55.0, 61.0],
+        "comparisonRoleSource": "none",
+        "diagnostics": []
+      },
+      "metricMetadata": {
+        "metricId": "<metric-id>",
+        "metricName": "Actual tonnes",
+        "metricType": "Input",
+        "unitOfMeasureSymbol": "t",
+        "precision": 1,
+        "attributeValues": {}
+      }
+    }
+  ],
+  "styleMetadata": [],
+  "diagnostics": [],
+  "warnings": [],
+  "noData": null
+}
+```
+
+### Pie Chart Widget JSON Mode
+
+`cap reporting widgets pie-chart <id> --json` returns the shared pie/donut
+render contract at the top level. It is not wrapped under `template`,
+`widgetTemplate`, or `data`. Donut center content is resolved under `center`:
+static text uses `center.text`, while Metric Value centers include
+`center.label`, `center.value`, and `center.formattedValue`. When
+`centerMetricLabel` is blank, the server resolves `center.label` from the metric
+friendly name, then the metric name.
+
+Top-level fields:
+
+| Field | Meaning |
+|---|---|
+| `id` | Widget/template identifier from the render response |
+| `title`, `description`, `footnote` | Display text after template resolution |
+| `pieChartWidgetType` | Rendered Pie/Donut type |
+| `showLegend` | Whether legend rendering is enabled |
+| `styleConfiguration` | Server-resolved chart-wide bounded style slots |
+| `centerNumberFormat` | Donut Metric Value center display format, when configured |
+| `center` | Resolved donut center metadata, when configured |
+| `labelDisplay` | Slice-label and tick visibility derived from `sliceLabelMode` |
+| `legend` | Resolved legend visibility, value mode, and item labels/values |
+| `dataItems[]` | Rendered slices with values, labels, colour, source identity, presentation, and number format |
+| `styleWarnings`, `warnings`, `noData` | Non-fatal diagnostics and empty-data state |
+
+Legend values and slice labels are resolved per data item. `dataItems[].legendValue` is populated only when the visible legend row should include the formatted value. `dataItems[].sliceLabel` follows `sliceLabelMode`. The aggregate legend block also exposes `legend.valueMode` and `legend.items[]` for dashboard render parity.
+
+Styled Pie/Donut output also includes the server-resolved styling and automation
+metadata used by browser dashboards and MCP apps:
+
+| Field | Meaning |
+|---|---|
+| `styleConfiguration` | Template-level bounded style slots such as `panel`, `chartArea`, `slices`, `sliceLabels`, `ticks`, `legendValues`, `donutCenter`, and `stateMessages` |
+| `centerNumberFormat` | Donut Metric Value center display format, when configured |
+| `dataItems[].presentation` | Source data-item non-fill presentation for slice labels, tooltip, legend marker, legend label, and legend value |
+| `dataItems[].numberFormat` | Source data-item value display format |
+| `dataItems[].sourceDataItemKey` | Stable source identity used to connect runtime slices back to configured data items where available |
+| `styleWarnings` / `dataItems[].styleWarnings` | Non-fatal inherited/default style warnings, such as contrast warnings that cannot be resolved at save time |
+| `selectionDiagnostics` | Value-selection counts, warnings, and rank/page metadata when widget-level or data-item value selection is configured |
 
 ### Table Widget JSON Mode
 

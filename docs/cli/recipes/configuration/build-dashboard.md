@@ -143,13 +143,35 @@ cat <<'EOF' | cap templates dashboard-templates create --json
   "name": "Executive Energy Dashboard",
   "description": "Monthly energy KPIs, trends, and breakdowns",
   "useTabSheet": false,
+  "dashboardStyle": {
+    "backgroundColor": "surface-canvas",
+    "foregroundColor": "text-primary",
+    "contentPadding": { "top": 2, "right": 2, "bottom": 2, "left": 2, "unit": { "id": 1, "name": "Rem" } },
+    "contentWidth": { "id": 3, "name": "Wide" },
+    "contentAlignment": { "id": 2, "name": "Center" }
+  },
   "treeItems": [
     {
       "id": "<id>",
       "name": "Overview",
       "isWidget": false,
       "sortOrder": 1,
-      "parent": null
+      "parent": null,
+      "nodeLayout": {
+        "layoutMode": { "id": 2, "name": "Grid" },
+        "headerBehavior": { "id": 3, "name": "Collapsible" },
+        "spacing": {
+          "padding": { "top": 1, "right": 1, "bottom": 1, "left": 1, "unit": { "id": 1, "name": "Rem" } },
+          "gap": { "id": 3, "name": "M" }
+        },
+        "responsive": { "stackBelow": { "id": 1, "name": "Sm" }, "columns": 2, "wrap": true }
+      },
+      "nodeStyle": {
+        "backgroundColor": "surface-muted",
+        "foregroundColor": "text-primary",
+        "typography": { "id": 2, "name": "Standard" },
+        "borderRadius": { "value": 8, "unit": { "id": 0, "name": "Px" } }
+      }
     },
     {
       "id": "<id>",
@@ -159,7 +181,11 @@ cat <<'EOF' | cap templates dashboard-templates create --json
       "parent": { "id": "<id>" },
       "widgetTemplate": { "id": "<widget-1-id>" },
       "widgetType": { "id": 0, "name": "InfoCard" },
-      "widgetSize": { "id": 2, "name": "50%" }
+      "widgetSize": { "id": 2, "name": "50%" },
+      "placementLayout": {
+        "widthBehavior": { "id": 0, "name": "WidgetSizeDefault" },
+        "horizontalAlignment": { "id": 4, "name": "Stretch" }
+      }
     },
     {
       "id": "<id>",
@@ -235,6 +261,9 @@ EOF
 - Widgets (`isWidget: true`) reference a section via `parent: { "id": "<section-id>" }`
 - `sortOrder` controls display order within each section
 - Use sequential zero IDs for `id` on create — the API assigns real IDs
+- `dashboardStyle` styles the dashboard canvas/page area, not the internals of widget templates
+- `nodeLayout` and `nodeStyle` apply to structural nodes; `placementLayout` (layout only) applies to widget or narrative wrappers — widget chrome (background/border/shadow/radius/padding/accent) is owned by each widget's own `styleConfiguration`, not by the placement
+- Shell-frame objects — the dashboard-level `header` (`title`/`eyebrow`/`subtitle`/`badge`/`style`), `filterRegion`, and `tabStrip` — are documented under [Shell Styling Fields](#shell-styling-fields-header-filter-region-tab-strip) below (in `schema`/`sample`; they persist and round-trip)
 
 **Narrative widget shape:**
 ```json
@@ -246,7 +275,17 @@ EOF
   "parent": { "id": "<section-id>" },
   "narrative": { "id": "<narrative-definition-id>", "name": "Executive Summary" },
   "widgetType": { "id": 5, "name": "Narrative" },
-  "widgetSize": { "id": 5, "name": "100%" }
+  "widgetSize": { "id": 5, "name": "100%" },
+  "placementLayout": {
+    "widthBehavior": { "id": 2, "name": "Fill" },
+    "responsive": { "fullWidthBelow": { "id": 2, "name": "Md" } }
+  },
+  "callout": {
+    "variant": { "id": 5, "name": "Narrative" },
+    "severity": { "id": 2, "name": "Medium" },
+    "icon": "message-square",
+    "collapsible": false
+  }
 }
 ```
 - The CLI `save` command accepts both bare JSON and the `get --json` wrapper format (`{"tenant": "...", "dashboardTemplate": {...}}`) — it auto-unwraps the `dashboardTemplate` property
@@ -611,6 +650,31 @@ The `dashboardTemplate` contains a flat `treeItems` array with `EnumDTO` objects
 The `DashboardTemplateTreeItemDTO` defines the SAVE format:
 
 ```
+DashboardTemplateSaveRequest (DashboardTemplateDTO):
+  UseTabSheet: bool              ← legacy tab flag; root nodes render as tabs
+  DashboardStyle: DashboardTemplateCanvasStyleDTO?
+    BackgroundColor: string?
+    ForegroundColor: string?
+    FontFamily: EnumDTO?          ← Theme, Sans, Serif, Mono, Nunito, Roboto, Poppins, Arial
+    FontWeight: EnumDTO?          ← Default, Normal, Medium, Semibold, Bold
+    FontSize: DashboardLayoutStructuredLengthDTO?   ← 8–96 px/rem
+    ContentPadding: DashboardLayoutStructuredLengthDTO?
+    ContentWidth: EnumDTO?         ← Default, FullWidth, Constrained, Wide
+    ContentAlignment: EnumDTO?     ← Default, Start, Center, Stretch
+  Header: DashboardTemplateHeaderDTO?               ← dashboard-level title object (NOT a node)
+    Title: string?                ← heading text; blank ⇒ falls back to the template name
+    Eyebrow: string?              ← metadata line above the title (≤250 chars, plain text)
+    Subtitle: string?             ← metadata line below the title (≤250 chars, plain text)
+    Badge: string?                ← governance pill (≤250 chars, plain text)
+    Style: DashboardTemplateNodeStyleDTO?           ← reuses the node-style slot (header.style.*)
+  FilterRegion: DashboardTemplateFilterRegionDTO?   ← stylable org-node/time-period filter container
+    Style: DashboardTemplateNodeStyleDTO?            ← reuses the node-style slot
+    Position: EnumDTO?            ← Above, Below
+  TabStrip: DashboardTemplateTabStripDTO?            ← stylable canvas-root tab strip
+    Style: DashboardTemplateNodeStyleDTO?            ← only meaningful when the canvas resolves to a Tabs layout
+    HoverBackgroundColor: string?                    ← tab .nav-link:hover background
+    HoverForegroundColor: string?                    ← tab .nav-link:hover text colour
+
 DashboardTemplateTreeItemDTO extends TreeNodeDTO:
   IsWidget: bool
   WidgetTemplate: NamedDTO?       ← { "id": "id", "name": "template name" }
@@ -619,15 +683,69 @@ DashboardTemplateTreeItemDTO extends TreeNodeDTO:
   WidgetSize: EnumDTO?            ← { "id": 2, "name": "50%" }
   SortOrder: int
   AISummaryContext: EnumDTO?      ← { "id": 0, "name": "Peers" }
+  NodeLayout: DashboardTemplateNodeLayoutDTO?           ← structural nodes only (layoutMode incl. Tabs)
+  NodeStyle: DashboardTemplateNodeStyleDTO?             ← structural nodes only
+  PlacementLayout: DashboardTemplatePlacementLayoutDTO? ← widget/narrative placements only (layout only; widget chrome lives on the widget template's styleConfiguration)
+  Callout: DashboardTemplateCalloutDTO?                 ← structural nodes and Narrative placements only
 
 TreeNodeDTO extends TreePathDTO:
   Parent: TreePathDTO?            ← { "id": "parent-id" }
   Icon: string?
-  BackgroundColor: string?        ← "#00806a"
+  BackgroundColor: string?        ← "#00806a" or safe color token
 
 TreePathDTO extends NamedDTO:
   Path: string?                   ← "Tab->Section->Widget"
 ```
+
+Use `cap templates dashboard-templates schema --json` for the machine-readable field catalogue and `cap templates dashboard-templates sample --json` for a styled sample. Safe colors are named tokens, hex colors, bounded `rgb(...)`/`rgba(...)`, or `var(--token-name)`. Structured lengths use numeric values with `Px` or `Rem` units, not free-text CSS shorthand.
+
+> **Automation coverage.** The shell-unification objects — the dashboard `header` (`title`/`eyebrow`/`subtitle`/`badge`/`style`), `filterRegion`, and `tabStrip` — are listed in `cap templates dashboard-templates schema --json` and emitted by `sample --json`, and they persist and round-trip through `save`/`create`/`get`. Excel coverage: all three have dedicated workbook columns (`headerJson`, `filterRegionJson`, `tabStripJson`).
+
+#### Shell Styling Fields (header, filter region, tab strip)
+
+These shape the dashboard *shell* — the frame around the widgets. They are additive: omit them and the dashboard renders exactly as before.
+
+**Header** (dashboard-level, NOT a tree item) is the dashboard title plus optional report metadata. Set it on the root `header` property — there is no header node and no `nodeKind`. A blank `title` falls back to the template name; the header renders before any tab strip and replaces the legacy name-based title only when it carries content:
+
+```json
+"header": {
+  "title": "Q3 ESG Performance",
+  "eyebrow": "Sustainability Report",
+  "subtitle": "Consolidated group results — July to September",
+  "badge": "Confidential",
+  "style": { "titleColor": "text-primary", "headerBackgroundColor": "surface-muted" }
+}
+```
+
+**Filter region** (dashboard-level, not a tree item) styles the org-node/time-period selector container and positions it Above or Below the content:
+
+```json
+"filterRegion": {
+  "position": { "id": 1, "name": "Below" },
+  "style": { "backgroundColor": "surface-muted", "borderRadius": { "value": 8, "unit": { "id": 0, "name": "Px" } } }
+}
+```
+
+**Tab strip** (dashboard-level) styles the canvas-root tab strip; only meaningful when the canvas renders as Tabs (`useTabSheet: true`, or a root node with `nodeLayout.layoutMode: Tabs`). `hoverBackgroundColor`/`hoverForegroundColor` style the `.nav-link:hover` state (tab-strip-specific; omit to keep the default hover):
+
+```json
+"tabStrip": {
+  "style": { "foregroundColor": "text-primary", "headerBackgroundColor": "surface-muted" },
+  "hoverBackgroundColor": "surface-strong",
+  "hoverForegroundColor": "text-primary"
+}
+```
+
+#### Designing good-looking dashboards
+
+Defaults already match the Capstone corporate theme, so style only with intent:
+
+- **Start from semantic color tokens** (`surface-default`, `surface-muted`, `text-primary`, `border-subtle`), not raw hex — they stay on-theme and accessible. Reserve hex/`rgb()` for deliberate brand color.
+- **Lean on layout before style.** `nodeLayout.layoutMode: Grid` + `responsive.columns` gives clean alignment; `spacing.gap` tokens (XS–XL) keep rhythm consistent. Reach for colors/borders only after the layout reads well.
+- **Establish hierarchy with the dashboard `header`** (eyebrow → title → subtitle, plus an optional badge) instead of styling many section titles differently.
+- **Keep contrast safe.** Any foreground/background pair you set should stay legible; the corporate accent is `primary #6172f3` — never the legacy `#787cf4`.
+- **Dashboard placement is layout-only.** `placementLayout` (width behaviour, alignment, min-height, spacing, responsive) positions a widget; the widget's frame *and* its chart/card/table internals are both owned by the widget template's own `styleConfiguration` and are not restyled from the dashboard.
+- **Use callouts sparingly** for genuine notes/warnings on a section or narrative — not as decoration.
 
 #### Widget Type Rules (CRITICAL)
 

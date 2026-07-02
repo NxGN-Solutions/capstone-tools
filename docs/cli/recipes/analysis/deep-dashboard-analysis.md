@@ -66,7 +66,7 @@ Dashboard: ESG Executive (dash-123)
 **Command:**
 ```bash
 # Use widget template IDs from Step 1
-cap templates widget-templates get-bulk -i wt-emissions-123,wt-energy-456,wt-trend-789 --json
+cap templates widget-templates get-bulk -i wt-emissions-123 -i wt-energy-456 -i wt-trend-789 --json
 ```
 
 **Response:**
@@ -243,7 +243,7 @@ cap templates dashboard-templates get dash-123 --json
 # - Social Performance: Safety Score (wt-321), Training (wt-654)
 # - Governance: Compliance (wt-987)
 
-cap templates widget-templates get-bulk -i wt-123,wt-456,wt-789,wt-321,wt-654,wt-987 --json
+cap templates widget-templates get-bulk -i wt-123 -i wt-456 -i wt-789 -i wt-321 -i wt-654 -i wt-987 --json
 # Widget configurations showing:
 # - Metrics tracked: Scope 1 Emissions, Scope 2 Emissions, Renewable Energy, etc.
 # - Aggregation methods: Sum, Average

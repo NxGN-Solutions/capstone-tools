@@ -33,21 +33,19 @@ Capstone is a **data management platform** for organizations that need to consol
 | Raw data, submitted value | Input Value | `data input-values` | Actual captured data points |
 | Text response, commentary value | Narrative Value | `data narrative-values` | Draft/submit/validate approved text |
 | Aggregated value, result, computed | Computed Value | `reporting computed-values` | Calculated/rolled-up values |
-| Dashboard chart, visualization | Widget | `reporting widgets` | Info Card, Pie Chart, XY Chart, Table |
+| Dashboard chart, visualization | Widget | `reporting widgets` | Info Card, Pie Chart, XY Chart, TextBlock, Table |
 | Chart configuration, widget setup | Widget Template | `templates widget-templates` | Defines widget data and display |
 | Dashboard layout, page configuration | Dashboard Template | `templates dashboard-templates` | Organizes widgets into sections |
 | Data entry form, capture sheet | Capture Template | `templates capture-templates` | Defines data entry structure |
 | Report layout, spreadsheet template | Report Template | `templates report-templates` | Defines report structure |
 | Alternate org view, virtual structure | Org Node Template | `templates org-node-templates` | Projects org structure differently |
 | External connection, integration | Data Source | `masterdata data-sources` | MQTT, SQL, REST integrations |
-| Warehouse export, outbound feed | Data Export | `masterdata data-exports` | Outbound data to external systems |
 | Edit request, correction request | Change Request | `data change-requests` | Audit-tracked data modifications |
 | Locked text correction request | Change Request | `data change-requests` | Governed edits for locked input or narrative values |
 | Period freeze, lock, close period | Data Lock | `data data-lock` | Prevents changes to locked periods |
 | Account, person, login | User | `security users` | System user with permissions |
-| Permission set, access level | Role | `security roles` | Feature access control |
 | Organization, company, client | Tenant | `auth tenants` | Isolated data environment |
-| Language, translation | Localisation | `system languages` | Multi-language support |
+| Language, translation | Localisation | `auth languages` | Multi-language support |
 | Override, exception, location-specific | Metric Override | `model *-overrides` | Per-location customization |
 | Custom field, metadata, tag | Attribute Type | `* *-attribute-types` | Custom attributes for entities |
 | Metric-to-framework link, standard mapping | Metric Framework Node | `model metric-framework-nodes` | Links metrics to reporting frameworks |
@@ -67,6 +65,20 @@ The CLI works on **Windows, macOS, and Linux**. For shell-specific syntax (envir
 | Pre-built binary (on PATH) | `cap <command>` |
 | Pre-built binary (local, macOS/Linux) | `./cap <command>` |
 | Pre-built binary (local, Windows) | `.\cap.exe <command>` |
+
+### Connect First (Auth-First On-Ramp)
+
+**Before any discovery or data command, establish a connection.** Empty results
+almost always trace back to auth/tenant, not missing data — so do this first:
+
+```bash
+cap config set api-url <URL>   # 1. Point at the Capstone server (ask the user for the URL)
+cap auth login                 # 2. Log in via OAuth (opens browser)
+cap auth whoami                # 3. Confirm identity, current tenant, and accessible tenants
+```
+
+If anything looks wrong, run `cap status` and `cap auth doctor` (see
+[Error Handling](#error-handling)).
 
 ### Verify Connection
 
@@ -172,6 +184,7 @@ For standard tasks, use recipes. They encode best practices and reduce errors.
 | "What's trending with..." | Recipe: find-trends |
 | "Create a metric for..." | Recipe: create-metric |
 | "Enter this month's data..." | Recipe: enter-data |
+| "Style/customize an Info Card..." | Recipe: configure-info-card-styles |
 | "List all metrics" | Direct: `cap model metrics list` |
 | "Show org structure" | Direct: `cap masterdata org-nodes list` |
 | "What periods are available?" | Direct: `cap data time-periods list --data-interval month` |
@@ -205,11 +218,23 @@ status, run `cap schema --json` or read [reference/commands.md](./reference/comm
 | `data` | Captured values, narratives, change requests, locks | `time-periods list`, `input-values *`, `narrative-values *`, `change-requests *`, `data-lock lock|unlock` |
 | `reporting` | Computed values and dashboard/widget output | `computed-values list/query/audit`, `widgets info-card/pie-chart/xy-chart/table`, `dashboards get-data/get-insights` |
 | `security`, `system` | User Excel import/export and tenant administration | `security users download-excel/upload-excel`, `system tenants *`, `system tenants fiscal-config update` |
+| `notifications` | Notification template administration | `notifications templates create/get/list/save/delete` |
 
 Most reporting commands require `--data-interval` and `--periods`. Type-specific
 widget commands use `--org-nodes` (plural). `widgets get-data` is the legacy CSV
 compatibility path with singular `--org-node`; prefer `computed-values` or typed
 widget commands for automation-safe checks.
+
+For widget styling work, start with
+`cap templates widget-templates schema --widget-type <info|pie|xy|table> --json`
+and `cap templates widget-templates sample --widget-type <type> --json`. Widget
+samples put the editable body under `.payload.widgetTemplate`; `get` responses
+put it under `.widgetTemplate`; `save` returns an acknowledgement object, not the
+full updated template. Pie/Donut enum values for center, legend-value, and
+slice-label modes are in `schema.fieldLookups`, and
+`cap reporting widgets pie-chart ... --json` returns a top-level render contract
+with `styleConfiguration`, `center`, `legend`, `labelDisplay`, and
+`dataItems[]`.
 
 ---
 
@@ -231,7 +256,7 @@ cap <domain> <entity> delete <id>             # Delete by ID
 
 ```bash
 cap <domain> <entity> download-excel --output file.xlsx
-cap <domain> <entity> upload-excel --file file.xlsx
+cap <domain> <entity> upload-excel file.xlsx
 ```
 
 ### Import And Upsert Identity
@@ -335,11 +360,30 @@ jq -r '[.gridRows[] | select(.isDataRow==true) | .name] | unique' /tmp/capture-c
 
 ## Error Handling
 
+### Auth & Tenant — Check This FIRST
+
+**All commands return empty / no rows → verify auth & tenant before anything
+else.** Run `cap status` and `cap auth doctor`, then confirm identity and tenant
+with `cap auth whoami`. An empty result with exit code `0` can mean you are in
+the wrong tenant, that an ambient `CAPSTONE_API_KEY` is shadowing your OAuth
+login (it resolves to the empty bootstrap tenant), or that you lack
+permissions — not just that data is missing.
+
+```bash
+cap status          # auth status, tenant, API endpoint at a glance
+cap auth doctor     # diagnose authentication state + print recovery commands
+cap auth whoami     # confirm username, current tenant, accessible tenants
+```
+
+`cap auth doctor` is the auth-recovery entry point; follow the recovery
+commands it prints (typically `cap auth login` and/or `cap auth switch-tenant`).
+
 ### Common Errors
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `AUTH_REQUIRED` | Not logged in | Run `cap auth login` |
+| Empty results / no rows (exit `0`) | Wrong tenant, ambient `CAPSTONE_API_KEY` shadowing OAuth, or no permission | Run `cap status`, `cap auth doctor`, `cap auth whoami` **before** assuming missing data |
+| `AUTH_REQUIRED` | Not logged in | Run `cap auth login` (diagnose with `cap auth doctor`) |
 | `NOT_FOUND` | Invalid ID | Verify ID with `list` command |
 | `VALIDATION_ERROR` | Invalid input data | Check JSON structure matches DTO |
 | `FORBIDDEN` | No permission | Check user roles and data permissions |

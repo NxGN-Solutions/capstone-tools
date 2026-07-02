@@ -229,7 +229,7 @@ cap reporting computed-values download-excel \
 
 **Capstone Term:** Widget
 
-**Definition:** A visual representation of data (Info Card, Pie Chart, XY Chart, Table). Widgets display computed values based on their template configuration.
+**Definition:** A visual representation of data (Info Card, Pie Chart, XY Chart, Table, TextBlock). Widgets display computed values based on their template configuration.
 
 **CLI:**
 ```bash
@@ -320,20 +320,29 @@ cap templates report-templates get <id> --json
 | 1 | PieChart | Part-to-whole relationships, breakdowns |
 | 2 | XYChart | Time series, trends, multi-metric comparison |
 | 4 | Table | Metric-backed dashboard table/grid |
+| 6 | TextBlock | Metric-aware dashboard text slots |
 
 **Key Properties:**
-- `widgetType` - Visualization type (InfoCard, PieChart, XYChart, Table)
+- `widgetType` - Visualization type (InfoCard, PieChart, XYChart, Table, TextBlock)
 - `discipline` - Categorization for organization and permissions
-- `dataItems` - Array of metrics to display
+- `dataItems` - Array of metrics to display for metric-set widgets; TextBlock does not support data items and discovers metrics from text tokens
 - `dataRangeMode` - Static (fixed) or Dynamic (relative) date range
 - `dataInterval` - Monthly, Quarterly, Annual, etc.
-- `rowFields` / `valueFields` - Table-only rendered row metadata and value columns
+- `pieChartWidgetTemplateType` / `centerMode` / `sliceLabelMode` - PieChart-only display options for pie vs donut, donut center content, and labels rendered on slices
+- `legendValueMode` - PieChart-only stored enum behind the dashboard editor's **Show Legend Value** checkbox
+- `dataGrouping`, `orgNodeRowSelectionMode`, `showOnlyRowsWithValues` - Table-only row grouping and table-wide display controls
+- `metricTypeFilters`, `metricDisciplineFilters`, `metricFrameworkFilters`, and metric/discipline/framework attribute filters - Table dynamic Metric Scope controls
+- `showMetricValue`, `showUnitOfMeasure`, `metricAttributeTypeIds` - Table current custom-column controls
+- `narrativeSelectionMode`, `narrativeScopeConfigured`, `narratives`, and narrative scope filters - Table dynamic/static narrative row controls
+- `styleConfiguration` - Table semantic-HTML style contract for slots, row/column overrides, conditional formatting, and categorical color tags
+- `subtitle`, TextBlock `styleConfiguration` - TextBlock-only secondary heading and bounded text-slot style contract
 
 **CLI:**
 ```bash
 cap templates widget-templates list --json
 cap templates widget-templates get <id> --json
 cap templates widget-templates create --file widget.json --json
+cap reporting widgets pie-chart <id> --org-nodes <org-node-id> --data-interval month --periods "Jan 25" --json
 cap reporting widgets table <id> --org-nodes <org-node-id> --data-interval quarter --periods "Q1 FY 25" --json
 ```
 

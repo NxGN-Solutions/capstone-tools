@@ -129,8 +129,8 @@ Pick the root org node for company-wide view, or a specific location.
 
 **Command:**
 ```bash
-# Extract widget template IDs from Step 2 response (comma-separated)
-cap templates widget-templates get-bulk -i <wt-id-1>,<wt-id-2>,<wt-id-3> --json
+# Extract widget template IDs from Step 2 response (one -i flag per ID)
+cap templates widget-templates get-bulk -i <wt-id-1> -i <wt-id-2> -i <wt-id-3> --json
 ```
 
 **Response:**

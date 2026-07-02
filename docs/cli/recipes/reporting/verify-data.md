@@ -75,7 +75,7 @@ cap reporting widgets pie-chart <widget-template-id> \
   --periods "2026-01-20" \
   --json
 
-# XYChart — returns series with data points (JSON-only by design)
+# XYChart — returns the browser-aligned render contract (JSON-only by design)
 cap reporting widgets xy-chart <widget-template-id> \
   --org-nodes <org-node-id> \
   --data-interval day \
@@ -91,6 +91,7 @@ cap reporting widgets table <widget-template-id> \
 ```
 
 > **Note:** Type-specific commands use `--org-nodes` (plural, comma-separated) and require `--data-interval`. The `get-data` command uses `--org-node` (singular) and auto-detects the interval.
+> XY chart JSON includes `categoryAxes`, `valueAxes`, `chartSeries[].renderConfig`, authorized `chartSeries[].metricMetadata`, `styleMetadata`, `diagnostics`, `warnings`, and `noData`; use those fields to verify rendered chart behavior instead of parsing series titles.
 
 For Table widgets, use both paths when validating full functionality: `widgets table` verifies the dashboard render contract, while `widgets get-data` verifies the legacy CSV compatibility output.
 
@@ -221,10 +222,19 @@ Widget is returning data at all org levels. Example Site 3 on Jan 21 is empty �
 
 ## Troubleshooting: No Data
 
+> **Check auth & tenant FIRST.** Before blaming the calculation engine, formulas,
+> phase, or aggregation, confirm you are actually connected to the right tenant.
+> An empty result with exit code `0` can mean a wrong tenant, an ambient
+> `CAPSTONE_API_KEY` shadowing your OAuth login (which resolves to the empty
+> bootstrap tenant), or insufficient permissions — not missing data. Run
+> `cap status` and `cap auth doctor`, then confirm identity/tenant with
+> `cap auth whoami` before working through the table below.
+
 If values are empty:
 
 | Symptom | Likely Cause | Fix |
 |---------|-------------|-----|
+| **Every** command returns empty / no rows (exit `0`) | Wrong tenant, ambient `CAPSTONE_API_KEY` shadowing OAuth, or no permission | Run `cap status`, `cap auth doctor`, `cap auth whoami` **first** — this is the #1 cause, not calc lag |
 | All values empty for a calculation | Calculation engine hasn't processed yet | Wait 15-30 seconds and retry |
 | All values empty after waiting | Formula references a non-existent metric ID | Check formula with `cap model calculations get <id> --json` and verify all `[id]` references exist in `cap model metrics list --json` |
 | Values appear after simple formula but not complex | Calculation engine stuck from prior bad formula | Save a simplified formula first (remove IF/THEN), wait for values, then restore full formula |

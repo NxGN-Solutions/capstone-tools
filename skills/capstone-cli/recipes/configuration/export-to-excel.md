@@ -131,6 +131,16 @@ Editing Guidelines
 cap <domain> <entity> upload-excel <filename>.xlsx --json
 ```
 
+> **Template entities take `-f/--file`.** For `model`, `masterdata`, `data`, and
+> `reporting` entities the spreadsheet path is a **positional** argument (as
+> shown above). For **template** entities — `templates widget-templates` and
+> `templates dashboard-templates` — the path must be passed with the
+> `-f`/`--file` flag instead:
+> ```bash
+> cap templates widget-templates upload-excel -f widgets.xlsx --json
+> cap templates dashboard-templates upload-excel -f dashboards.xlsx --json
+> ```
+
 **Examples:**
 ```bash
 # Re-import edited metrics

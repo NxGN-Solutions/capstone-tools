@@ -115,7 +115,7 @@ map when checking whether a command family exists.
 |--------|----------|
 | `auth` | `doctor`, `languages`, `login`, `logout`, `switch-tenant`, `tenants`, `whoami` |
 | `auth apikey` | `create`, `list`, `prune`, `revoke` |
-| `config` | `get`, `set`, `unset` |
+| `config` | `get`, `list`, `set`, `show`, `unset` |
 | `data` | `availability` |
 | `data change-requests` | `create`, `delete`, `get`, `list`, `save`, `validate` |
 | `data data-lock` | `lock`, `unlock` |
@@ -153,7 +153,7 @@ map when checking whether a command family exists.
 | `perf` | `memory-throughput` |
 | `reporting computed-values` | `audit`, `download-excel`, `list`, `query` |
 | `reporting dashboards` | `get-data`, `get-insights` |
-| `reporting widgets` | `get-data`, `info-card`, `pie-chart`, `table`, `xy-chart` |
+| `reporting widgets` | `get-data`, `info-card`, `pie-chart`, `table`, `text-block`, `textblock`, `xy-chart` |
 | `root` | `concepts`, `schema`, `status`, `version` |
 | `security users` | `download-excel`, `upload-excel` |
 | `system tenants` | `bootstrap-local`, `create`, `delete`, `delete-status`, `delete-watch`, `fiscal-config update`, `get`, `list`, `sample`, `save`, `schema`, `snapshot`, `teardown` |
@@ -249,13 +249,25 @@ Formula graph commands resolve both ID tokens and display-name tokens such as
 ### Get Multiple Items (Bulk)
 
 ```bash
-cap templates widget-templates get-bulk <id1> <id2> ... [--json]
-cap templates widget-templates get-bulk "<id1>,<id2>" [--json]
-cap model inputs get-bulk <id1> <id2> ... --json
-cap model calculations get-bulk <id1> <id2> ... --json
+cap templates widget-templates get-bulk -i <id1> -i <id2> -i <id3> [--json]
+cap model inputs get-bulk -i <id1> -i <id2> --json
+cap model calculations get-bulk -i <id1> -i <id2> --json
 ```
 
+> IDs are passed as **repeated `-i`/`--id` flags**, one GUID per flag. Positional
+> arguments (`get-bulk <id1> <id2>`) and a single comma-joined string
+> (`get-bulk -i "id1,id2"`) are **not** accepted and return a validation error.
+
 Retrieves multiple full entities in one CLI invocation. Returns partial results — valid entities are returned alongside errors for invalid or inaccessible IDs. Model `get-bulk` commands return the same editable DTOs as `get`, so automation can hydrate list results before analysis or save-round-tripping without spawning one process per entity.
+
+By default `templates widget-templates get-bulk` returns compact widget summaries.
+Add `--full` to return the full editable widget template DTOs — including nested
+`valueSelectionConfig` — matching the `get` payload shape, so the output can be
+edited and piped back to `save`/`import-json`:
+
+```bash
+cap templates widget-templates get-bulk -i <id1> -i <id2> --full --json
+```
 
 **Supported entities:** `templates widget-templates`, `model inputs`, `model calculations`
 
@@ -371,12 +383,18 @@ cap <domain> lookups get <name> [--json]
 | Domain | Available Lookups |
 |--------|-------------------|
 | `model` | `metric-types`, `time-period-types`, `time-period-aggregation-methods`, `org-structure-aggregation-methods`, `calculation-phases` |
-| `templates` | `widget-sizes`, `widget-types`, `data-grouping-types`, `data-range-modes`, `metric-selection-modes` |
+| `templates` | `widget-sizes`, `widget-types`, `data-grouping-types`, `data-range-modes`, `metric-selection-modes`, `metric-partitioning-modes`, `partitioning-rank-modes`, `org-node-row-selection-modes`, `org-node-template-types`, `org-node-template-visibility-modes`, `pie-chart-types`, `xy-chart-data-item-types`, `ai-summary-contexts` |
 | `data` | `change-request-reasons`, `change-request-status-types`, `change-request-validation-levels` |
 
 Use `meta lookups` when building scripts or agents that need one discovery
 surface for all enum/reference values. The domain-specific commands remain
 available for direct lookup calls.
+
+Some widget-template enum sets are schema-owned rather than standalone lookup
+endpoints. For Pie/Donut center, legend-value, and slice-label modes, read
+`cap templates widget-templates schema --widget-type pie --json` and inspect
+`.fieldLookups[]` for `widgetTemplate.centerMode`,
+`widgetTemplate.legendValueMode`, and `widgetTemplate.sliceLabelMode`.
 
 ### Reporting Commands
 
@@ -420,6 +438,7 @@ cap reporting widgets info-card <widget-template-id> --org-nodes <id> --data-int
 cap reporting widgets pie-chart <widget-template-id> --org-nodes <id> --data-interval month --periods "Jan 25" [--json]
 cap reporting widgets xy-chart <widget-template-id> --org-nodes <id> --data-interval month --periods "Jan 25" [--json]
 cap reporting widgets table <widget-template-id> --org-nodes <id> --data-interval quarter --periods "Q1 FY 25" [--json]
+cap reporting widgets text-block <widget-template-id> --org-nodes <id> --data-interval month --periods "Jan 25" [--json]
 
 # Widget data (legacy CSV compatibility payload, not dashboard Table render JSON)
 cap reporting widgets get-data <widget-template-id> --org-node <id> --periods "FY 24, FY 25" [--json]
@@ -432,15 +451,74 @@ cap reporting dashboards get-insights <dashboard-template-id> <layout-node-id> -
 cap templates dashboard-templates audit <dashboard-template-id> --strict --json
 ```
 
-> **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`) use `--org-nodes` (plural, comma-separated) and can infer `--data-interval`/static periods from the widget template when configured. The `get-data` command uses `--org-node` (singular ID), auto-detects the data interval from the widget template, requires `--periods`, and returns the legacy CSV compatibility envelope, not the Table dashboard render response. Prefer `reporting computed-values` or typed widget commands for automation-safe checks. Use `cap data time-periods list --data-interval <interval>` to discover available period names.
+> **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`, `text-block`) use `--org-nodes` (plural, comma-separated) and can infer `--data-interval`/static periods from the widget template when configured. The `get-data` command uses `--org-node` (singular ID), auto-detects the data interval from the widget template, requires `--periods`, and returns the legacy CSV compatibility envelope, not the Table dashboard render response. Prefer `reporting computed-values` or typed widget commands for automation-safe checks. Use `cap data time-periods list --data-interval <interval>` to discover available period names.
 
-**Table widget command discovery for agents:**
+### Dashboard Template Layout Metadata
+
+Dashboard template commands understand the same layout metadata contract across JSON, Excel, audit, schema, and sample surfaces:
+
+```bash
+cap templates dashboard-templates schema --json
+cap templates dashboard-templates sample --json
+cap templates dashboard-templates get <id> --json
+cap templates dashboard-templates save --file dashboard.json --json
+cap templates dashboard-templates import-json --file dashboard-templates.json --upsert --json
+cap templates dashboard-templates audit <id> --strict --json
+cap templates dashboard-templates download-excel -o dashboards.xlsx
+cap templates dashboard-templates upload-excel -f dashboards.xlsx --json
+```
+
+The JSON contract adds `dashboardStyle` at the template root and the following optional groups on `treeItems`:
+
+| JSON group | Applies to | Fields |
+|------------|------------|--------|
+| `dashboardStyle` | Dashboard canvas | `backgroundColor`, `foregroundColor`, `contentPadding`, `contentWidth`, `contentAlignment` |
+| `nodeLayout` | Structural nodes only | `layoutMode`, `horizontalAlignment`, `verticalAlignment`, `minHeight`, `headerBehavior`, `spacing.padding`, `spacing.margin`, `spacing.gap`, `responsive.stackBelow`, `responsive.columns`, `responsive.wrap` |
+| `nodeStyle` | Structural nodes only | `backgroundColor`, `foregroundColor`, `titleColor`, `headerBackgroundColor`, `contentBackgroundColor`, `typography`, `borderColor`, `borderRadius` |
+| `placementLayout` | Widget and narrative placements only | `widthBehavior`, `horizontalAlignment`, `verticalAlignment`, `minHeight`, `spacing.padding`, `spacing.margin`, `spacing.gap`, `responsive.fullWidthBelow` |
+| `callout` | Structural nodes and Narrative placements only | `variant`, `severity`, `icon`, `collapsible`, `titleTranslations`, `bodyTranslations` |
+
+Widget placement is **layout-only** — the placement wrapper contributes width,
+alignment, minimum height, spacing, and responsive behavior. All widget chrome
+(background, border, shadow, corner radius, padding, accent) is owned by each
+widget's own `styleConfiguration`, managed through `templates widget-templates`.
+
+Allowed enum/token values are:
+
+| Field family | Values |
+|--------------|--------|
+| Canvas content width | Default, FullWidth, Constrained, Wide |
+| Canvas content alignment | Default, Start, Center, Stretch |
+| Layout mode | Default, Stack, Grid, Inline |
+| Alignment | Default, Start, Center, End, Stretch |
+| Minimum height | None, S, M, L |
+| Header behavior | Default, Visible, Hidden, Collapsible, CollapsedByDefault |
+| Spacing token | None, XS, S, M, L, XL |
+| Responsive breakpoint | Never, Sm, Md, Lg |
+| Typography | Default, Compact, Standard, Emphasis |
+| Width behavior | WidgetSizeDefault, Auto, Fill |
+| Callout variant | None, Info, Success, Warning, Critical, Narrative |
+| Callout severity | Default, Low, Medium, High, Critical |
+
+Use safe color values only: named design tokens, `#rgb`, `#rrggbb`, `#rrggbbaa`, bounded `rgb(...)`/`rgba(...)`, or `var(--token-name)`. Use safe icon tokens containing letters, numbers, underscores, or hyphens.
+
+Structured lengths are JSON objects, not CSS strings. Use a single `value` or side-specific `top`, `right`, `bottom`, and `left` numbers with `unit: { "id": 0, "name": "Px" }` or `unit: { "id": 1, "name": "Rem" }`. Free-text CSS shorthands such as `"1rem 2rem"` are rejected.
+
+Excel dashboard-template workbooks include `Dashboard Style JSON` on the dashboard row and row-level metadata columns named `nodeLayoutJson`, `nodeStyleJson`, `placementLayoutJson`, and `calloutJson`. These cells contain the same JSON objects used by `save` and `import-json`.
+
+`WidgetSize` remains the default width for widget and narrative placements. Use `placementLayout.widthBehavior` only when a placement should Auto-size or Fill its available track. Widget-template internals — including all chrome — are configured through `templates widget-templates`; dashboard placement layout only controls how that widget is sized and positioned within its track.
+
+**Widget command discovery for agents:**
 
 ```bash
 cap templates widget-templates --help
 cap templates widget-templates list --help
 cap templates widget-templates get --help
 cap templates widget-templates get-bulk --help
+cap templates widget-templates schema --help
+cap templates widget-templates sample --help
+cap templates widget-templates schema --widget-type info --json
+cap templates widget-templates sample --widget-type info --json
 cap templates widget-templates create --help
 cap templates widget-templates save --help
 cap templates widget-templates import-json --help
@@ -449,11 +527,96 @@ cap templates widget-templates upload-excel --help
 cap templates dashboard-templates import-json --help
 cap templates dashboard-templates audit --help
 cap reporting widgets --help
+cap reporting widgets info-card --help
+cap reporting widgets pie-chart --help
 cap reporting widgets table --help
+cap reporting widgets text-block --help
+cap reporting widgets xy-chart --help
 cap reporting widgets get-data --help
 ```
 
-Use `cap reporting widgets table ... --json` when an agent needs the shared dashboard table contract with `timePeriodColumns`, `metricColumns`, `gridRows`, `metadataColumns`, `totalCount`, and paging support. Use `cap reporting widgets get-data ... --json` when an agent needs the legacy CSV compatibility envelope for analysis workflows.
+Use `cap reporting widgets info-card ... --json` when an agent needs resolved
+Info Card text, values, trend tokens, warnings, and returned
+`styleConfiguration` for dashboard-render parity. Use `cap reporting widgets
+pie-chart ... --json` when an agent needs the shared pie/donut render contract
+with returned `styleConfiguration`, `centerNumberFormat`, resolved `center`,
+`labelDisplay`, `legend`, `dataItems[].presentation`,
+`dataItems[].numberFormat`, `dataItems[].legendValue`, and
+`dataItems[].sliceLabel` metadata. In non-JSON mode, the command prints
+`Center: <label>: <value>` when configured and includes `Legend` and `Slice
+Label` columns. Use `cap reporting widgets table ... --json` when an agent
+needs the shared dashboard table contract with `timePeriodColumns`,
+`metricColumns`, `metricNumberFormats`, `gridRows`, `metadataColumns`,
+`selectionDiagnostics`, `styleConfiguration`, `warnings`, `totalCount`, and
+paging support. Use `cap reporting widgets text-block ... --json` when an agent
+needs the shared TextBlock render contract with resolved `titleContent`,
+`subtitleContent`, `descriptionContent`, `footnoteContent`, token spans,
+`styleConfiguration`, `warnings`, and `diagnostics`. Use `cap reporting widgets
+get-data ... --json` when an agent needs the legacy CSV compatibility envelope
+for analysis workflows.
+
+**Info Card style discovery for agents:**
+
+```bash
+cap templates widget-templates sample --widget-type info --json
+cap templates widget-templates schema --widget-type info --json
+cap templates widget-templates get <widget-template-id> --json
+cap templates widget-templates save --file info-card.json --json
+cap reporting widgets info-card <widget-template-id> --org-nodes <id> --data-interval quarter --periods "Q3 FY 25" --json
+```
+
+The widget-type variant is `info`; `info-card` is accepted as a readability
+alias.
+
+The sample and schema document the `styleConfiguration` slots (`panel`, `title`,
+`value`, `unit`, `label`, `description`, `footnote`, `separators`, `trend`, and
+`stateMessages`), bounded typography and surface fields, panel-only
+`padding`/`gap`/accent fields, per-direction trend `color`/`icon`, and Info Card
+data-item `numberFormat`. For worked style patterns, use
+[Configure Info Card Styles](../recipes/configuration/configure-info-card-styles.md).
+
+**Pie style discovery for agents:**
+
+```bash
+cap templates widget-templates sample --widget-type pie --json
+cap templates widget-templates schema --widget-type pie --json
+cap templates widget-templates get <widget-template-id> --json
+cap templates widget-templates save --file pie-chart.json --json
+cap reporting widgets pie-chart <widget-template-id> --org-nodes <id> --data-interval month --periods "Jan 25" --json
+```
+
+The widget-type variant is `pie`; `pie-chart` is accepted as a readability
+alias.
+
+For automation, use these JSON roots:
+
+| Command | JSON Root |
+|---------|-----------|
+| `cap templates widget-templates list --json` | `.data[]` contains compact grid rows. |
+| `cap templates widget-templates sample --widget-type pie --json` | `.payload.widgetTemplate` contains the save-ready sample body. |
+| `cap templates widget-templates schema --widget-type pie --json` | `.fieldLookups[]` contains enum values, including schema-only Pie center/legend/slice modes. |
+| `cap templates widget-templates get <id> --json` | `.widgetTemplate` contains the editable full DTO. |
+| `cap templates widget-templates save --file pie-chart.json --json` | Top-level acknowledgement with `success`, `id`, child data-item counts, and `warnings`; run `get` for the full updated DTO. |
+| `cap reporting widgets pie-chart <id> ... --json` | Top-level render contract with `id`, `title`, `pieChartWidgetType`, `styleConfiguration`, `center`, `legend`, `labelDisplay`, and `dataItems[]`. |
+
+The sample and schema document Pie `styleConfiguration` slots (`panel`,
+`title`, `description`, `footnote`, `chartArea`, `slices`, `sliceBorders`,
+`sliceLabels`, `ticks`, `tooltip`, `legend`, `legendMarkers`, `legendLabels`,
+`legendValues`, `donutCenter`, and `stateMessages`), `centerNumberFormat`,
+`dataItems[].presentation`, `dataItems[].numberFormat`, and existing
+`valueSelectionConfig`. `styleConfiguration` slots are the chart-wide ("all
+slices") base; `dataItems[].presentation` overrides them per slice. The cascade
+is per-slice presentation → chart-wide slot → theme/palette. `legendMarkers`
+accepts `borderColor`/`borderWidth`/`borderRadius`/`opacity` only — a marker's
+colour always follows its slice, so there is no chart-wide marker fill. Set
+per-slice fill with `dataItems[].presentation.slice.backgroundColor`; legacy
+workbook `Colour` values are import-only aliases into that slot. Keep
+style/format fields separate from `valueSelectionConfig`; raw CSS, HTML,
+JavaScript, callbacks, unsafe URLs, arbitrary chart config, `styleBag`, and
+`propertyBag` are rejected. For worked style patterns, use
+[Configure Pie Chart Styles](../recipes/configuration/configure-pie-chart-styles.md).
+
+Use `cap reporting widgets xy-chart ... --json` when an agent needs the shared browser-aligned XY render contract with `categoryAxes`, `valueAxes`, `chartSeries[].renderConfig`, `chartSeries[].metricMetadata`, `styleMetadata`, `diagnostics`, `warnings`, and `noData`.
 
 ---
 
@@ -496,12 +659,28 @@ Widget templates support auto-wrapping - you can provide the inner object withou
 # InfoCard (auto-wrapped - recommended)
 echo '{
   "name": "Energy Usage Card",
+  "title": "Energy Usage",
+  "footnote": "#trend[<delta-calculation-metric-id>] since @[period:-1]",
   "widgetType": { "id": 0, "name": "InfoCard" },
   "discipline": { "id": "<discipline-id>" },
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
   "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+  "styleConfiguration": {
+    "panel": { "borderRadius": 8, "borderColor": "border", "borderWidth": 1, "backgroundColor": "surface", "fontFamily": "theme" },
+    "title": { "foregroundColor": "text-primary", "fontWeight": "Semibold", "fontSize": 14, "borderWidth": 0 },
+    "value": { "foregroundColor": "text-primary", "fontWeight": "Bold", "fontSize": 32 },
+    "trend": {
+      "accentColor": "neutral",
+      "fontWeight": "Medium",
+      "showLabel": false,
+      "up": { "color": "success", "icon": "arrow-up" },
+      "down": { "color": "danger", "icon": "arrow-down" },
+      "flat": { "color": "neutral", "icon": "equals" },
+      "unknown": { "color": "unknown", "icon": "none" }
+    }
+  },
   "dataItems": [
     {
       "metric": { "id": "<metric-id>" },
@@ -510,9 +689,24 @@ echo '{
       "partitioningRankMode": { "id": 0, "name": "None" },
       "partitioningRankLimit": null,
       "sortOrder": 1
+    },
+    {
+      "metric": { "id": "<delta-calculation-metric-id>", "name": "Delta Calculation metric" },
+      "name": "Delta",
+      "metricPartitioningMode": { "id": 0, "name": "None" },
+      "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+      "partitioningRankMode": { "id": 0, "name": "None" },
+      "partitioningRankLimit": null,
+      "sortOrder": 2
     }
   ]
 }' | cap templates widget-templates create --json
+
+Info Card comparisons use ordinary selected metrics, Calculation metrics, and display-property tokens. Raw API/CLI JSON uses stored GUID-form tokens such as `[metric-guid]`, `[metric-guid]|-1|`, or `#trend[metric-guid]`; the widget editor and Widget Template Excel use metric names and transpose them to GUIDs internally. Widget Template Excel preserves the same bounded style contract in the `Info Card Style` JSON column; do not add target, benchmark, prior, delta, or delta-percent columns or CLI-only fields.
+
+Info Card style JSON is schema-limited. `fontFamily` must be one of `theme`, `sans`, `serif`, `mono`, `nunito`, `roboto`, `poppins`, or `arial`; `fontSize`, `borderWidth`, and panel `accentWidth` are bounded integers. `accentSide` and `accentWidth` are panel-only fields. A border renders only with positive `borderWidth` plus safe `borderColor`; a panel accent edge renders only with `accentSide`, positive `accentWidth`, and safe `accentColor`.
+
+Trend presentation is configured per Info Card through `styleConfiguration.trend`. Direction keys are `up`, `down`, `flat`, and `unknown`; each direction accepts a safe `color` token or hex value and a bounded `icon` token. Use `icon: "none"` for color-only trends. Do not use raw CSS classes, FontAwesome class names, HTML, scripts, or `url()` values.
 
 # PieChart
 echo '{
@@ -523,7 +717,26 @@ echo '{
   "dataInterval": { "id": 2, "name": "Month" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
   "showLegend": true,
+  "pieChartWidgetTemplateType": { "id": 1, "name": "Donut Chart" },
+  "centerMode": { "id": 2, "name": "Metric Value" },
+  "centerStaticText": null,
+  "centerMetricId": "<total-waste-metric-id>",
+  "centerMetricLabel": null,
+  "centerNumberFormat": { "precision": 2, "magnitude": "Millions" },
+  "legendValueMode": { "id": 1, "name": "Value" },
+  "sliceLabelMode": { "id": 3, "name": "Label and Value" },
   "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+  "styleConfiguration": {
+    "panel": { "backgroundColor": "surface", "borderColor": "border", "borderWidth": 1, "borderRadius": 8, "padding": 20 },
+    "title": { "foregroundColor": "text-primary", "fontWeight": "Semibold", "fontSize": 18 },
+    "chartArea": { "backgroundColor": "surface", "padding": 8 },
+    "slices": { "opacity": 0.9 },
+    "sliceBorders": { "borderColor": "surface", "borderWidth": 2 },
+    "ticks": { "borderColor": "border", "borderWidth": 1, "opacity": 0.75 },
+    "legendValues": { "foregroundColor": "text-secondary", "fontWeight": "Semibold", "fontSize": 13 },
+    "donutCenter": { "foregroundColor": "text-primary", "fontWeight": "Bold", "fontSize": 28 },
+    "stateMessages": { "foregroundColor": "warning" }
+  },
   "dataItems": [
     {
       "metric": { "id": "<metric-id>" },
@@ -533,7 +746,14 @@ echo '{
       "partitioningRankLimit": null,
       "showInLegend": true,
       "showTooltip": true,
-      "sortOrder": 1
+      "sortOrder": 1,
+      "presentation": {
+        "slice": { "backgroundColor": "#4a90d9" },
+        "legendValue": { "fontWeight": "Semibold", "foregroundColor": "text-secondary" },
+        "tooltip": { "fontSize": 12, "foregroundColor": "text-primary" },
+        "sliceLabels": { "fontSize": 12, "foregroundColor": "text-primary" }
+      },
+      "numberFormat": { "precision": 1, "magnitude": "Thousands" }
     }
   ]
 }' | cap templates widget-templates create --json
@@ -549,6 +769,10 @@ echo '{
   "metricSelectionMode": { "id": 0, "name": "Static" },
   "showLegend": true,
   "invertAxes": false,
+  "styleConfiguration": {
+    "categoryAxis": { "labelRotation": 45, "labelDensity": "Comfortable" },
+    "series": { "strokeWidth": 2 }
+  },
   "axes": [{ "name": "Value", "dynamicAxis": true }],
   "timePeriodAggregationMethod": { "id": 0, "name": "None" },
   "dataItems": [
@@ -556,6 +780,9 @@ echo '{
       "metric": { "id": "<metric-id>" },
       "xyChartWidgetTemplateDataItemType": { "id": 2, "name": "Line" },
       "xyChartWidgetTemplateAxis": { "name": "Value", "dynamicAxis": true },
+      "presentation": {
+        "series": { "color": "#1565C0" }
+      },
       "timePeriodAggregationMethod": { "id": 0, "name": "None" },
       "showInLegend": true,
       "showTooltip": true,
@@ -564,7 +791,7 @@ echo '{
   ]
 }' | cap templates widget-templates create --json
 
-# Table (dimensional dashboard table)
+# Table dashboard table with Dynamic Narrative Scope
 echo '{
   "name": "Portfolio KPI Matrix",
   "title": "Portfolio KPI Matrix",
@@ -573,78 +800,279 @@ echo '{
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 3, "name": "Quarter" },
   "metricSelectionMode": { "id": 0, "name": "Static" },
-  "tableVersion": 1,
+  "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+  "dataGrouping": { "id": 1, "name": "OrgNode" },
+  "orgNodeRowSelectionMode": { "id": 0, "name": "Children" },
+  "showOnlyRowsWithValues": true,
+  "showMetricValue": true,
+  "showUnitOfMeasure": true,
+  "showMetricsInColumns": false,
   "missingValuePlaceholder": "-",
-  "groupingMode": { "id": 1, "name": "Org Node" },
-  "metricRowSource": {
-    "metrics": [],
-    "metricTypeFilters": [],
-    "disciplineFilters": [],
-    "frameworkFilters": [],
-    "metricAttributeFilters": [],
-    "orgNodePartitioningMode": { "id": 0, "name": "None" }
-  },
-  "orgNodeRowSource": {
-    "rowSelectionMode": { "id": 0, "name": "Children" },
-    "orgNodeAttributeFilters": []
-  },
-  "includeOrgNodeName": true,
-  "includeOrgNodePath": false,
-  "includeOrgNodeAttributes": [
-    { "id": "<sector-attribute-type-id>", "name": "Sector" }
-  ],
-  "includeMetricName": false,
-  "includeMetricReference": false,
-  "includeMetricAttributes": [],
-  "includeDiscipline": false,
-  "includeFramework": false,
-  "columnLayout": { "id": 3, "name": "Metric Then Period" },
-  "metrics": [
+  "dataItems": [
     {
       "metric": { "id": "<revenue-metric-id>", "name": "Revenue" },
+      "metricPartitioningMode": { "id": 0, "name": "None" },
+      "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
+      "partitioningRankMode": { "id": 0, "name": "None" },
+      "partitioningRankLimit": null,
       "sortOrder": 0
+    }
+  ],
+  "metricAttributeTypeIds": ["<sector-attribute-type-id>"],
+  "narrativeSelectionMode": { "id": 0, "name": "Dynamic" },
+  "narrativeScopeConfigured": true,
+  "narrativeDisciplineFilters": [
+    { "id": "<discipline-id>", "name": "Finance" }
+  ],
+  "narrativeFrameworkFilters": [],
+  "narrativeMetricAttributeFilters": [],
+  "narrativeDisciplineNodeAttributeFilters": [],
+  "narrativeFrameworkNodeAttributeFilters": [],
+  "narrativeAttributeFilters": [],
+  "narratives": [],
+  "styleConfiguration": {
+    "rowLabelHeader": "Company",
+    "zebraStripeColor": "surface",
+    "gridHeader": {
+      "foregroundColor": "text-primary",
+      "fontWeight": "Bold",
+      "textTransform": "Uppercase",
+      "letterSpacing": 1
     },
-    {
-      "metric": { "id": "<ebitda-metric-id>", "name": "EBITDA" },
-      "sortOrder": 1
-    }
-  ],
-  "periodSet": [
-    { "id": "<q1-period-id>", "name": "Q1 FY 25" },
-    { "id": "<q2-period-id>", "name": "Q2 FY 25" }
-  ],
-  "extraColumns": [
-    {
-      "sortOrder": 0,
-      "headerTranslations": [{ "value": "YoY %", "language": { "code": "en" } }],
-      "calculationMetricSelection": {
-        "metric": { "id": "<yoy-calculation-metric-id>", "name": "Revenue YoY %" }
-      },
-      "formatter": { "id": 2, "name": "Percent" },
-      "precision": 1,
-      "alignment": { "id": 2, "name": "Right" }
-    }
-  ],
-  "dimensionalSorts": [
-    {
-      "targetDimension": { "id": 1, "name": "Row context" },
-      "targetAttributeType": { "id": "<sector-attribute-type-id>", "name": "Sector" },
-      "direction": { "id": 0, "name": "Ascending" },
-      "nullPlacement": { "id": 0, "name": "Last" },
-      "sortOrder": 0
-    }
-  ],
-  "formatter": { "id": 0, "name": "Number" },
-  "precision": 2,
-  "unitMode": { "id": 3, "name": "Cell" },
-  "alignment": { "id": 2, "name": "Right" },
-  "widthMode": { "id": 0, "name": "Auto" }
+    "valueCells": {
+      "textAlign": "End"
+    },
+    "conditionalFormatRules": [
+      {
+        "configuredColumnId": "metric:<metric-guid-n>",
+        "operator": "Negative",
+        "style": { "foregroundColor": "danger" }
+      }
+    ]
+  }
 }' | cap templates widget-templates create --json
 ```
 
 > **Note:** The CLI auto-wraps JSON in `{"widgetTemplate": {...}}` if the root object has `name` or `widgetType` properties. You can also use the explicit wrapper format if preferred.
 
-Table templates use the same shared WidgetTemplate API and CLI command surface as the existing widget types. Manage them with `cap templates widget-templates list|get|get-bulk|create|save|import-json|delete|download-excel|upload-excel`, and set the widget type to `{ "id": 4, "name": "Table" }` in JSON or the corresponding Table widget type in Excel. Table data comes from selected Input or Calculation metrics and their ComputedValues; do not encode hidden widget-only calculations in the template.
+### Widget Value Selection
+
+Widget templates can carry advanced `valueSelectionConfig` in JSON create/save
+payloads, `import-json` batches, and widget-template Excel import/export. The
+same validator runs for API, CLI JSON, and Excel upload, so unsupported matrix
+cells and unknown nested fields fail consistently.
+
+Use schema and sample commands to inspect the editable shape:
+
+```bash
+cap templates widget-templates schema --widget-type info --json
+cap templates widget-templates schema --widget-type pie --json
+cap templates widget-templates schema --widget-type xy --json
+cap templates widget-templates schema --widget-type table --json
+cap templates widget-templates schema --widget-type textblock --json
+cap templates widget-templates sample --widget-type pie --json
+```
+
+#### Dynamic Metric Selection And Metric-Set Value Selection
+
+`widgetTemplate.metricSelectionMode` controls whether a widget lists explicit
+metrics or resolves metrics from scope filters:
+
+| Mode | `metricSelectionMode` | Behavior |
+|------|------------------------|----------|
+| **Static** | `{ "id": 0, "name": "Static" }` | You list each metric explicitly in `widgetTemplate.dataItems[]`. |
+| **Dynamic** | `{ "id": 1, "name": "Dynamic" }` | The metrics are resolved at render time from the metric-scope filters below. Omit explicit `dataItems` for dynamic Table templates; Info Card/Pie dynamic samples also omit explicit `dataItems`. |
+
+In Dynamic mode the metric set is scoped by these widget-level filter arrays.
+Every array is optional; an **empty array selects all** along that axis, and you
+add `{ "id", "name" }` entries to narrow it:
+
+| Filter field | Narrows the set by |
+|--------------|--------------------|
+| `metricTypeFilters` | Metric type: `{ "id": 0, "name": "Input" }` and/or `{ "id": 1, "name": "Calculation" }` |
+| `metricDisciplineFilters` | Discipline node(s) |
+| `metricFrameworkFilters` | Framework node(s) |
+| `metricAttributeFilters` | Metric attribute value(s) |
+| `disciplineAttributeFilters` | Primary discipline attribute filter object(s), used by current Table metric scope |
+| `frameworkAttributeFilters` | Primary framework attribute filter object(s), used by current Table metric scope |
+| `disciplineNodeAttributeFilters` | Discipline org-structure attribute value(s) |
+| `frameworkNodeAttributeFilters` | Framework org-structure attribute value(s) |
+
+For Table templates in Dynamic metric mode, author at least one non-empty
+metric-scope filter family: `metricTypeFilters`, `metricDisciplineFilters`,
+`metricFrameworkFilters`, `metricAttributeFilters`, `disciplineAttributeFilters`,
+or `frameworkAttributeFilters`. Empty arrays still mean "all" for an authored
+axis once Dynamic mode has a non-empty filter family.
+
+To sort and Top/Bottom-rank either a dynamically-resolved Info Card/Pie metric
+set or an explicit static chart/card metric set, attach a **widget-level**
+`valueSelectionConfig` with `ownerScope: "WidgetDynamicMetricSet"` (see the
+example further below). In Static mode, keep explicit `dataItems[]`; the engine
+treats the candidates as a static metric set and updates the render order from
+the selected values. This is distinct from partitioned per-data-item selection,
+which uses `ownerScope: "DataItem"` on `dataItems[].valueSelectionConfig`. Do not
+combine widget-level static metric-set selection with data-item-level selection
+on the same static chart/card.
+
+**Dynamic metric-set value selection** is limited to Info Card and Pie Chart.
+XY Chart has no dynamic metric discovery (use explicit static XY data items).
+Table widgets do support Dynamic metric selection through Metric Scope
+(`metricTypeFilters`, discipline/framework filters, and attribute filters), but
+Table ranking/filtering uses the separate `TableRows` owner scope over resolved
+rows, not `WidgetDynamicMetricSet`. Run
+`cap templates widget-templates schema --widget-type table --json` to inspect
+the Table metric, narrative, custom-column, and style fields.
+
+Supported owner scopes:
+
+| Scope | JSON location | Supported widgets |
+|-------|---------------|-------------------|
+| `DataItem` | `widgetTemplate.dataItems[].valueSelectionConfig` | Info Card, Pie Chart, XY Chart partitioned data items |
+| `WidgetDynamicMetricSet` | `widgetTemplate.valueSelectionConfig` | Static Info Card, Pie Chart, and XY metric sets; Dynamic Info Card and Pie Chart metric sets |
+| `TableRows` | `widgetTemplate.valueSelectionConfig` | Table row filtering, ordering, and Top/Bottom rank |
+
+XY Chart does not support Dynamic mode metric-set discovery; create explicit
+static XY data items, then use widget-level `WidgetDynamicMetricSet` selection
+to order or Top/Bottom-rank that configured set.
+
+All enum values in `valueSelectionConfig` are serialized as **bare strings**
+(e.g. `"rankMode": "Top"`), not `{ "id", "name" }` objects. The config object
+rejects unknown members, so misspelled or stale fields fail validation.
+
+**Config fields:**
+
+| Field | Type / values | Rule |
+|-------|---------------|------|
+| `ownerScope` | `DataItem`, `WidgetDynamicMetricSet`, `TableRows` | Must match the JSON location (see table above) |
+| `valueSelector` | object (see selector kinds below) | Required |
+| `orderMode` | `None`, `ValueAscending`, `ValueDescending` | |
+| `rankMode` | `None`, `Top`, `Bottom` | |
+| `rankLimit` | integer `1`..`1000` (MaxPageSize) | Required when `rankMode` is `Top`/`Bottom`; must be omitted otherwise |
+| `nullPlacement` | `Last`, `DefaultLast` | Only `Last`/`DefaultLast` are authorable; authoring `First` is rejected |
+| `predicates` | array, max 5 | Filters applied before ranking (see below) |
+| `diagnosticsLabel` | string (optional) | Free-text label echoed in selection diagnostics output |
+| `boundsWarningMode` | `Default`, `Warn`, `Suppress` (optional) | Controls advisory warnings when the projected element count is large |
+
+**Selector kinds** (`valueSelector.selectorKind`):
+
+| Scope | Supported `selectorKind` | Required selector fields |
+|-------|--------------------------|--------------------------|
+| `DataItem`, `WidgetDynamicMetricSet` | `AggregatedRange` | `aggregationMethod` (`Sum`/`Average`/`LastValue`/`Min`/`Max`), `fallbackWhenMissing` (`None`/`TreatAsNull`/`Reject`) |
+| `TableRows` | `TableMetricAggregate`, `TableRowAggregate` | `aggregationMethod`, `fallbackWhenMissing`; `TableMetricAggregate` also takes `tableColumnKey` (e.g. `"metric:<metric-guid-n>"`). `TableRowAggregate` must not carry `tableColumnKey`. |
+
+**Predicates** (`predicates[]`, max 5, applied before ranking):
+
+| Field | Type / values | Rule |
+|-------|---------------|------|
+| `predicateType` | `Value`, `Null` | |
+| `operator` | Value: `GT`, `GTE`, `LT`, `LTE`, `EQ`, `NE`, `Between`. Null: `IsNull`, `IsNotNull` | Operator set depends on `predicateType` |
+| `operandKind` | `Number`, `Metric` (Value predicates only) | Defaults to `Number` |
+| `lowerValue` | number | `Number` operand: required for all Value operators |
+| `upperValue` | number | `Number` operand: required only for `Between` |
+| `metricId` / `metricStableKey` | GUID / stable key | `Metric` operand: exactly one required; cannot use `Between`; cannot carry numeric values |
+| `tolerance` | number ≥ 0 (optional) | Negative tolerance is rejected |
+
+`Null` predicates carry no operand fields (no `operandKind`, `lowerValue`,
+`upperValue`, `metricId`, or `metricStableKey`). `Metric` operand predicates are
+not supported in dynamic metric-set selection (`WidgetDynamicMetricSet`); use
+`Number` operands there.
+
+Example dynamic Pie Top 5 (with a Number-operand filter):
+
+```json
+{
+  "name": "Top Inputs | Pie",
+  "widgetType": { "id": 1, "name": "Pie Chart" },
+  "metricSelectionMode": { "id": 1, "name": "Dynamic" },
+  "valueSelectionConfig": {
+    "ownerScope": "WidgetDynamicMetricSet",
+    "valueSelector": {
+      "selectorKind": "AggregatedRange",
+      "aggregationMethod": "Sum",
+      "fallbackWhenMissing": "TreatAsNull"
+    },
+    "orderMode": "ValueDescending",
+    "rankMode": "Top",
+    "rankLimit": 5,
+    "nullPlacement": "Last",
+    "predicates": [
+      {
+        "predicateType": "Value",
+        "operator": "GTE",
+        "operandKind": "Number",
+        "lowerValue": 0
+      }
+    ],
+    "diagnosticsLabel": "Top 5 inputs by sum",
+    "boundsWarningMode": "Warn"
+  }
+}
+```
+
+Example Table row selection (Top 5 rows by a metric column, with a Metric-operand filter):
+
+```json
+{
+  "name": "Top Sites | Table",
+  "widgetType": { "id": 4, "name": "Table" },
+  "valueSelectionConfig": {
+    "ownerScope": "TableRows",
+    "valueSelector": {
+      "selectorKind": "TableMetricAggregate",
+      "aggregationMethod": "Sum",
+      "tableColumnKey": "metric:<metric-guid-n>",
+      "fallbackWhenMissing": "TreatAsNull"
+    },
+    "orderMode": "ValueDescending",
+    "rankMode": "Top",
+    "rankLimit": 5,
+    "nullPlacement": "Last",
+    "predicates": [
+      {
+        "predicateType": "Value",
+        "operator": "GT",
+        "operandKind": "Metric",
+        "metricStableKey": "<threshold-metric-guid-n>"
+      }
+    ]
+  }
+}
+```
+
+> `tableColumnKey` uses the stored `metric:<guid>` form where `<guid>` is the
+> metric ID without dashes (the `N` GUID format).
+
+Info Card and the other widget types support per-data-item selection at
+`widgetTemplate.dataItems[].valueSelectionConfig` with `ownerScope: "DataItem"`.
+Run `cap templates widget-templates sample --widget-type info --json` for a
+ready-to-edit example that includes a data-item `valueSelectionConfig`.
+
+Excel stores `valueSelectionConfig` as a single JSON-in-cell column. A blank cell
+means no value-selection config, and upload rejects stale/removed fields such as
+`changeFilter`, `moversMode`, and `includeOnlyChanged`, as well as removed
+change-typed predicate types (`AbsoluteChange`, `PercentChange`, `SignChange`).
+
+Pie and donut templates use the same shared WidgetTemplate API and CLI command surface as the existing widget types. Manage them with `cap templates widget-templates list|get|get-bulk|create|save|import-json|delete|download-excel|upload-excel`, and render live data with `cap reporting widgets pie-chart ...`.
+
+**Pie/donut display fields:**
+
+| JSON field | Excel column | Values / default | Rule |
+|------------|--------------|------------------|------|
+| `pieChartWidgetTemplateType` | `Pie Chart Type` | `0` Pie Chart, `1` Donut Chart | Required for pie widgets |
+| `centerMode` | `Center Mode` | `0` None, `1` Static Text, `2` Metric Value; default `None` | Donut Chart only |
+| `centerStaticText` | `Center Static Text` | Free text | Required when `centerMode.id` is `1`; disallowed for Metric Value |
+| `centerMetricId` | `Center Metric Id` | Metric GUID | Required when `centerMode.id` is `2`; disallowed for Static Text |
+| `centerMetricLabel` | `Center Metric Label` | Optional text | Optional override for Metric Value centers; if blank, render uses metric friendly name, then metric name |
+| `legendValueMode` | `Legend Value Mode` | `0` Hidden, `1` Value; default `Value` | Stored enum behind the UI's **Show Legend Value** checkbox; controls numeric values in visible legend rows, not row visibility |
+| `sliceLabelMode` | `Slice Label Mode` | `0` Hidden, `1` Label, `2` Value, `3` Label and Value; default `Hidden` | Controls labels rendered on slices, separate from tooltips and legend rows |
+
+Widget-template Excel download/upload includes the display columns above plus `Center Metric`. On upload, set `Center Metric Id` for a stable metric reference or `Center Metric` for an exact-name lookup; if both are present they must resolve to the same metric. Legacy workbooks that omit the new columns continue to import with defaults.
+
+The dashboard editor presents `centerMetricId` through the searchable metric grid picker. The CLI and Excel contracts still use the explicit metric ID/name fields so imports remain stable and diffable.
+
+Table templates use the same shared WidgetTemplate API and CLI command surface as the existing widget types. Manage them with `cap templates widget-templates list|get|get-bulk|create|save|import-json|delete|download-excel|upload-excel`, and set the widget type to `{ "id": 4, "name": "Table" }` in JSON or the corresponding Table widget type in Excel. Table data comes from selected Input or Calculation metrics, their ComputedValues, and optional dynamic or static narrative rows; do not encode hidden widget-only calculations in the template.
+
+TextBlock templates use the same shared WidgetTemplate API, CLI command surface, and widget-template Excel download/upload workflow. Manage them with `cap templates widget-templates list|get|get-bulk|create|save|import-json|delete|download-excel|upload-excel`, set the widget type to `{ "id": 6, "name": "TextBlock" }`, and render live data with `cap reporting widgets text-block ...`. TextBlock discovers metrics from explicit tokens in `title`, `subtitle`, `description`, and `footnote`; do not create hidden `dataItems[]` rows for those references. Excel roundtrips `Subtitle` and `Text Block Style` columns alongside the existing title/description/footnote fields.
 
 **Widget Types:**
 | ID | Name | Use Case |
@@ -653,17 +1081,24 @@ Table templates use the same shared WidgetTemplate API and CLI command surface a
 | 1 | PieChart | Part-to-whole breakdown |
 | 2 | XYChart | Time series / trends |
 | 4 | Table | Dashboard grid/table render |
+| 6 | TextBlock | Metric-aware dashboard text |
 
 **Table validation highlights:**
 | Area | Rule |
 |------|------|
-| `tableVersion` | Must be `1` |
-| `groupingMode` | Required; use `Metric` rows or `Org Node` rows |
-| Row source | `GroupingMode=Metric` needs at least one metric selector; `GroupingMode=Org Node` needs `orgNodeRowSource.rowSelectionMode` |
-| Row context | At least one include toggle or attribute list must be configured |
-| `columnLayout` | Required; `Periods`, `Metrics`, `Metric Then Period`, and `Period Then Metric` derive generated value columns from `metrics` and `periodSet` |
-| `extraColumns` | Optional per-row Calculation metric columns for patterns such as YoY |
-| Render budget | The platform defaults to 2,000 rendered cells and has a 10,000-cell hard limit; these are not designer JSON inputs |
+| `dataGrouping` | Required; controls row grouping. `OrgNode` also requires `orgNodeRowSelectionMode`. `Framework` requires Dynamic metric selection. |
+| Metric selection | Static tables use explicit `dataItems[]` unless metric filters provide the report-template fallback. Dynamic tables use metric type, discipline, framework, metric-attribute, discipline-attribute, and framework-attribute filters and clear explicit data items on save. |
+| Org-node scope | `orgNodeAttributeFilters` filters the resolved org-node scope before values are loaded; it is not the deferred `OrgNodeAttribute` row-grouping mode. |
+| Custom columns | `showMetricValue`, `showUnitOfMeasure`, and `metricAttributeTypeIds` control visible helper/value columns. |
+| `narrativeSelectionMode` | `Dynamic` (`id: 0`) resolves narratives from Narrative Scope. `Static` (`id: 1`) renders explicit `narratives[]`. |
+| `narrativeScopeConfigured` | Set `true` when Dynamic Narrative Scope is intentionally authored. Empty scope arrays then mean all permitted values; `false`/omitted preserves legacy metric-scope fallback. |
+| Narrative Scope | Dynamic scope can filter by `narrativeDisciplineFilters`, `narrativeFrameworkFilters`, `narrativeMetricAttributeFilters`, `narrativeDisciplineNodeAttributeFilters`, `narrativeFrameworkNodeAttributeFilters`, and `narrativeAttributeFilters`. |
+| Static narratives | `narratives[]` contains `{ narrative: { id, name }, sortOrder }` entries and is used only when `narrativeSelectionMode` is Static. |
+| Org-node template | Do not author `orgNodeTemplateId` on new Table widgets; dashboard config determines the org-node-template lens at render time. |
+| Included data types | Do not use `includedDataTypes` as a new authoring control; it is an internal spreadsheet-adapter compatibility field. |
+| Style | `styleConfiguration` uses the bounded Table style contract for slots, `rowLabelHeader`, `zebraStripeColor`, column overrides, row overrides, conditional formatting, and categorical color tags. |
+| Deferred columns/grouping | Arbitrary static-text columns, org-node-attribute display columns, expression columns, and `OrgNodeAttribute` row grouping are not current authoring fields. |
+| Render budget | The platform applies table render budgets server-side; budget values are not designer JSON inputs. |
 | `--help` | Available on `cap templates widget-templates --help`, `cap reporting widgets --help`, and each widget subcommand |
 
 See [Create Widget Template Recipe](../recipes/configuration/create-widget-template.md) for detailed examples.
@@ -903,7 +1338,7 @@ This table is a high-level availability summary only.
 | `root` | schema, concepts, status, version | ✅ Available |
 | `workflows` | list, show | ✅ Available |
 | `update` | check | ✅ Available |
-| `config` | set, get, unset | ✅ Available |
+| `config` | set, get, list, show, unset | ✅ Available |
 | `auth` | Login, logout, tenant selection, current-user context, API key management, available language list | ✅ Available |
 | `meta` | cross-domain lookups | ✅ Available |
 | `model` | metrics, inputs, calculations, narratives, model tree aliases, lookups | ✅ Available |

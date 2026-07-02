@@ -110,4 +110,4 @@ See `docs/mcp/setup.md` for complete configuration examples.
 
 Current release: `see environment manifests` (`environment-specific`)
 
-Last updated: `2026-06-21T10:14:59Z`
+Last updated: `2026-07-02T06:40:56Z`

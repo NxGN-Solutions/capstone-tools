@@ -82,6 +82,7 @@ For widget templates, set this at both the widget default and data-item override
 | 2 | XY Chart | Time series, comparisons (Column/Bar/Line/Area) |
 | 3 | AI Summary | AI-generated insights from sibling/descendant widgets |
 | 4 | Table | Metric-backed dashboard table/grid |
+| 6 | TextBlock | Metric-aware dashboard text with title, subtitle, description, and footnote |
 
 ### Widget Sizes
 
@@ -94,7 +95,7 @@ For widget templates, set this at both the widget default and data-item override
 | 4 | 75% | Three-quarters width |
 | 5 | 100% | Full width |
 
-**Recommended defaults:** InfoCards at 50%, daily XY Charts at 100%, site-comparison XY Charts at 50%, PieCharts at 33%, Tables at 100% for dense grids, AI Summary at 100%. See [Build Dashboard](../recipes/configuration/build-dashboard.md#widget-sizing-guidelines) for rationale.
+**Recommended defaults:** InfoCards at 50%, daily XY Charts at 100%, site-comparison XY Charts at 50%, PieCharts at 33%, TextBlocks at 100% for narrative/status text, Tables at 100% for dense grids, AI Summary at 100%. See [Build Dashboard](../recipes/configuration/build-dashboard.md#widget-sizing-guidelines) for rationale.
 
 ### AI Summary Context
 
@@ -129,41 +130,21 @@ For widget templates, set this at both the widget default and data-item override
 | 1 | Children | One series per immediate child org node |
 | 2 | Descendants | One series per descendant org node |
 
-### Table Row Field Source Types
+### Table Widget Enums
 
-| ID | Name | Description |
-|----|------|-------------|
-| 0 | MetricName | Metric display name |
-| 1 | MetricReference | Metric reference/code |
-| 2 | MetricType | Input or Calculation |
-| 3 | Discipline | Metric discipline |
-| 4 | Framework | Linked framework names |
-| 5 | MetricAttribute | Selected metric attribute value |
-| 6 | OrgNodeName | Org-node display name |
-| 7 | OrgNodePath | Org-node path |
-| 8 | OrgNodeAttribute | Selected org-node attribute value |
-| 9 | StaticText | Configured static label |
+| Field | Values | Description |
+|-------|--------|-------------|
+| `dataGrouping` | `0 None`, `1 OrgNode`, `2 Discipline`, `3 Framework` | Controls rendered table row grouping. `Framework` requires Dynamic metric selection. |
+| `orgNodeRowSelectionMode` | `0 Children`, `1 Descendants` | Applies when `dataGrouping` is OrgNode. |
+| `narrativeSelectionMode` | `0 Dynamic`, `1 Static` | Dynamic resolves narratives from Narrative Scope; Static renders explicit `narratives[]`. |
 
-### Table Value Binding Modes
+Table metric scope uses `metricTypeFilters`, `metricDisciplineFilters`, `metricFrameworkFilters`, `metricAttributeFilters`, `disciplineAttributeFilters`, and `frameworkAttributeFilters` when `metricSelectionMode` is Dynamic. The legacy/report-template-compatible `disciplineNodeAttributeFilters` and `frameworkNodeAttributeFilters` fields are also accepted by the shared DTO surface. Static Table templates use explicit `dataItems[]` unless metric filters provide the report-template fallback.
 
-| ID | Name | Description |
-|----|------|-------------|
-| 0 | RowMetricValue | Use the metric that generated the row |
-| 1 | SelectedMetricValue | Use a specific selected metric for every row |
-| 2 | CalculationMetricValue | Use a specific Calculation metric for every row |
+Table custom columns are controlled with `showMetricValue`, `showUnitOfMeasure`, and `metricAttributeTypeIds`. Dynamic Narrative Scope uses `narrativeDisciplineFilters`, `narrativeFrameworkFilters`, `narrativeMetricAttributeFilters`, `narrativeDisciplineNodeAttributeFilters`, `narrativeFrameworkNodeAttributeFilters`, and `narrativeAttributeFilters`.
 
-### Table Formatting Enums
+Table `styleConfiguration` uses bounded semantic HTML table slots (`panel`, `header`, `title`, `description`, `gridHeader`, `rowLabels`, `metadataCells`, `valueCells`, `totalCells`, `missingValueCells`, `emptyState`, `errorState`, `footnote`, `paginator`) plus `rowLabelHeader`, `zebraStripeColor`, `columnOverrides[]`, `rowOverrides[]`, `conditionalFormatRules[]`, and `categoricalColorTags[]`.
 
-| Enum | Values |
-|------|--------|
-| Row Sort Mode | `0 Configured`, `1 DisplayText`, `2 AttributeOrder` (AttributeOrder is not supported for TableVersion 1) |
-| Width Mode | `0 Auto`, `1 Fixed`, `2 Fill` |
-| Alignment | `0 Left`, `1 Center`, `2 Right` |
-| Formatter | `0 Number`, `1 Currency`, `2 Percent`, `3 Text` |
-| Unit Mode | `0 MetricDefault`, `1 Hidden`, `2 Header`, `3 Cell` |
-| Sort Target Kind | `0 RowField`, `1 ValueField`, `2 RowMetric`, `3 GeneratedPeriodColumn` (GeneratedPeriodColumn is not supported for TableVersion 1) |
-| Sort Direction | `0 Ascending`, `1 Descending` |
-| Null Placement | `0 Last`, `1 First` |
+Do not author `includedDataTypes` or `orgNodeTemplateId` for new Table widgets. They are legacy compatibility/adapter fields. Arbitrary `columns[]`, expression columns, and `OrgNodeAttribute` row grouping are deferred beyond the current Table authoring contract.
 
 ---
 

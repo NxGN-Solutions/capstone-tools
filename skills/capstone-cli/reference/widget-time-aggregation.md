@@ -66,8 +66,9 @@ Set it on a data item to override the widget default for that metric:
 ## Related Commands
 
 ```bash
+cap templates widget-templates sample --widget-type info --json
+cap templates widget-templates schema --widget-type info --json
 cap templates widget-templates sample --widget-type pie --json
 cap templates widget-templates schema --widget-type pie --json
 cap templates widget-templates sample --widget-type xy --json
 ```
-

@@ -42,6 +42,12 @@ On first use, **ask the user which Capstone server they want to connect to**. Th
 cap config set api-url <URL-FROM-USER>
 ```
 
+> Config keys: `api-url`, `default-tenant`, `default-format`, `default-limit`,
+> `timeout`. `set`/`get`/`unset` all take the key **positionally**
+> (`cap config set api-url <url>`, `cap config get api-url`). Run
+> `cap config list` (or `cap config show`, or `cap config get` with no key) to
+> print **all** current settings.
+
 **2. Log in via OAuth (opens browser):**
 
 ```
@@ -64,6 +70,23 @@ cap auth switch-tenant <tenant-id>  # Switch to a specific tenant
 ```
 
 > If any command returns a connection error, ask the user to confirm the API URL is correct and the server is reachable.
+
+### Auth Recovery — When Something Looks Wrong
+
+If commands fail with the auth/tenant exit code (`3`), **or every command
+returns empty results**, diagnose before retrying — `cap auth doctor` is the
+entry point:
+
+```
+cap status        # auth status, current tenant, and API endpoint at a glance
+cap auth doctor   # diagnose authentication state and print recovery commands
+```
+
+`cap auth doctor` prints the supported recovery commands (typically
+`cap auth login` and/or `cap auth switch-tenant`). Empty output with exit `0`
+is usually a wrong tenant, an ambient `CAPSTONE_API_KEY` shadowing your OAuth
+login (it resolves to the empty bootstrap tenant), or missing permissions — not
+missing data. Confirm with `cap auth whoami`.
 
 ## Automation Error Contract
 
@@ -320,9 +343,14 @@ For standard workflows, **read the recipe first** from `docs/recipes/`. Recipes 
 | Create a metric | `docs/recipes/configuration/create-metric.md` |
 | Create a calculation | `docs/recipes/configuration/create-calculation.md` |
 | Create a widget | `docs/recipes/configuration/create-widget-template.md` |
+| Style/customize an Info Card | `docs/recipes/configuration/configure-info-card-styles.md` |
 | Build a dashboard | `docs/recipes/configuration/build-dashboard.md` |
+| Export template data to Excel | `docs/recipes/configuration/export-to-excel.md` |
+| Set up a data source | `docs/recipes/configuration/set-up-data-source.md` |
+| Seed a tenant | `docs/recipes/data-management/seed-tenant.md` |
 | Enter data | `docs/recipes/data-management/enter-data.md` |
 | Bulk import from Excel | `docs/recipes/data-management/bulk-import.md` |
+| Review approvals | `docs/recipes/data-management/review-approvals.md` |
 | Check data completeness | `docs/recipes/exploration/check-completeness.md` |
 
 ## Reference Documentation
@@ -378,6 +406,6 @@ For standard workflows, **read the recipe first** from `docs/recipes/`. Recipes 
 - Run `cap schema --json` and `cap workflows list --json` before generating automation
 - Use `import-json --upsert --dry-run --json` before applying large model-build changes
 - Use `cap status` to see current auth state, tenant, and config at a glance
-- Token refresh is automatic — if a token expires mid-session, the CLI refreshes it
+- Token refresh is automatic — *but* if refresh fails (revoked session, server restart, expired login), the CLI exits with the auth error code (`3`) and other queries may otherwise return empty. Run `cap auth doctor`, then `cap auth login` to recover
 - Excel import/export is available on most entities: `download-excel` and `upload-excel`
 - When creating/saving entities, use `get --json > file.json`, edit the file, then `save --file file.json` for roundtrip editing

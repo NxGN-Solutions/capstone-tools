@@ -138,6 +138,12 @@ cap reporting widgets info-card <widget-template-id> \
   --periods "Jan 2026" \
   --json
 
+cap reporting widgets xy-chart <widget-template-id> \
+  --org-nodes <org-node-id> \
+  --data-interval month \
+  --periods "Jan 2026,Feb 2026" \
+  --json
+
 cap reporting widgets table <widget-template-id> \
   --org-nodes <org-node-id> \
   --data-interval quarter \
@@ -145,7 +151,36 @@ cap reporting widgets table <widget-template-id> \
   --json
 ```
 
+Use `widgets xy-chart` when validating the dashboard XY render contract (`categoryAxes`, `valueAxes`, `chartSeries[].renderConfig`, `chartSeries[].metricMetadata`, `styleMetadata`, `diagnostics`, and no-data warnings).
 Use `widgets table` when validating the dashboard table contract (`timePeriodColumns`, `metricColumns`, `gridRows`, `metadataColumns`, and `totalCount`). Use `widgets get-data` when an agent needs the legacy CSV compatibility payload and does not need dashboard table-render metadata.
+
+#### Verifying value selection (Ranking & filters)
+
+When a widget template carries a `valueSelectionConfig` (ordering, Top/Bottom
+ranking, or value/null filtering), the typed `info-card` and `pie-chart` reads
+emit a **selection-diagnostics** block so you can confirm the ranking and
+filters took effect. Text output shows lines like:
+
+```text
+Value selection: 5 of 23 selected
+Filtered by predicates: 12
+Hidden by limit: 6
+Selection warnings: <code>, <code>
+```
+
+- `Value selection: <selected> of <originalAuthorizedCount> selected` — how many
+  metrics/series survived predicates and ranking out of the originally
+  authorized set.
+- `Filtered by predicates` — count removed by `predicates[]` (omitted when zero).
+- `Hidden by limit` — count truncated by `rankMode` Top/Bottom + `rankLimit`
+  (omitted when zero).
+- `Selection warnings` — advisory projection / bounds warning codes (omitted
+  when none).
+
+In `--json` output the same data is available under `selectionDiagnostics`
+(`originalAuthorizedCount`, `predicateFilteredCount`, `rankTruncatedCount`,
+`warningCodes`). Use this to assert that a "Top 5" or filtered widget selected
+the expected number of values before promoting a template.
 
 ### 4. Dashboard Composition Flow (Dashboard Templates)
 
