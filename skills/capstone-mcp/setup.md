@@ -91,7 +91,10 @@ Claude uses the `/discover-structure` prompt to explore your tenant's organizati
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `CAPSTONE_API_URL` | Yes | — | Capstone API base URL |
+| `CAPSTONE_API_URL` | Yes | — | Capstone API base URL (tools discover the Identity issuer from this host) |
+| `CAPSTONE_API_KEY` | No | — | If set, API-key mode (no OAuth). Wins over a stored OAuth session. |
+| `CAPSTONE_IDENTITY_URL` | No | — | Override Identity issuer at login only; otherwise discovered from `GET Security/Authentication/Oidc`. |
+| `CAPSTONE_NO_BROWSER` | No | — | If set, do not open a system browser; print the authorize URL on stderr. |
 | `CAPSTONE_LOG_LEVEL` | No | `Information` | Log verbosity: `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical` |
 
 ---
@@ -106,7 +109,8 @@ The `CAPSTONE_API_URL` is missing from your Claude Desktop config. Add it to the
 
 - Ensure your Capstone account has API access enabled
 - Check that the API URL is correct (no trailing slash needed — the server trims it)
-- Try specifying the OAuth provider: ask Claude "Log in to Capstone with Google"
+- Ask Claude "Log in to Capstone" (`auth_login`). Identity presents Microsoft or Google SSO as configured for the user.
+- If the browser does not open, copy the authorize URL from the MCP server stderr.
 
 ### "Not authenticated" errors on tool calls
 

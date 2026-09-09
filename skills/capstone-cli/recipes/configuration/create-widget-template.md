@@ -2,6 +2,12 @@
 
 > Guided workflow for creating widget templates (InfoCard, PieChart, XYChart, TextBlock, Table).
 >
+> **Visual standard:** when styling any widget, take the `styleConfiguration`
+> variant from the
+> [Dashboard Design System](../../reference/dashboard-design-system.md) (type
+> ramp, chrome, brand slots, number-format matrix) rather than composing styles
+> from scratch.
+>
 > **MCP alternative:** Widget templates can also be created via MCP using the `templates_widgets_create` tool. See [MCP Tool Reference — Templates CRUD](../../../capstone-mcp/reference/tools.md#templates--crud-10-tools).
 
 ## When to Use
@@ -127,8 +133,9 @@ cap model metrics list --json
 > `cap templates widget-templates sample --widget-type pie --json`.
 
 **Required fields for Table widgets:**
-- `dataGrouping` - `None`, `OrgNode`, `Discipline`, or `Framework` (Framework requires Dynamic metric selection)
-- `orgNodeRowSelectionMode` - Required when `dataGrouping` is `OrgNode`
+- `dataGrouping` - `None`, `OrgNode`, `Discipline`, or `Framework` (Framework anywhere in the chain requires Dynamic metric selection)
+- `additionalDataGrouping` - optional Then By levels (0–2 of OrgNode/Discipline/Framework, distinct from `dataGrouping`)
+- `orgNodeRowSelectionMode` - Required when the grouping chain contains `OrgNode`
 - Static metric selection needs `dataItems[]` unless metric filters provide the report-template fallback
 - Dynamic metric selection uses Metric Scope filters (`metricTypeFilters`, discipline/framework filters, and attribute filters) and clears explicit `dataItems[]` on save
 
@@ -148,7 +155,7 @@ Do not author `includedDataTypes` or `orgNodeTemplateId` for new Table templates
 - `dataRangeMode`, `metricSelectionMode`, and `timePeriodAggregationMethod`
 - `dataInterval`, `dataPeriodStart`, and `dataPeriodEnd` when `dataRangeMode` is `Static`
 
-TextBlock does not support `dataItems`; metrics are discovered only from explicit text tokens. `styleConfiguration` is optional and uses bounded TextBlock slots for `panel`, `title`, `subtitle`, `description`, `footnote`, `trend`, and `stateMessages`. TextBlock style colors accept safe theme tokens or `#RGB`/`#RRGGBB` hex values, font family uses the shared `theme`/`sans`/`serif`/`mono`/`nunito`/`roboto`/`poppins`/`arial` catalogue, and font weight accepts `Normal`/`Medium`/`Semibold`/`Bold`.
+TextBlock does not support `dataItems`; metrics are discovered only from explicit text tokens. `styleConfiguration` is optional and uses bounded TextBlock slots for `panel`, `title`, `subtitle`, `description`, `footnote`, `trend`, and `stateMessages`. TextBlock style colors accept registry tokens from `cap meta lookups get color-tokens` or `#RGB`/`#RRGGBB`/`#RRGGBBAA` hex values, font family uses the shared `theme`/`sans`/`serif`/`mono`/`nunito`/`roboto`/`poppins`/`arial` catalogue, and font weight accepts `Normal`/`Medium`/`Semibold`/`Bold`.
 
 **Data Interval Reference:**
 | ID | Name |
@@ -286,7 +293,7 @@ This pattern shows two data items (current vs previous period) with a trend indi
       "up": { "color": "success", "icon": "arrow-up" },
       "down": { "color": "danger", "icon": "arrow-down" },
       "flat": { "color": "neutral", "icon": "equals" },
-      "unknown": { "color": "unknown", "icon": "none" }
+      "unknown": { "color": "neutral", "icon": "none" }
     }
   },
   "dataItems": [
@@ -581,6 +588,7 @@ Table widgets are the dashboard table widget type. They use normal Input and Cal
   "metricSelectionMode": { "id": 0, "name": "Static" },
   "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
   "dataGrouping": { "id": 1, "name": "OrgNode" },
+  "additionalDataGrouping": [{ "id": 2, "name": "Discipline" }],
   "orgNodeRowSelectionMode": { "id": 0, "name": "Children" },
   "showOnlyRowsWithValues": true,
   "showMetricValue": true,
@@ -632,8 +640,8 @@ Table widgets are the dashboard table widget type. They use normal Input and Cal
 
 **Key fields:**
 - `dataItems` are the static metric selections. Use dynamic metric filters instead when `metricSelectionMode` is Dynamic.
-- `dataGrouping` and `orgNodeRowSelectionMode` control row grouping under the dashboard-selected org node.
-- `showMetricsInColumns` switches OrgNode-grouped tables from one row per metric to metric columns.
+- `dataGrouping` plus optional `additionalDataGrouping` and `orgNodeRowSelectionMode` control row grouping under the dashboard-selected org node.
+- `showMetricsInColumns` is allowed only when the chain is OrgNode only; it switches from one row per metric to metric columns.
 - `showMetricValue`, `showUnitOfMeasure`, and `metricAttributeTypeIds` control custom columns.
 - `narrativeSelectionMode: Dynamic` uses the narrative scope arrays. Empty arrays mean all permitted values when `narrativeScopeConfigured` is true.
 - `narrativeSelectionMode: Static` ignores narrative scope arrays and renders the explicit `narratives[]` list.
@@ -727,6 +735,7 @@ same static chart/card.
 | `rankMode` | `None`, `Top`, `Bottom` | |
 | `rankLimit` | integer `1`..`1000` (MaxPageSize) | Required when `rankMode` is `Top`/`Bottom`; omit otherwise |
 | `nullPlacement` | `Last`, `DefaultLast` | `First` is rejected (engine default) |
+| `tableRowScope` | `All`, `LeafOrgNodes` | Optional, TableRows only. Use `LeafOrgNodes` for project/asset watchlists that should rank leaf org-node rows instead of parent aggregates |
 | `predicates` | array, max 5 | Filters applied before ranking |
 | `diagnosticsLabel` | string (optional) | Free-text label echoed in widget selection diagnostics |
 | `boundsWarningMode` | `Default`, `Warn`, `Suppress` (optional) | Advisory warnings when projected element count is large |
@@ -777,6 +786,7 @@ Table row example (Top 5 rows by a metric column):
   "rankMode": "Top",
   "rankLimit": 5,
   "nullPlacement": "Last",
+  "tableRowScope": "LeafOrgNodes",
   "predicates": []
 }
 ```

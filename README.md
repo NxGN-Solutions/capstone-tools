@@ -177,7 +177,7 @@ See [MCP documentation](docs/mcp/) and [MCP agent instructions](skills/capstone-
 
 This repository includes agent-facing context:
 
-- [AGENTS.md](AGENTS.md) for Codex and other coding agents.
+- [AGENTS.md](AGENTS.md) for coding agents.
 - [CLAUDE.md](CLAUDE.md) for Claude Code and Claude Desktop users.
 - [llms.txt](llms.txt) as a compact index for LLM ingestion.
 - [skills/capstone-cli/SKILL.md](skills/capstone-cli/SKILL.md) for CLI workflows.
@@ -193,4 +193,4 @@ These downloads and documents are distributed under the [Capstone Tools Distribu
 
 For help, use your Capstone implementation, support, or account contact. Security reporting guidance is in [SECURITY.md](SECURITY.md), and support request guidance is in [SUPPORT.md](SUPPORT.md).
 
-Last updated: `2026-07-02T06:40:56Z`
+Last updated: `2026-09-09T10:09:25Z`

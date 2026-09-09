@@ -3,6 +3,11 @@
 > Build styled Pie and Donut widget templates with the CLI. Use this when a
 > dashboard needs custom Pie surfaces, labels, legends, donut center styling,
 > data-item presentation, number formatting, or value selection alongside style.
+>
+> **Visual standard:** the normative `Composition-Donut` / `Mix-Pie` variants
+> (slice limits, live metric center, legend typography) live in the
+> [Dashboard Design System](../../reference/dashboard-design-system.md) — start
+> there; this recipe covers the mechanics.
 
 ## When to Use
 

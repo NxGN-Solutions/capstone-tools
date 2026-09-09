@@ -48,10 +48,12 @@ cap config set api-url <URL-FROM-USER>
 > `cap config list` (or `cap config show`, or `cap config get` with no key) to
 > print **all** current settings.
 
-**2. Log in via OAuth (opens browser):**
+**2. Log in via Identity OIDC (opens browser):**
 
 ```
-cap auth login
+cap auth login                 # PKCE
+cap auth login --device        # SSH / no loopback
+cap auth login --no-browser    # Print authorize URL
 ```
 
 **3. Verify connection:**
@@ -362,6 +364,7 @@ For standard workflows, **read the recipe first** from `docs/recipes/`. Recipes 
 | `docs/reference/commands.md` | Quick command lookup |
 | `docs/reference/glossary.md` | Term definitions with examples |
 | `docs/reference/model-building.md` | Enum lookup tables, payload templates |
+| `docs/reference/dashboard-design-system.md` | **Visual standard for dashboards** — brand token derivation, shell/section/placement contracts, widget style variants, number formats, polish gates |
 | `docs/reference/widget-time-aggregation.md` | Widget time aggregation rules for Dynamic cards, pies, tables, and XY charts |
 | `docs/reference/output-formats.md` | Table vs JSON output format details |
 | `docs/reference/template-selection.md` | Choose the right template workflow |
@@ -380,7 +383,10 @@ For standard workflows, **read the recipe first** from `docs/recipes/`. Recipes 
 | `CAPSTONE_API_URL` | API base URL |
 | `CAPSTONE_TENANT` | Default tenant |
 | `CAPSTONE_OUTPUT` | Output format (`table` or `json`) |
-| `CAPSTONE_API_KEY` | API key (ephemeral, not persisted) |
+| `CAPSTONE_API_KEY` | API key (ephemeral unless `auth login --with-api-key --persist`) |
+| `CAPSTONE_IDENTITY_URL` | Override Identity issuer at login only |
+| `CAPSTONE_CALLBACK_PORT` | Pin PKCE loopback port |
+| `CAPSTONE_CONFIG_DIR` | Config directory (default: `~/.cap`) |
 
 ## Key Concepts
 

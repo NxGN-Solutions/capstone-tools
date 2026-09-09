@@ -3,6 +3,11 @@
 > Build styled Info Card widget templates with the CLI. Use this when a dashboard
 > needs KPI cards, period-comparison cards, alert/exceedance cards, tinted
 > metric cards, left-accent cards, or full-bleed showcase cards.
+>
+> **Visual standard:** the normative card variants (`KPI-Accent`, `KPI-Quiet`,
+> `KPI-Alert`, `KPI-Comparison`) and the type ramp live in the
+> [Dashboard Design System](../../reference/dashboard-design-system.md) — start
+> there; this recipe covers the mechanics and additional showcase styles.
 
 ## When to Use
 
@@ -170,10 +175,10 @@ and lets the trend direction carry the color.
     "fontWeight": "Medium",
     "fontSize": 14,
     "showLabel": true,
-    "up": { "color": "#dc2626", "icon": "arrow-up" },
-    "down": { "color": "#059669", "icon": "arrow-down" },
+    "up": { "color": "danger", "icon": "arrow-up" },
+    "down": { "color": "success", "icon": "arrow-down" },
     "flat": { "color": "neutral", "icon": "equals" },
-    "unknown": { "color": "unknown", "icon": "none" }
+    "unknown": { "color": "neutral", "icon": "none" }
   }
 }
 ```
@@ -190,11 +195,11 @@ visual treatment.
 ```json
 {
   "panel": {
-    "backgroundColor": "#fff7ed",
-    "borderColor": "#fed7aa",
+    "backgroundColor": "surface-muted",
+    "borderColor": "warning",
     "borderWidth": 1,
     "borderRadius": 8,
-    "accentColor": "#f97316",
+    "accentColor": "warning",
     "accentSide": "Bottom",
     "accentWidth": 6,
     "padding": 18,
@@ -202,12 +207,12 @@ visual treatment.
     "fontFamily": "theme"
   },
   "title": {
-    "foregroundColor": "#7c2d12",
+    "foregroundColor": "warning",
     "fontWeight": "Bold",
     "fontSize": 18
   },
   "value": {
-    "foregroundColor": "#c2410c",
+    "foregroundColor": "warning",
     "fontWeight": "Bold",
     "fontSize": 34
   },
@@ -216,16 +221,16 @@ visual treatment.
     "fontSize": 14
   },
   "separators": {
-    "borderColor": "#fed7aa",
+    "borderColor": "warning",
     "borderWidth": 1
   },
   "trend": {
     "fontWeight": "Medium",
     "showLabel": true,
-    "up": { "color": "#dc2626", "icon": "caret-up" },
-    "down": { "color": "#059669", "icon": "caret-down" },
+    "up": { "color": "danger", "icon": "caret-up" },
+    "down": { "color": "success", "icon": "caret-down" },
     "flat": { "color": "neutral", "icon": "equals" },
-    "unknown": { "color": "unknown", "icon": "none" }
+    "unknown": { "color": "neutral", "icon": "none" }
   }
 }
 ```
@@ -238,11 +243,11 @@ or other cards that should stand apart without looking like an alert.
 ```json
 {
   "panel": {
-    "backgroundColor": "#ecfeff",
-    "borderColor": "#67e8f9",
+    "backgroundColor": "surface-canvas",
+    "borderColor": "info",
     "borderWidth": 1,
     "borderRadius": 8,
-    "accentColor": "#0891b2",
+    "accentColor": "info",
     "accentSide": "Bottom",
     "accentWidth": 5,
     "padding": 18,
@@ -250,12 +255,12 @@ or other cards that should stand apart without looking like an alert.
     "fontFamily": "theme"
   },
   "title": {
-    "foregroundColor": "#155e75",
+    "foregroundColor": "info",
     "fontWeight": "Bold",
     "fontSize": 18
   },
   "value": {
-    "foregroundColor": "#0e7490",
+    "foregroundColor": "info",
     "fontWeight": "Bold",
     "fontSize": 36
   },
@@ -265,16 +270,16 @@ or other cards that should stand apart without looking like an alert.
     "fontSize": 14
   },
   "separators": {
-    "borderColor": "#a5f3fc",
+    "borderColor": "info",
     "borderWidth": 1
   },
   "trend": {
     "fontWeight": "Medium",
     "showLabel": true,
-    "up": { "color": "#dc2626", "icon": "arrow-up" },
-    "down": { "color": "#0891b2", "icon": "arrow-down" },
+    "up": { "color": "danger", "icon": "arrow-up" },
+    "down": { "color": "info", "icon": "arrow-down" },
     "flat": { "color": "neutral", "icon": "equals" },
-    "unknown": { "color": "unknown", "icon": "none" }
+    "unknown": { "color": "neutral", "icon": "none" }
   }
 }
 ```
@@ -287,11 +292,11 @@ such as blue NO2 and purple SO2 cards.
 ```json
 {
   "panel": {
-    "backgroundColor": "#f5f3ff",
-    "borderColor": "#ddd6fe",
+    "backgroundColor": "surface-muted",
+    "borderColor": "border",
     "borderWidth": 1,
     "borderRadius": 8,
-    "accentColor": "#7c3aed",
+    "accentColor": "primary",
     "accentSide": "Left",
     "accentWidth": 5,
     "padding": 18,
@@ -299,12 +304,12 @@ such as blue NO2 and purple SO2 cards.
     "fontFamily": "theme"
   },
   "title": {
-    "foregroundColor": "#5b21b6",
+    "foregroundColor": "primary",
     "fontWeight": "Bold",
     "fontSize": 18
   },
   "value": {
-    "foregroundColor": "#6d28d9",
+    "foregroundColor": "primary",
     "fontWeight": "Bold",
     "fontSize": 34
   },
@@ -313,16 +318,16 @@ such as blue NO2 and purple SO2 cards.
     "fontWeight": "Medium"
   },
   "separators": {
-    "borderColor": "#ddd6fe",
+    "borderColor": "border",
     "borderWidth": 1
   },
   "trend": {
     "fontWeight": "Medium",
     "showLabel": true,
-    "up": { "color": "#ef4444", "icon": "arrow-up" },
-    "down": { "color": "#059669", "icon": "arrow-down" },
+    "up": { "color": "danger", "icon": "arrow-up" },
+    "down": { "color": "success", "icon": "arrow-down" },
     "flat": { "color": "neutral", "icon": "equals" },
-    "unknown": { "color": "unknown", "icon": "none" }
+    "unknown": { "color": "neutral", "icon": "none" }
   }
 }
 ```
@@ -331,12 +336,12 @@ For a blue variant, replace the purple values with:
 
 ```json
 {
-  "panel.backgroundColor": "#eff6ff",
-  "panel.borderColor": "#bfdbfe",
-  "panel.accentColor": "#2563eb",
-  "title.foregroundColor": "#1e3a8a",
-  "value.foregroundColor": "#1d4ed8",
-  "separators.borderColor": "#bfdbfe"
+  "panel.backgroundColor": "surface-canvas",
+  "panel.borderColor": "info",
+  "panel.accentColor": "info",
+  "title.foregroundColor": "info",
+  "value.foregroundColor": "info",
+  "separators.borderColor": "info"
 }
 ```
 
@@ -349,6 +354,10 @@ fragment.
 Use when the card styling itself must control the full interior of the widget.
 This is the right pattern for accent frames, zero-padding cards, or dark
 showcase panels.
+
+This showcase is intentionally outside the standard design-system palette and
+uses raw hex values to demonstrate custom-brand styling. For normal dashboard
+work, prefer registry tokens from `cap meta lookups get color-tokens`.
 
 ```json
 {

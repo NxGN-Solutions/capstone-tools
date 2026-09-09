@@ -338,6 +338,13 @@ Widget commands have two output families:
 | `cap reporting widgets xy-chart` | Typed XY-chart render DTO, JSON-first | Browser-aligned series, axis, value, render metadata, and metric metadata validation |
 | `cap reporting widgets table` | Typed Table render DTO | Dashboard grid/table render validation |
 
+Typed widget render contracts keep raw numeric values numeric and expose
+formatted strings only for display fields such as Info Card values, Text Block
+metric tokens, Pie legend/center labels, and Table cell display values. These
+formatted display strings use the shared server formatter with invariant
+thousands grouping and the metric precision; unit symbols are applied according
+to the unit's configured prefix/suffix position.
+
 ### XY Chart JSON Mode
 
 `cap reporting widgets xy-chart <id> --json` returns the same server-owned XY render contract consumed by the browser renderer and MCP dashboard renderer. Use it for automation that needs to inspect how an XY chart will render, not just whether metric values exist.

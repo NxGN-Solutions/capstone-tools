@@ -16,7 +16,7 @@ These flags work across most commands:
 | `--file path` | Read input from file | `cap model inputs create --file input.json` |
 | `--periods "<names>"` | Comma-separated period names | `cap reporting widgets table <id> --periods "Q1 FY 25"` |
 
-> **Tip:** Use `cap data time-periods list --data-interval <interval>` to discover available period names before running reporting commands.
+> **Tip:** Use `cap data time-periods list --data-interval <interval>` to discover selectable reporting period names before running reporting commands. Use `cap data time-periods diagnose <yyyy-MM-dd> --data-interval <interval> --json` when a seed `startDate` does not appear to be selectable.
 
 ## Naming Conventions
 
@@ -114,7 +114,7 @@ map when checking whether a command family exists.
 | Prefix | Commands |
 |--------|----------|
 | `auth` | `doctor`, `languages`, `login`, `logout`, `switch-tenant`, `tenants`, `whoami` |
-| `auth apikey` | `create`, `list`, `prune`, `revoke` |
+| `auth apikey` | `create`, `list`, `prune`, `rotate`, `delete` |
 | `config` | `get`, `list`, `set`, `show`, `unset` |
 | `data` | `availability` |
 | `data change-requests` | `create`, `delete`, `get`, `list`, `save`, `validate` |
@@ -143,7 +143,7 @@ map when checking whether a command family exists.
 | `model lookups` | `get`, `list` |
 | `model metric-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `model metric-framework-nodes` | `copy`, `download-excel`, `list`, `save`, `upload-excel` |
-| `model metric-org-node-exclusions` | `copy`, `list`, `save` |
+| `model metric-org-node-exclusions` | `copy`, `download-excel`, `list`, `save`, `upload-excel` |
 | `model metrics` | `delete-eval`, `explain`, `get`, `graph`, `list` |
 | `model narrative-attribute-types` | `create`, `delete`, `download-excel`, `get`, `get-all`, `list`, `lookup`, `save`, `upload-excel` |
 | `model narrative-overrides` | `copy`, `create`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
@@ -217,6 +217,15 @@ cap <domain> <entity> get <id> [--json]
 
 `cap masterdata org-nodes get <id> --json` returns selected attribute values by default. Add `--include-values` only when you need the full available value lists for each attribute type.
 
+Attribute type JSON keeps the stable name-only `values` field and adds
+`valueDetails` when IDs are available. Use `valueDetails[].id` for
+org-node-template attribute filters:
+
+```bash
+cap masterdata org-node-attribute-types get <attribute-type-id> --json
+cap masterdata org-node-attribute-types list --json
+```
+
 **Example:**
 ```bash
 cap model metrics get <id> --json
@@ -236,6 +245,12 @@ cap model metrics explain <metric-id> --max-depth 3 --json
 # Build a graph from one or more roots
 cap model metrics graph --roots <metric-id>[,<metric-id>] --direction dependencies --json
 cap model metrics graph --roots <metric-id> --direction both --max-depth 2 --json
+
+# Validate a formula against a named calculation for circular dependency checks
+cap model formula-validation validate "Total Revenue" --formula "[Revenue] + [Other Revenue]" --json
+
+# Validate syntax/dependencies without a real calculation name
+cap model formula-validation validate --formula "[Revenue] + [Other Revenue]" --json
 ```
 
 `model metrics get` and rich list output include `friendlyName`, `metricType`,
@@ -243,8 +258,11 @@ cap model metrics graph --roots <metric-id> --direction both --max-depth 2 --jso
 `timePeriodAggregationMethod`. Input and calculation `get`/`list` text output
 shows a **Friendly Name** field when one is set; JSON payloads include
 `friendlyName` for create/save round trips.
-Formula graph commands resolve both ID tokens and display-name tokens such as
-`[Sample Metric]`.
+Formula validation can omit the positional calculation name for syntax-only or
+dependency validation; the CLI sends an internal collision-resistant sentinel
+name so circular-dependency detection does not match a real metric. Formula
+graph commands resolve both ID tokens and display-name tokens such as `[Sample
+Metric]`.
 
 ### Get Multiple Items (Bulk)
 
@@ -361,6 +379,7 @@ The workflow order is:
 
 ```bash
 cap data time-periods list --data-interval <type> [--json]
+cap data time-periods diagnose <yyyy-MM-dd> --data-interval <type> [--strict-selectable-periods] [--json]
 cap data availability --data-interval month [--org-nodes "<id>"] [--json]
 ```
 
@@ -372,11 +391,20 @@ cap data availability --data-interval month [--org-nodes "<id>"] [--json]
 | Weekly | `cap data time-periods list --data-interval week` |
 | Daily | `cap data time-periods list --data-interval day` |
 
+`time-periods list --json` returns an array of selectable
+`TimePeriodTreeNodeDto` items with `name`, `startDate`, `endDate`, and
+`timePeriodType`. Text output also prints the selectable range for the tenant.
+Use `time-periods diagnose --json` for machine-readable range diagnostics:
+`reportingSelectable`, `selectableRange`, `selectablePeriod`,
+`nearestSelectablePeriods`, `mismatchReason`, and `seedValidity`. When a date is
+outside the selectable range, extend the tenant's configured reporting period
+range before using that `startDate` in strict seed loads.
+
 ### Lookup Enums
 
 ```bash
 cap meta lookups list --json
-cap meta lookups get <name> [--domain model|data|templates] --json
+cap meta lookups get <name> [--domain model|data|templates|meta] --json
 cap <domain> lookups get <name> [--json]
 ```
 
@@ -385,10 +413,16 @@ cap <domain> lookups get <name> [--json]
 | `model` | `metric-types`, `time-period-types`, `time-period-aggregation-methods`, `org-structure-aggregation-methods`, `calculation-phases` |
 | `templates` | `widget-sizes`, `widget-types`, `data-grouping-types`, `data-range-modes`, `metric-selection-modes`, `metric-partitioning-modes`, `partitioning-rank-modes`, `org-node-row-selection-modes`, `org-node-template-types`, `org-node-template-visibility-modes`, `pie-chart-types`, `xy-chart-data-item-types`, `ai-summary-contexts` |
 | `data` | `change-request-reasons`, `change-request-status-types`, `change-request-validation-levels` |
+| `meta` | `color-tokens` |
 
 Use `meta lookups` when building scripts or agents that need one discovery
 surface for all enum/reference values. The domain-specific commands remain
 available for direct lookup calls.
+
+`cap meta lookups get color-tokens --json` is offline and does not require API
+configuration. Use it to discover the shared dashboard/widget color registry,
+deprecated legacy tokens, and aliases. Template `schema --json` color fields
+list the 17 canonical non-deprecated token names in `values[]`.
 
 Some widget-template enum sets are schema-owned rather than standalone lookup
 endpoints. For Pie/Donut center, legend-value, and slice-label modes, read
@@ -500,7 +534,7 @@ Allowed enum/token values are:
 | Callout variant | None, Info, Success, Warning, Critical, Narrative |
 | Callout severity | Default, Low, Medium, High, Critical |
 
-Use safe color values only: named design tokens, `#rgb`, `#rrggbb`, `#rrggbbaa`, bounded `rgb(...)`/`rgba(...)`, or `var(--token-name)`. Use safe icon tokens containing letters, numbers, underscores, or hyphens.
+Use safe color values only: registry design tokens from `cap meta lookups get color-tokens`, `#rgb`, `#rrggbb`, or `#rrggbbaa`. Invalid identifiers, `rgb(...)`/`rgba(...)`, `var(...)`, raw CSS, HTML, scripts, callbacks, and URL values are rejected on strict save. Dashboard and widget Excel uploads warn at the cell level and ignore invalid color cells instead of failing the row. Use safe icon tokens containing letters, numbers, underscores, or hyphens.
 
 Structured lengths are JSON objects, not CSS strings. Use a single `value` or side-specific `top`, `right`, `bottom`, and `left` numbers with `unit: { "id": 0, "name": "Px" }` or `unit: { "id": 1, "name": "Rem" }`. Free-text CSS shorthands such as `"1rem 2rem"` are rejected.
 
@@ -641,6 +675,12 @@ echo '{...}' | cap <domain> <entity> create [--json]
 - `templates widget-templates`, `templates dashboard-templates`, `templates org-node-templates`
 - `data input-values`, `data change-requests`
 
+For capture and report templates, `showMetricsInColumns: true` requires an
+Org Node-only grouping chain (`dataGrouping: { "id": 1, "name": "OrgNode" }`
+and empty `additionalDataGrouping`). The CLI validates this before calling
+the API. Optional Then By levels go in `additionalDataGrouping`.
+`allowMultiOrgNodeSelect` is coerced false when the chain lacks Org Node.
+
 ### Update Existing Item
 
 ```bash
@@ -678,7 +718,7 @@ echo '{
       "up": { "color": "success", "icon": "arrow-up" },
       "down": { "color": "danger", "icon": "arrow-down" },
       "flat": { "color": "neutral", "icon": "equals" },
-      "unknown": { "color": "unknown", "icon": "none" }
+      "unknown": { "color": "neutral", "icon": "none" }
     }
   },
   "dataItems": [
@@ -706,7 +746,7 @@ Info Card comparisons use ordinary selected metrics, Calculation metrics, and di
 
 Info Card style JSON is schema-limited. `fontFamily` must be one of `theme`, `sans`, `serif`, `mono`, `nunito`, `roboto`, `poppins`, or `arial`; `fontSize`, `borderWidth`, and panel `accentWidth` are bounded integers. `accentSide` and `accentWidth` are panel-only fields. A border renders only with positive `borderWidth` plus safe `borderColor`; a panel accent edge renders only with `accentSide`, positive `accentWidth`, and safe `accentColor`.
 
-Trend presentation is configured per Info Card through `styleConfiguration.trend`. Direction keys are `up`, `down`, `flat`, and `unknown`; each direction accepts a safe `color` token or hex value and a bounded `icon` token. Use `icon: "none"` for color-only trends. Do not use raw CSS classes, FontAwesome class names, HTML, scripts, or `url()` values.
+Trend presentation is configured per Info Card through `styleConfiguration.trend`. Direction keys are `up`, `down`, `flat`, and `unknown`; each direction accepts a registry `color` token or hex value and a bounded `icon` token. Use `icon: "none"` for color-only trends. Do not use raw CSS classes, FontAwesome class names, HTML, scripts, `rgb(...)`, `var(...)`, or `url()` values.
 
 # PieChart
 echo '{
@@ -949,6 +989,7 @@ rejects unknown members, so misspelled or stale fields fail validation.
 | `rankMode` | `None`, `Top`, `Bottom` | |
 | `rankLimit` | integer `1`..`1000` (MaxPageSize) | Required when `rankMode` is `Top`/`Bottom`; must be omitted otherwise |
 | `nullPlacement` | `Last`, `DefaultLast` | Only `Last`/`DefaultLast` are authorable; authoring `First` is rejected |
+| `tableRowScope` | `All`, `LeafOrgNodes` | Optional, TableRows only. `LeafOrgNodes` filters OrgNode + metrics-as-columns tables to leaf row candidates before predicates, order, and Top/Bottom rank |
 | `predicates` | array, max 5 | Filters applied before ranking (see below) |
 | `diagnosticsLabel` | string (optional) | Free-text label echoed in selection diagnostics output |
 | `boundsWarningMode` | `Default`, `Warn`, `Suppress` (optional) | Controls advisory warnings when the projected element count is large |
@@ -995,6 +1036,7 @@ Example dynamic Pie Top 5 (with a Number-operand filter):
     "rankMode": "Top",
     "rankLimit": 5,
     "nullPlacement": "Last",
+    "tableRowScope": "LeafOrgNodes",
     "predicates": [
       {
         "predicateType": "Value",
@@ -1086,7 +1128,7 @@ TextBlock templates use the same shared WidgetTemplate API, CLI command surface,
 **Table validation highlights:**
 | Area | Rule |
 |------|------|
-| `dataGrouping` | Required; controls row grouping. `OrgNode` also requires `orgNodeRowSelectionMode`. `Framework` requires Dynamic metric selection. |
+| `dataGrouping` | Required; primary row grouping. `additionalDataGrouping` holds optional Then By levels (0–2). OrgNode anywhere in the chain requires `orgNodeRowSelectionMode`. Framework anywhere requires Dynamic metric selection. `showMetricsInColumns` requires an OrgNode-only chain. |
 | Metric selection | Static tables use explicit `dataItems[]` unless metric filters provide the report-template fallback. Dynamic tables use metric type, discipline, framework, metric-attribute, discipline-attribute, and framework-attribute filters and clear explicit data items on save. |
 | Org-node scope | `orgNodeAttributeFilters` filters the resolved org-node scope before values are loaded; it is not the deferred `OrgNodeAttribute` row-grouping mode. |
 | Custom columns | `showMetricValue`, `showUnitOfMeasure`, and `metricAttributeTypeIds` control visible helper/value columns. |
@@ -1173,6 +1215,14 @@ Exit codes:
 | Validation or non-interactive prompt without `--yes` | `2` | Use `--yes` for scripts and CI. |
 | Auth, tenant, API, timeout, or transport errors | Existing shared CLI exit codes | See `cap schema --json` for the current exit-code contract. |
 
+### Bootstrap local tenant
+
+```bash
+cap system tenants bootstrap-local <name> --from-aspire [--force-new] [--json]
+```
+
+Reuses an exact tenant name when present. `--force-new` appends `yyyyMMddHHmmss` and **creates a new Identity organisation** entitled to the current user. There is no teardown: leftover names such as `residual-h2 20260824122327` stay on the Identity picker until you `cap system tenants delete` them (switch off that tenant first). Prefer reuse for shared users such as testera. No in-repo test should pass `--force-new` against a shared human Identity user.
+
 ### Validate Data
 
 ```bash
@@ -1253,6 +1303,7 @@ cap <domain> <entity> download-excel -o file.xlsx
 **Entities supporting Excel download:**
 - `model inputs`, `model calculations`
 - `model metric-attribute-types`, `model metric-framework-nodes`
+- `model metric-org-node-exclusions`
 - `masterdata units`, `masterdata data-sources`
 - `masterdata disciplines`, `masterdata frameworks`, `masterdata org-nodes`
 - `masterdata discipline-attribute-types`, `masterdata framework-attribute-types`, `masterdata org-node-attribute-types`
@@ -1287,12 +1338,19 @@ useful.
 **Entities supporting Excel upload:**
 - `model inputs`, `model calculations`
 - `model metric-attribute-types`, `model metric-framework-nodes`
+- `model metric-org-node-exclusions`
 - `masterdata units`, `masterdata data-sources`
 - `masterdata disciplines`, `masterdata frameworks`, `masterdata org-nodes`
 - `masterdata discipline-attribute-types`, `masterdata framework-attribute-types`, `masterdata org-node-attribute-types`
 - `templates capture-templates`, `templates report-templates`
 - `templates widget-templates`, `templates dashboard-templates`, `templates org-node-templates`
 - `data input-values`
+
+`model metric-org-node-exclusions` workbooks contain only `Org Node Path` and
+`Metric` columns. Each data row means that the named metric is excluded from the
+resolved org-node path. Upload is upsert-only: rows present in the workbook
+create or keep exclusions, and rows omitted from the workbook do not delete or
+include existing exclusions.
 
 ---
 
@@ -1312,9 +1370,12 @@ cap config unset <key>              # Reset setting to default
 ## Authentication Commands
 
 ```bash
-cap auth login                      # OAuth login (interactive)
+cap auth login                      # Identity OIDC login (PKCE, opens browser)
+cap auth login --no-browser         # Print the authorize URL; keep the CLI running until callback
+cap auth login --device             # Device-code flow (SSH / no loopback)
 cap auth login --with-api-key       # API key auth (reads CAPSTONE_API_KEY env var)
-cap auth logout                     # Clear stored credentials
+cap auth login --with-api-key --persist  # Persist the key locally after validation
+cap auth logout                     # Revoke Identity refresh token and clear local credentials
 cap auth whoami                     # Show current user/tenant
 cap auth tenants                    # List accessible tenants
 cap auth switch-tenant <id>         # Change active tenant
@@ -1325,6 +1386,10 @@ cap auth switch-tenant <id>         # Change active tenant
 export CAPSTONE_API_KEY=your-api-key
 cap auth login --with-api-key
 ```
+
+Optional env vars: `CAPSTONE_IDENTITY_URL` (login-only issuer override), `CAPSTONE_CALLBACK_PORT` (pin PKCE loopback), `CAPSTONE_PKCE_TIMEOUT_SECONDS` (loopback wait, 30–1800, default 900), `CAPSTONE_CONFIG_DIR`. SSH sessions should use `--device`, not `--no-browser`. `--no-browser` keeps a loopback listener for 15 minutes by default — complete Microsoft SSO (SSO-only users: do not use the Identity password form) before it expires. If the listener dies, Chrome shows connection refused; re-run login instead of reusing the URL. Identity's own login session is separate from this wait.
+
+Tenant switch or first-login that saves a tenant but Identity requires a new login (`RequiresReauth`) exits `6` (`PartialResult`). Auth-required failures exit `3`.
 
 ---
 

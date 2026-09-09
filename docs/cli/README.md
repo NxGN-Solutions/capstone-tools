@@ -10,7 +10,7 @@ almost always trace back to auth/tenant, not missing data:
 
 ```bash
 cap config set api-url <URL>   # 1. Point at the Capstone server
-cap auth login                 # 2. Log in via OAuth (opens browser)
+cap auth login                 # 2. Identity OIDC login (opens browser; --device for SSH)
 cap auth whoami                # 3. Confirm identity, tenant, and accessible tenants
 ```
 
@@ -25,6 +25,7 @@ recovery commands to run.
 | Get the agent on-ramp (shell detection, setup, workspace cache, error contract) | [dist-CLAUDE.md](./dist-CLAUDE.md) |
 | Teach an agent the CLI (concept glossary, domain routing, command patterns, error handling) | [SKILL.md](./SKILL.md) |
 | Follow a step-by-step task workflow | [recipes/README.md](./recipes/README.md) |
+| Build a great-looking dashboard (visual standard, brand tokens, widget variants) | [reference/dashboard-design-system.md](./reference/dashboard-design-system.md) |
 | Look up a specific command | [reference/commands.md](./reference/commands.md) |
 | Translate syntax across Windows/macOS/Linux shells | [reference/platform-guide.md](./reference/platform-guide.md) |
 | Map vocabulary (KPI → Metric, site → Org Node, …) | [reference/glossary.md](./reference/glossary.md) |

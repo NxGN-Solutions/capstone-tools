@@ -6,21 +6,19 @@
 
 ## Authentication (5 tools)
 
-### `Login`
+### `auth_login`
 
-Login to Capstone using OAuth. Opens browser for Microsoft/Google SSO authentication.
+Login to Capstone using Identity OIDC (PKCE). Opens a browser. The authorize URL is also written to stderr so headless hosts can complete login without a local browser (`CAPSTONE_NO_BROWSER=1` skips opening one).
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `provider` | string | No | OAuth provider: `microsoft` (default) or `google` |
+No parameters. Identity chooses the SSO provider (typically Microsoft).
 
-**Returns:** Login status message with authenticated user identity.
+**Returns:** Login status message with authenticated user identity and the authorize URL.
 
 ---
 
-### `Logout`
+### `auth_logout`
 
-Logout from Capstone. Clears stored authentication tokens.
+Revokes the Identity refresh token (`POST {issuer}/connect/revoke`) and always clears local credentials, even if revoke fails.
 
 No parameters.
 
@@ -294,7 +292,7 @@ Query raw input data (manually entered or imported values) with validation statu
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `templateId` | string (ID) | Conditional | Capture template ID (from `templates_spreadsheetCaptures_list`). Optional if `templateJson` is provided. |
-| `templateJson` | string (JSON) | Conditional | Inline capture template JSON (alternative to `templateId`). Minimum: `{"name":"Ad-hoc","dataGrouping":{"id":1},"spreadsheetTemplateMetrics":[{"metric":{"id":"METRIC_GUID"},"sortOrder":0}]}`. `dataGrouping` id: 0=None, 1=OrgNode, 2=Discipline. Get metric IDs from `model_metrics_list`. |
+| `templateJson` | string (JSON) | Conditional | Inline capture template JSON (alternative to `templateId`). Minimum: `{"name":"Ad-hoc","dataGrouping":{"id":1},"spreadsheetTemplateMetrics":[{"metric":{"id":"METRIC_GUID"},"sortOrder":0}]}`. `dataGrouping` id: 0=None, 1=OrgNode, 2=Discipline, 3=Framework. Optional `additionalDataGrouping` is an ordered list of `{id: 1|2|3}` Then By levels. Get metric IDs from `model_metrics_list`. |
 | `timePeriodNames` | string | No | Comma-separated period names (e.g., `Jan 2025,Feb 2025`) |
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
 | `periodCount` | int | No | Number of recent periods (default: 4, used with `periodType`) |
@@ -403,7 +401,7 @@ Save input values (batch upsert). Uses business-key matching — zero IDs resolv
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `templateId` | string (ID) | Conditional | Report template ID (from `templates_spreadsheetReports_list`). Optional if `templateJson` is provided. |
-| `templateJson` | string (JSON) | Conditional | Inline report template JSON (alternative to `templateId`). Minimum: `{"name":"Ad-hoc","dataGrouping":{"id":1},"spreadsheetTemplateMetrics":[{"metric":{"id":"METRIC_GUID"},"sortOrder":0}]}`. `dataGrouping` id: 0=None, 1=OrgNode, 2=Discipline. Get metric IDs from `model_metrics_list`. |
+| `templateJson` | string (JSON) | Conditional | Inline report template JSON (alternative to `templateId`). Minimum: `{"name":"Ad-hoc","dataGrouping":{"id":1},"spreadsheetTemplateMetrics":[{"metric":{"id":"METRIC_GUID"},"sortOrder":0}]}`. `dataGrouping` id: 0=None, 1=OrgNode, 2=Discipline, 3=Framework. Optional `additionalDataGrouping` is an ordered list of `{id: 1|2|3}` Then By levels. Get metric IDs from `model_metrics_list`. |
 | `timePeriodNames` | string | No | Comma-separated period names (e.g., `Jan 2025,Feb 2025`) |
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
 | `periodCount` | int | No | Number of recent periods (default: 4, used with `periodType`) |
@@ -1145,7 +1143,7 @@ Data tools support two ways to specify time periods:
 | Approach | Parameters | When to Use |
 |----------|-----------|-------------|
 | **By name** | `timePeriodNames="Jan 2025,Feb 2025"` | When you know exact period names |
-| **By type+count** | `periodType="quarter"`, `periodCount=4` | When you want N most recent periods |
+| **By type+count** | `periodType="quarter"`, `periodCount=4` | When you want N most recent periods that have started |
 
 Use `data_timePeriods_list` to discover available period names.
 

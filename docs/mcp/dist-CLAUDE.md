@@ -168,7 +168,7 @@ The `CAPSTONE_API_URL` is missing from your Claude Desktop config. Add it to the
 
 - Ensure your Capstone account has API access enabled
 - Check that the API URL is correct (no trailing slash needed)
-- Try specifying the provider: ask Claude "Log in to Capstone with Google"
+- Ask Claude "Log in to Capstone". Identity presents the configured SSO (typically Microsoft).
 
 ### "Not authenticated" errors on tool calls
 

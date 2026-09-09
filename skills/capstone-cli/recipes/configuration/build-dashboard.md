@@ -2,6 +2,12 @@
 
 > Guided workflow for creating a dashboard with widget templates.
 >
+> **Visual standard:** before choosing any colors, spacing, section styling, or
+> widget placement, read the
+> [Dashboard Design System](../../reference/dashboard-design-system.md) — it
+> defines the normative shell/section/placement contracts and brand token
+> derivation this recipe's payloads should follow.
+>
 > **MCP alternative:** Dashboards can also be created and modified via MCP using the `templates_dashboards_create`, `templates_dashboards_get`, and `templates_dashboards_save` tools. See [MCP Tool Reference — Dashboard Templates](../../../capstone-mcp/reference/tools.md#dashboard-templates-4-tools).
 
 ## When to Use
@@ -27,7 +33,7 @@ Before starting, Claude should know:
 
 ### Step 1: Plan the Dashboard Layout
 
-**Purpose:** Determine what widgets the dashboard needs.
+**Purpose:** Determine what widgets and layout sections the dashboard needs.
 
 **Ask if not provided:**
 - "What metrics or KPIs should appear on this dashboard?"
@@ -68,6 +74,8 @@ Executive Energy Dashboard
 **Purpose:** Build the individual widgets that will populate the dashboard.
 
 For each widget in the plan, follow the [Create Widget Template](./create-widget-template.md) recipe.
+
+Create TextBlock widget templates for authored text areas, status notes, alerts, and explanatory content. Do not model those as dashboard node callouts. The dashboard template positions the TextBlock; the TextBlock widget template owns its title, description, footnote, panel styling, and text-slot styling.
 
 **Example — create 3 InfoCards:**
 
@@ -261,33 +269,31 @@ EOF
 - Widgets (`isWidget: true`) reference a section via `parent: { "id": "<section-id>" }`
 - `sortOrder` controls display order within each section
 - Use sequential zero IDs for `id` on create — the API assigns real IDs
+- `orgNodeTemplate` on the dashboard is the reporting hierarchy lens supplied to all widgets. Do not hardcode table widget org-node-template context unless maintaining a legacy template.
 - `dashboardStyle` styles the dashboard canvas/page area, not the internals of widget templates
 - `nodeLayout` and `nodeStyle` apply to structural nodes; `placementLayout` (layout only) applies to widget or narrative wrappers — widget chrome (background/border/shadow/radius/padding/accent) is owned by each widget's own `styleConfiguration`, not by the placement
 - Shell-frame objects — the dashboard-level `header` (`title`/`eyebrow`/`subtitle`/`badge`/`style`), `filterRegion`, and `tabStrip` — are documented under [Shell Styling Fields](#shell-styling-fields-header-filter-region-tab-strip) below (in `schema`/`sample`; they persist and round-trip)
 
-**Narrative widget shape:**
+**TextBlock widget shape for text areas:**
 ```json
 {
   "id": "<id>",
-  "name": "Executive Summary",
+  "name": "Escalation Trigger",
   "isWidget": true,
   "sortOrder": 1,
   "parent": { "id": "<section-id>" },
-  "narrative": { "id": "<narrative-definition-id>", "name": "Executive Summary" },
-  "widgetType": { "id": 5, "name": "Narrative" },
+  "widgetTemplate": { "id": "<textblock-widget-template-id>", "name": "Escalation Trigger Text" },
+  "widgetType": { "id": 6, "name": "Text Block" },
   "widgetSize": { "id": 5, "name": "100%" },
   "placementLayout": {
     "widthBehavior": { "id": 2, "name": "Fill" },
     "responsive": { "fullWidthBelow": { "id": 2, "name": "Md" } }
-  },
-  "callout": {
-    "variant": { "id": 5, "name": "Narrative" },
-    "severity": { "id": 2, "name": "Medium" },
-    "icon": "message-square",
-    "collapsible": false
   }
 }
 ```
+
+Use Narrative placements only when the content comes from a narrative definition. Use dashboard callouts only for short structural annotations, not for widget-like text cards.
+
 - The CLI `save` command accepts both bare JSON and the `get --json` wrapper format (`{"tenant": "...", "dashboardTemplate": {...}}`) — it auto-unwraps the `dashboardTemplate` property
 
 **What to look for:**
@@ -483,6 +489,7 @@ Choose widget sizes based on content type and screen compatibility:
 | **XYChart (daily)** | 100% | 5 | Daily data has many points; full width prevents label crowding |
 | **XYChart (comparison)** | 50% | 2 | Fewer points; side-by-side enables visual comparison |
 | **Table** | 100% | 5 | Dense rows/columns usually need full dashboard width |
+| **TextBlock** | 100% | 5 | Text cards and status notes usually read best across the section width |
 | **AI Summary** | 100% | 5 | Always full width; placed last in a section |
 
 Specify widget size in the treeItems entry:
@@ -691,13 +698,13 @@ DashboardTemplateTreeItemDTO extends TreeNodeDTO:
 TreeNodeDTO extends TreePathDTO:
   Parent: TreePathDTO?            ← { "id": "parent-id" }
   Icon: string?
-  BackgroundColor: string?        ← "#00806a" or safe color token
+  BackgroundColor: string?        ← registry color token or #RGB/#RRGGBB/#RRGGBBAA
 
 TreePathDTO extends NamedDTO:
   Path: string?                   ← "Tab->Section->Widget"
 ```
 
-Use `cap templates dashboard-templates schema --json` for the machine-readable field catalogue and `cap templates dashboard-templates sample --json` for a styled sample. Safe colors are named tokens, hex colors, bounded `rgb(...)`/`rgba(...)`, or `var(--token-name)`. Structured lengths use numeric values with `Px` or `Rem` units, not free-text CSS shorthand.
+Use `cap templates dashboard-templates schema --json` for the machine-readable field catalogue and `cap templates dashboard-templates sample --json` for a styled sample. Safe colors are registry tokens from `cap meta lookups get color-tokens` or `#RGB`/`#RRGGBB`/`#RRGGBBAA` hex values. Strict saves reject invalid identifiers, `rgb(...)`/`rgba(...)`, `var(...)`, raw CSS, HTML, scripts, callbacks, and URL values. Excel uploads warn at the cell level and ignore invalid color cells instead of failing the row. Structured lengths use numeric values with `Px` or `Rem` units, not free-text CSS shorthand.
 
 > **Automation coverage.** The shell-unification objects — the dashboard `header` (`title`/`eyebrow`/`subtitle`/`badge`/`style`), `filterRegion`, and `tabStrip` — are listed in `cap templates dashboard-templates schema --json` and emitted by `sample --json`, and they persist and round-trip through `save`/`create`/`get`. Excel coverage: all three have dedicated workbook columns (`headerJson`, `filterRegionJson`, `tabStripJson`).
 
@@ -731,7 +738,7 @@ These shape the dashboard *shell* — the frame around the widgets. They are add
 ```json
 "tabStrip": {
   "style": { "foregroundColor": "text-primary", "headerBackgroundColor": "surface-muted" },
-  "hoverBackgroundColor": "surface-strong",
+  "hoverBackgroundColor": "surface-muted",
   "hoverForegroundColor": "text-primary"
 }
 ```
@@ -740,7 +747,7 @@ These shape the dashboard *shell* — the frame around the widgets. They are add
 
 Defaults already match the Capstone corporate theme, so style only with intent:
 
-- **Start from semantic color tokens** (`surface-default`, `surface-muted`, `text-primary`, `border-subtle`), not raw hex — they stay on-theme and accessible. Reserve hex/`rgb()` for deliberate brand color.
+- **Start from semantic color tokens** (`surface`, `surface-muted`, `text-primary`, `border`), not raw hex — they stay on-theme and accessible. Reserve hex for the deliberate brand/CI slots described in the dashboard design system.
 - **Lean on layout before style.** `nodeLayout.layoutMode: Grid` + `responsive.columns` gives clean alignment; `spacing.gap` tokens (XS–XL) keep rhythm consistent. Reach for colors/borders only after the layout reads well.
 - **Establish hierarchy with the dashboard `header`** (eyebrow → title → subtitle, plus an optional badge) instead of styling many section titles differently.
 - **Keep contrast safe.** Any foreground/background pair you set should stay legible; the corporate accent is `primary #6172f3` — never the legacy `#787cf4`.

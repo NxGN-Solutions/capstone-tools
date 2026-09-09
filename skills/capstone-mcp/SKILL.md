@@ -140,7 +140,7 @@ When the user's request matches a prompt, use it. Prompts encode best-practice w
 
 | Category | Tools | Purpose |
 |----------|-------|---------|
-| **Auth** (6) | `Login`, `Logout`, `Whoami`, `ListTenants`, `SwitchTenant`, `Languages` | Authentication and tenant management |
+| **Auth** (6) | `auth_login`, `auth_logout`, `auth_whoami`, `auth_tenants_list`, `auth_switchTenant`, `auth_languages` | Identity OIDC (PKCE) + API key + tenant switching |
 | **Model** (5) | `model_metrics_list`, `model_metrics_get`, `model_orgNodes_list`, `model_frameworks_list`, `model_disciplines_list` | Read model structure |
 | **Data** (5) | `data_timePeriods_list`, `data_availability`, `data_inputValues_list`, `data_inputValues_save`, `data_computedValues_list` | Query and save data |
 | **Reporting** (2) | `reporting_dashboards_getData`, `reporting_widgets_getData` | Dashboard/widget data as CSV |
@@ -259,8 +259,8 @@ When analyzing retrieved data, use these techniques based on the user's question
 
 | Error | Cause | Recovery |
 |-------|-------|----------|
-| Authentication required | Not logged in | Call `Login` |
-| Tenant selection required | Multiple tenants, none selected | Call `ListTenants` then `SwitchTenant` |
+| Authentication required | Not logged in | Call `auth_login` |
+| Tenant selection required | Multiple tenants, none selected | Call `auth_tenants_list` then `auth_switchTenant` |
 | Not found | Invalid ID | Verify with list tools |
 | Validation error | Invalid parameters | Check parameter types and required fields |
 | Server error | API issue | Suggest retry; check if API is running |
@@ -285,7 +285,7 @@ When analyzing retrieved data, use these techniques based on the user's question
 
 | Feature | Available | Notes |
 |---------|-----------|-------|
-| Authentication (Login, Logout, Whoami, Tenants) | Yes | Full OAuth + tenant switching |
+| Authentication (login, logout, whoami, tenants) | Yes | Identity PKCE + API key; tenant switch honors RequiresReauth |
 | Model read (Metrics, Org Nodes, Disciplines, Frameworks) | Yes | Read-only |
 | Data read (Time Periods, Availability, Input Values, Computed Values) | Yes | Full query support |
 | Data write (Input Values save) | Yes | Business-key upsert |

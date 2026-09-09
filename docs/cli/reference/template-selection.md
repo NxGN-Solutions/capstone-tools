@@ -23,6 +23,10 @@ cap auth whoami
 | Compose sections/tabs of widgets for end users | **Dashboard Template** | `templates dashboard-templates`, `reporting dashboards *` |
 | Change reporting hierarchy lens | **Org Node Template** (used by report/dashboard templates) | `templates org-node-templates` |
 
+Dashboard templates own the rendered shell: header, filter region, tab strip, layout nodes, org-node template lens, and widget placement. Widget templates own the widget internals: title/description/footnote, data-item labels, chart/table/card/TextBlock styling, number formats, and tokenized text.
+
+Use TextBlock widget templates for dashboard text areas, status notes, alerts, and explanatory content. Use layout-node callouts only for brief structural annotations. Table widgets should normally receive the org-node template lens from the dashboard; `widgetTemplate.orgNodeTemplateId` is legacy compatibility.
+
 ---
 
 ## End-to-End Flows
@@ -198,6 +202,8 @@ cap reporting dashboards get-data <dashboard-template-id> \
   --json
 ```
 
+When validating a dashboard that uses an org-node template, test through `reporting dashboards get-data` or the browser renderer so every widget receives the dashboard-owned org-node template context. Type-specific widget commands are still useful for widget internals, but they do not replace dashboard-context verification.
+
 ---
 
 ## Common Agent Mistakes
@@ -209,6 +215,9 @@ cap reporting dashboards get-data <dashboard-template-id> \
 | Mixing `--org-node` and `--org-nodes` for widgets | `widgets get-data` uses `--org-node`; type-specific widgets use `--org-nodes` |
 | Forgetting period discovery | Run `cap data time-periods list --data-interval <interval>` first |
 | Running docs examples before installing or extracting the CLI | Download the release package and use `cap` or `.\cap.exe` |
+| Styling widgets from dashboard placement fields | Put widget chrome and text-slot styling in `widgetTemplate.styleConfiguration`; dashboard placement is layout-only |
+| Using node callouts as content cards | Create a TextBlock widget template and place it on the dashboard |
+| Hardcoding table widget org-node templates | Configure the org-node template on the dashboard so all widgets share the same hierarchy lens |
 
 ---
 

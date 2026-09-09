@@ -135,7 +135,7 @@ For widget templates, set this at both the widget default and data-item override
 | Field | Values | Description |
 |-------|--------|-------------|
 | `dataGrouping` | `0 None`, `1 OrgNode`, `2 Discipline`, `3 Framework` | Controls rendered table row grouping. `Framework` requires Dynamic metric selection. |
-| `orgNodeRowSelectionMode` | `0 Children`, `1 Descendants` | Applies when `dataGrouping` is OrgNode. |
+| `orgNodeRowSelectionMode` | `0 Children`, `1 Descendants` | Applies when the grouping chain contains OrgNode. |
 | `narrativeSelectionMode` | `0 Dynamic`, `1 Static` | Dynamic resolves narratives from Narrative Scope; Static renders explicit `narratives[]`. |
 
 Table metric scope uses `metricTypeFilters`, `metricDisciplineFilters`, `metricFrameworkFilters`, `metricAttributeFilters`, `disciplineAttributeFilters`, and `frameworkAttributeFilters` when `metricSelectionMode` is Dynamic. The legacy/report-template-compatible `disciplineNodeAttributeFilters` and `frameworkNodeAttributeFilters` fields are also accepted by the shared DTO surface. Static Table templates use explicit `dataItems[]` unless metric filters provide the report-template fallback.
@@ -174,6 +174,29 @@ Metric aggregation has two independent dimensions:
 - **Time period aggregation** combines values across the selected reporting periods for the requested data interval.
 
 When both are involved, report reads compose them for the requested view. For example, a company-level quarterly report for a monthly Sum/Sum metric rolls site values up through the org tree and combines the selected months into the quarter result.
+
+### Cross-Interval Time Behavior
+
+The calculation engine materializes values at every tenant-enabled interval.
+The metric's time-period aggregation method controls both collapsing finer
+source periods into a coarser period and expanding a coarser source period into
+contained finer periods:
+
+| Time method | Finer source -> coarser target | Coarser source -> finer target |
+|-------------|---------------------------------|--------------------------------|
+| None | Native interval only | No value |
+| Sum | Add source values | Divide the source value evenly across contained target periods |
+| Average | Average source values | Repeat the source value unchanged in each contained target period |
+| Last Value | Use the most recent source value | Put the value in the final contained target period; earlier periods are zero |
+| Min | Use the minimum source value | Repeat the source value unchanged |
+| Max | Use the maximum source value | Repeat the source value unchanged |
+
+Use `Average` for an assumption or rate captured at a coarser interval but
+applicable unchanged throughout that interval. Use `Sum` for a coarser-period
+total that should be apportioned evenly. For example, a ZAR/hour rate captured
+once per year uses `dataInterval = Year` and
+`timePeriodAggregationMethod = Average`, making the same hourly rate available
+to monthly calculations without duplicate input capture.
 
 ### Calculation Phases
 
@@ -411,6 +434,8 @@ cap data input-values create \
   --json
 ```
 
+**Units:** `cap data input-values save` treats omitted `unitOfMeasure` as the **metric definition (storage) unit**. After `list` shows override (display) units, a payload copied from `list` must include `unitOfMeasure.id` or the display number will be stored as-is.
+
 **`save`** uses JSON input (batch):
 ```bash
 cat payload.json | cap data input-values save --json
@@ -495,6 +520,30 @@ For large payloads, save the JSON to a file and pass it with `--file`:
 ```bash
 cap data input-values save --file /path/to/values.json --json
 ```
+
+### Selectable Period Validation and Diagnostics
+
+By default, `data input-values save` submits rows after resolving each metric's
+data interval and warning about non-selectable reporting starts. Add
+`--strict-selectable-periods` when a seed load must reject rows whose
+`startDate` is not one of the tenant's selectable reporting period starts.
+
+Use `cap data time-periods list --data-interval <type> --json` to get valid
+`startDate` values. If a date is rejected, run:
+
+```bash
+cap data time-periods diagnose <yyyy-MM-dd> --data-interval <type> --json
+```
+
+The diagnostic response includes `reportingSelectable`, `selectableRange`,
+`selectablePeriod`, `nearestSelectablePeriods`, `mismatchReason`, and
+`seedValidity`. Extending the tenant's configured reporting period range is the
+administrative action when the requested date is outside `selectableRange`.
+
+JSON save output groups identical period diagnostics by default. Add
+`--include-period-diagnostics` to include the grouped diagnostic array, or
+`--full-period-diagnostics` when you need one diagnostic per input row. The full
+flag implies `--include-period-diagnostics`.
 
 ### Workflow: Updating Existing Input Values
 
@@ -685,7 +734,8 @@ AVG([A], [B])                     Average of values
 ISFUTURE()                        True if period is in the future
 MIN(), MAX(), FIRST(), LAST()     Range aggregation
 IFNULL(a, b), COALESCE(a, b, ..) Null handling
-DIV(a, b), SUMPRODUCT(r1, r2)    Safe division, sum of products
+DIV(a, b[, fallback])            Safe division; the fallback defaults to 0
+SUMPRODUCT(r1, r2)               Sum of products
 ```
 
 **Safe division pattern:**
@@ -693,7 +743,10 @@ DIV(a, b), SUMPRODUCT(r1, r2)    Safe division, sum of products
 IF [Denominator] <> 0 THEN [Numerator] / [Denominator] ELSE 0
 ```
 
-Use `cap model formula-validation validate <calculation-name> --formula '<formula>' --json` to verify formula syntax before saving a calculation.
+Use `DIV([Numerator], [Denominator], null)` instead when a missing or zero
+denominator must remain no-data rather than become a numeric zero.
+
+Use `cap model formula-validation validate <calculation-name> --formula '<formula>' --json` to verify formula syntax and circular-dependency behavior before saving a named calculation. Omit `<calculation-name>` for syntax-only/dependency validation; the CLI sends an internal collision-resistant sentinel name so the validation request cannot be mistaken for a real metric.
 
 ### Formula Parser Provenance
 
@@ -710,12 +763,14 @@ The authoritative pre-save check is the API validation endpoint exposed by the C
 
 ```bash
 cap model formula-validation validate <calculation-name> --formula '<formula>' --json
+cap model formula-validation validate --formula '<formula>' --json
 ```
 
 You can also pipe the formula through stdin:
 
 ```bash
 echo '[A] + [B]' | cap model formula-validation validate Total --json
+echo '[A] + [B]' | cap model formula-validation validate --json
 ```
 
 ---

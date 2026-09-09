@@ -77,6 +77,7 @@ Each recipe includes:
 | [Build Dashboard](./configuration/build-dashboard.md) | Assemble widgets into a dashboard | ✅ Available |
 | [Export to Excel](./configuration/export-to-excel.md) | Bulk export/import via Excel | ✅ Available |
 | [Set Up Data Source](./configuration/set-up-data-source.md) | Configure external data integrations | ✅ Available |
+| [Manage API Keys](./configuration/manage-api-keys.md) | Create, list, rotate, and delete API keys | ✅ Available |
 
 ### Data Management
 

@@ -73,7 +73,7 @@ almost always trace back to auth/tenant, not missing data — so do this first:
 
 ```bash
 cap config set api-url <URL>   # 1. Point at the Capstone server (ask the user for the URL)
-cap auth login                 # 2. Log in via OAuth (opens browser)
+cap auth login                 # 2. Identity OIDC login (opens browser; --device for SSH; --no-browser prints a URL and must keep the process running until callback)
 cap auth whoami                # 3. Confirm identity, current tenant, and accessible tenants
 ```
 

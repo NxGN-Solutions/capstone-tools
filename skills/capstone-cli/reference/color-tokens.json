@@ -1,0 +1,187 @@
+{
+  "generatedFrom": "ColorTokenRegistry",
+  "tokens": [
+    {
+      "name": "primary",
+      "role": "Platform brand / emphasis",
+      "lightHex": "#6172f3",
+      "darkHex": null,
+      "cssVariable": "--cap-color-primary",
+      "category": "Brand",
+      "deprecated": false
+    },
+    {
+      "name": "secondary",
+      "role": "Secondary emphasis",
+      "lightHex": "#475467",
+      "darkHex": null,
+      "cssVariable": "--cap-color-secondary",
+      "category": "Brand",
+      "deprecated": false
+    },
+    {
+      "name": "chrome",
+      "role": "Dark chrome surfaces (headers, bands)",
+      "lightHex": "#313a46",
+      "darkHex": null,
+      "cssVariable": "--cap-color-chrome",
+      "category": "Brand",
+      "deprecated": false
+    },
+    {
+      "name": "success",
+      "role": "Positive state",
+      "lightHex": "#027a48",
+      "darkHex": null,
+      "cssVariable": "--cap-color-success",
+      "category": "Status",
+      "deprecated": false
+    },
+    {
+      "name": "warning",
+      "role": "Caution state",
+      "lightHex": "#b54708",
+      "darkHex": null,
+      "cssVariable": "--cap-color-warning",
+      "category": "Status",
+      "deprecated": false
+    },
+    {
+      "name": "danger",
+      "role": "Negative / breach state",
+      "lightHex": "#b42318",
+      "darkHex": null,
+      "cssVariable": "--cap-color-danger",
+      "category": "Status",
+      "deprecated": false
+    },
+    {
+      "name": "info",
+      "role": "Informational state",
+      "lightHex": "#3667e3",
+      "darkHex": null,
+      "cssVariable": "--cap-color-info",
+      "category": "Status",
+      "deprecated": false
+    },
+    {
+      "name": "neutral",
+      "role": "No-signal state",
+      "lightHex": "#667085",
+      "darkHex": null,
+      "cssVariable": "--cap-color-neutral",
+      "category": "Status",
+      "deprecated": false
+    },
+    {
+      "name": "surface",
+      "role": "Card/panel background",
+      "lightHex": "#ffffff",
+      "darkHex": null,
+      "cssVariable": "--cap-color-surface",
+      "category": "Surface",
+      "deprecated": false
+    },
+    {
+      "name": "surface-canvas",
+      "role": "Page/canvas background",
+      "lightHex": "#f9fafd",
+      "darkHex": null,
+      "cssVariable": "--cap-color-surface-canvas",
+      "category": "Surface",
+      "deprecated": false
+    },
+    {
+      "name": "surface-muted",
+      "role": "Quiet chrome (tab strip, filter bar)",
+      "lightHex": "#f7f8fb",
+      "darkHex": null,
+      "cssVariable": "--cap-color-surface-muted",
+      "category": "Surface",
+      "deprecated": false
+    },
+    {
+      "name": "text-primary",
+      "role": "Primary text",
+      "lightHex": "#101828",
+      "darkHex": null,
+      "cssVariable": "--cap-color-text-primary",
+      "category": "Text",
+      "deprecated": false
+    },
+    {
+      "name": "text-secondary",
+      "role": "Secondary text",
+      "lightHex": "#344054",
+      "darkHex": null,
+      "cssVariable": "--cap-color-text-secondary",
+      "category": "Text",
+      "deprecated": false
+    },
+    {
+      "name": "text-muted",
+      "role": "De-emphasized text",
+      "lightHex": "#667085",
+      "darkHex": null,
+      "cssVariable": "--cap-color-text-muted",
+      "category": "Text",
+      "deprecated": false
+    },
+    {
+      "name": "border",
+      "role": "Borders and separators",
+      "lightHex": "#d0d5dd",
+      "darkHex": null,
+      "cssVariable": "--cap-color-border",
+      "category": "Border",
+      "deprecated": false
+    },
+    {
+      "name": "white",
+      "role": "Absolute white",
+      "lightHex": "#ffffff",
+      "darkHex": null,
+      "cssVariable": "--cap-color-white",
+      "category": "Absolute",
+      "deprecated": false
+    },
+    {
+      "name": "black",
+      "role": "Absolute black",
+      "lightHex": "#000000",
+      "darkHex": null,
+      "cssVariable": "--cap-color-black",
+      "category": "Absolute",
+      "deprecated": false
+    },
+    {
+      "name": "brand-blue",
+      "role": "Deprecated legacy brand blue",
+      "lightHex": "#064181",
+      "darkHex": null,
+      "cssVariable": "--cap-color-brand-blue",
+      "category": "Brand",
+      "deprecated": true
+    },
+    {
+      "name": "brand-magenta",
+      "role": "Deprecated legacy brand magenta",
+      "lightHex": "#950349",
+      "darkHex": null,
+      "cssVariable": "--cap-color-brand-magenta",
+      "category": "Brand",
+      "deprecated": true
+    }
+  ],
+  "aliases": {
+    "accent": "primary",
+    "body": "text-secondary",
+    "ink": "text-primary",
+    "muted": "text-muted",
+    "negative": "danger",
+    "positive": "success",
+    "primary-dark": "chrome",
+    "primaryDark": "chrome",
+    "unknown": "neutral"
+  }
+}
