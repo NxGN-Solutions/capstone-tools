@@ -680,6 +680,15 @@ Org Node-only grouping chain (`dataGrouping: { "id": 1, "name": "OrgNode" }`
 and empty `additionalDataGrouping`). The CLI validates this before calling
 the API. Optional Then By levels go in `additionalDataGrouping`.
 `allowMultiOrgNodeSelect` is coerced false when the chain lacks Org Node.
+`metricPropertyColumns` is the list of metric metadata columns next to the
+metric name (enum `{ "id", "name" }` values). Spreadsheet templates default
+to Unit of Measure; set `[]` to hide it. `metricAttributeTypeIds` adds one
+column per metric attribute type. Grid layout hides those columns when
+metrics are shown as columns; Excel download still writes them because Excel
+is always metrics-as-rows.
+Report templates may set `expandCalculations: true` with
+`expandCalculationsMaxDepth` between 1 and 20 (default 10). Expansion is
+rejected when `showMetricsInColumns` is true.
 
 ### Update Existing Item
 
@@ -845,7 +854,7 @@ echo '{
   "orgNodeRowSelectionMode": { "id": 0, "name": "Children" },
   "showOnlyRowsWithValues": true,
   "showMetricValue": true,
-  "showUnitOfMeasure": true,
+  "metricPropertyColumns": [{ "id": 0, "name": "Unit of Measure" }],
   "showMetricsInColumns": false,
   "missingValuePlaceholder": "-",
   "dataItems": [
@@ -1131,7 +1140,7 @@ TextBlock templates use the same shared WidgetTemplate API, CLI command surface,
 | `dataGrouping` | Required; primary row grouping. `additionalDataGrouping` holds optional Then By levels (0–2). OrgNode anywhere in the chain requires `orgNodeRowSelectionMode`. Framework anywhere requires Dynamic metric selection. `showMetricsInColumns` requires an OrgNode-only chain. |
 | Metric selection | Static tables use explicit `dataItems[]` unless metric filters provide the report-template fallback. Dynamic tables use metric type, discipline, framework, metric-attribute, discipline-attribute, and framework-attribute filters and clear explicit data items on save. |
 | Org-node scope | `orgNodeAttributeFilters` filters the resolved org-node scope before values are loaded; it is not the deferred `OrgNodeAttribute` row-grouping mode. |
-| Custom columns | `showMetricValue`, `showUnitOfMeasure`, and `metricAttributeTypeIds` control visible helper/value columns. |
+| Custom columns | `showMetricValue`, `metricPropertyColumns` (`MetricProperty` EnumDTO list), and `metricAttributeTypeIds` control visible helper/value columns. When `showMetricValue` is false, at least one of `metricPropertyColumns` or `metricAttributeTypeIds` must be non-empty. |
 | `narrativeSelectionMode` | `Dynamic` (`id: 0`) resolves narratives from Narrative Scope. `Static` (`id: 1`) renders explicit `narratives[]`. |
 | `narrativeScopeConfigured` | Set `true` when Dynamic Narrative Scope is intentionally authored. Empty scope arrays then mean all permitted values; `false`/omitted preserves legacy metric-scope fallback. |
 | Narrative Scope | Dynamic scope can filter by `narrativeDisciplineFilters`, `narrativeFrameworkFilters`, `narrativeMetricAttributeFilters`, `narrativeDisciplineNodeAttributeFilters`, `narrativeFrameworkNodeAttributeFilters`, and `narrativeAttributeFilters`. |

@@ -401,7 +401,7 @@ Save input values (batch upsert). Uses business-key matching — zero IDs resolv
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `templateId` | string (ID) | Conditional | Report template ID (from `templates_spreadsheetReports_list`). Optional if `templateJson` is provided. |
-| `templateJson` | string (JSON) | Conditional | Inline report template JSON (alternative to `templateId`). Minimum: `{"name":"Ad-hoc","dataGrouping":{"id":1},"spreadsheetTemplateMetrics":[{"metric":{"id":"METRIC_GUID"},"sortOrder":0}]}`. `dataGrouping` id: 0=None, 1=OrgNode, 2=Discipline, 3=Framework. Optional `additionalDataGrouping` is an ordered list of `{id: 1|2|3}` Then By levels. Get metric IDs from `model_metrics_list`. |
+| `templateJson` | string (JSON) | Conditional | Inline report template JSON (alternative to `templateId`). Minimum: `{"name":"Ad-hoc","dataGrouping":{"id":1},"spreadsheetTemplateMetrics":[{"metric":{"id":"METRIC_GUID"},"sortOrder":0}]}`. `dataGrouping` id: 0=None, 1=OrgNode, 2=Discipline, 3=Framework. Optional `additionalDataGrouping` is an ordered list of `{id: 1|2|3}` Then By levels. Optional `expandCalculations` / `expandCalculationsMaxDepth` (1..20) nest formula dependencies under calculation rows. Get metric IDs from `model_metrics_list`. |
 | `timePeriodNames` | string | No | Comma-separated period names (e.g., `Jan 2025,Feb 2025`) |
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
 | `periodCount` | int | No | Number of recent periods (default: 4, used with `periodType`) |
@@ -940,6 +940,8 @@ Create a new report template from JSON config. Checks for name collisions — if
 |-------|------|-------|
 | `name` | string | Template name |
 | `dataGrouping` | `{id: "id"}` | Data grouping to use |
+
+Optional: `expandCalculations` (bool) and `expandCalculationsMaxDepth` (1..20, default 10). Expansion is rejected when `showMetricsInColumns` is true.
 
 **Returns:** Success message with the new template ID and name.
 

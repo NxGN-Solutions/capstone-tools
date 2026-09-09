@@ -332,7 +332,7 @@ cap templates report-templates get <id> --json
 - `legendValueMode` - PieChart-only stored enum behind the dashboard editor's **Show Legend Value** checkbox
 - `dataGrouping`, `orgNodeRowSelectionMode`, `showOnlyRowsWithValues` - Table-only row grouping and table-wide display controls
 - `metricTypeFilters`, `metricDisciplineFilters`, `metricFrameworkFilters`, and metric/discipline/framework attribute filters - Table dynamic Metric Scope controls
-- `showMetricValue`, `showUnitOfMeasure`, `metricAttributeTypeIds` - Table current custom-column controls
+- `showMetricValue`, `metricPropertyColumns`, `metricAttributeTypeIds` - Table current custom-column controls. `metricPropertyColumns` is a `MetricProperty` EnumDTO list (not `metricColumns`, which means metrics rendered as columns)
 - `narrativeSelectionMode`, `narrativeScopeConfigured`, `narratives`, and narrative scope filters - Table dynamic/static narrative row controls
 - `styleConfiguration` - Table semantic-HTML style contract for slots, row/column overrides, conditional formatting, and categorical color tags
 - `subtitle`, TextBlock `styleConfiguration` - TextBlock-only secondary heading and bounded text-slot style contract

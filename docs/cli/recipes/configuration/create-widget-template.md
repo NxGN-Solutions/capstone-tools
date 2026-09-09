@@ -141,7 +141,8 @@ cap model metrics list --json
 
 **Authoring fields for Table widgets:**
 - `showOnlyRowsWithValues` - Suppress rows whose resolved values are all empty
-- `showMetricValue`, `showUnitOfMeasure`, `metricAttributeTypeIds` - Current custom-column controls
+- `showMetricValue`, `metricPropertyColumns`, `metricAttributeTypeIds` - Current custom-column controls. `metricPropertyColumns` is an EnumDTO list of `MetricProperty` values (`0` Unit of Measure, `1` Precision, …); widget default is `[]`
+- `showTotalRow` - Engine-sourced footer for the dashboard org node's calculated values. Only rendered when the grouping chain is OrgNode-only and `showMetricsInColumns` is true; otherwise the render returns `TABLE_TOTAL_UNAVAILABLE`
 - `orgNodeAttributeFilters` - Filter the resolved org-node scope before values are loaded; this is not the deferred `OrgNodeAttribute` grouping mode
 - `narrativeSelectionMode` - `Dynamic` for Narrative Scope, or `Static` for explicit `narratives[]`
 - `narrativeScopeConfigured` and narrative scope arrays - Use when Dynamic Narrative Scope is intentionally authored
@@ -592,7 +593,7 @@ Table widgets are the dashboard table widget type. They use normal Input and Cal
   "orgNodeRowSelectionMode": { "id": 0, "name": "Children" },
   "showOnlyRowsWithValues": true,
   "showMetricValue": true,
-  "showUnitOfMeasure": true,
+  "metricPropertyColumns": [{ "id": 0, "name": "Unit of Measure" }],
   "showMetricsInColumns": false,
   "missingValuePlaceholder": "-",
   "dataItems": [
@@ -642,7 +643,8 @@ Table widgets are the dashboard table widget type. They use normal Input and Cal
 - `dataItems` are the static metric selections. Use dynamic metric filters instead when `metricSelectionMode` is Dynamic.
 - `dataGrouping` plus optional `additionalDataGrouping` and `orgNodeRowSelectionMode` control row grouping under the dashboard-selected org node.
 - `showMetricsInColumns` is allowed only when the chain is OrgNode only; it switches from one row per metric to metric columns.
-- `showMetricValue`, `showUnitOfMeasure`, and `metricAttributeTypeIds` control custom columns.
+- `showTotalRow` adds an engine-sourced total row for the dashboard org node. It requires OrgNode-only grouping with `showMetricsInColumns`. The footer is the parent engine value, not a client or filtered sum of body rows.
+- `showMetricValue`, `metricPropertyColumns`, and `metricAttributeTypeIds` control custom columns.
 - `narrativeSelectionMode: Dynamic` uses the narrative scope arrays. Empty arrays mean all permitted values when `narrativeScopeConfigured` is true.
 - `narrativeSelectionMode: Static` ignores narrative scope arrays and renders the explicit `narratives[]` list.
 - `styleConfiguration` controls the semantic HTML table renderer. Keep it sparse and use safe tokens or validated hex values.

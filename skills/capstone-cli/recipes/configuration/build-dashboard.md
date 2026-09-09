@@ -151,6 +151,7 @@ cat <<'EOF' | cap templates dashboard-templates create --json
   "name": "Executive Energy Dashboard",
   "description": "Monthly energy KPIs, trends, and breakdowns",
   "useTabSheet": false,
+  "showOrgNodeFilter": true,
   "dashboardStyle": {
     "backgroundColor": "surface-canvas",
     "foregroundColor": "text-primary",
@@ -270,6 +271,7 @@ EOF
 - `sortOrder` controls display order within each section
 - Use sequential zero IDs for `id` on create — the API assigns real IDs
 - `orgNodeTemplate` on the dashboard is the reporting hierarchy lens supplied to all widgets. Do not hardcode table widget org-node-template context unless maintaining a legacy template.
+- `showOrgNodeFilter` defaults to `true`. Set it to `false` and supply `defaultOrgNode` (`id` / `name` / `path`) for a dedicated dashboard that always renders one org node. Hidden without `defaultOrgNode` is rejected. Time periods still have no template default.
 - `dashboardStyle` styles the dashboard canvas/page area, not the internals of widget templates
 - `nodeLayout` and `nodeStyle` apply to structural nodes; `placementLayout` (layout only) applies to widget or narrative wrappers — widget chrome (background/border/shadow/radius/padding/accent) is owned by each widget's own `styleConfiguration`, not by the placement
 - Shell-frame objects — the dashboard-level `header` (`title`/`eyebrow`/`subtitle`/`badge`/`style`), `filterRegion`, and `tabStrip` — are documented under [Shell Styling Fields](#shell-styling-fields-header-filter-region-tab-strip) below (in `schema`/`sample`; they persist and round-trip)

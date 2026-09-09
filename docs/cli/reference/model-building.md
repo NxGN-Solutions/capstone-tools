@@ -140,7 +140,7 @@ For widget templates, set this at both the widget default and data-item override
 
 Table metric scope uses `metricTypeFilters`, `metricDisciplineFilters`, `metricFrameworkFilters`, `metricAttributeFilters`, `disciplineAttributeFilters`, and `frameworkAttributeFilters` when `metricSelectionMode` is Dynamic. The legacy/report-template-compatible `disciplineNodeAttributeFilters` and `frameworkNodeAttributeFilters` fields are also accepted by the shared DTO surface. Static Table templates use explicit `dataItems[]` unless metric filters provide the report-template fallback.
 
-Table custom columns are controlled with `showMetricValue`, `showUnitOfMeasure`, and `metricAttributeTypeIds`. Dynamic Narrative Scope uses `narrativeDisciplineFilters`, `narrativeFrameworkFilters`, `narrativeMetricAttributeFilters`, `narrativeDisciplineNodeAttributeFilters`, `narrativeFrameworkNodeAttributeFilters`, and `narrativeAttributeFilters`.
+Table custom columns are controlled with `showMetricValue`, `metricPropertyColumns` (`MetricProperty` EnumDTO list; widget default `[]`), and `metricAttributeTypeIds`. Dynamic Narrative Scope uses `narrativeDisciplineFilters`, `narrativeFrameworkFilters`, `narrativeMetricAttributeFilters`, `narrativeDisciplineNodeAttributeFilters`, `narrativeFrameworkNodeAttributeFilters`, and `narrativeAttributeFilters`.
 
 Table `styleConfiguration` uses bounded semantic HTML table slots (`panel`, `header`, `title`, `description`, `gridHeader`, `rowLabels`, `metadataCells`, `valueCells`, `totalCells`, `missingValueCells`, `emptyState`, `errorState`, `footnote`, `paginator`) plus `rowLabelHeader`, `zebraStripeColor`, `columnOverrides[]`, `rowOverrides[]`, `conditionalFormatRules[]`, and `categoricalColorTags[]`.
 
