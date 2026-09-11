@@ -119,7 +119,7 @@ map when checking whether a command family exists.
 | `data` | `availability` |
 | `data change-requests` | `create`, `delete`, `get`, `list`, `save`, `validate` |
 | `data data-lock` | `lock`, `unlock` |
-| `data input-values` | `create`, `download-excel`, `get`, `list`, `save`, `upload-excel`, `validate` |
+| `data input-values` | `create`, `download-excel`, `get`, `history`, `list`, `save`, `upload-excel`, `validate` |
 | `data lookups` | `get` |
 | `data narrative-values` | `get`, `get-by-context`, `get-by-metric-context`, `history`, `list`, `save`, `submit`, `validate` |
 | `data recalculation` | `status`, `wait` |
@@ -485,7 +485,7 @@ cap reporting dashboards get-insights <dashboard-template-id> <layout-node-id> -
 cap templates dashboard-templates audit <dashboard-template-id> --strict --json
 ```
 
-> **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`, `text-block`) use `--org-nodes` (plural, comma-separated) and can infer `--data-interval`/static periods from the widget template when configured. The `get-data` command uses `--org-node` (singular ID), auto-detects the data interval from the widget template, requires `--periods`, and returns the legacy CSV compatibility envelope, not the Table dashboard render response. Prefer `reporting computed-values` or typed widget commands for automation-safe checks. Use `cap data time-periods list --data-interval <interval>` to discover available period names.
+> **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`, `text-block`) use `--org-nodes` (plural, comma-separated) and can infer `--data-interval`/static periods from the widget template when configured. For `reporting widgets table`, `--data-interval` only resolves `--periods` names; the widget template `DataInterval` selects which stored computed values are returned. The `get-data` command uses `--org-node` (singular ID), auto-detects the data interval from the widget template, requires `--periods`, and returns the legacy CSV compatibility envelope, not the Table dashboard render response. Prefer `reporting computed-values` or typed widget commands for automation-safe checks. Use `cap data time-periods list --data-interval <interval>` to discover available period names.
 
 ### Dashboard Template Layout Metadata
 
@@ -1232,10 +1232,19 @@ cap system tenants bootstrap-local <name> --from-aspire [--force-new] [--json]
 
 Reuses an exact tenant name when present. `--force-new` appends `yyyyMMddHHmmss` and **creates a new Identity organisation** entitled to the current user. There is no teardown: leftover names such as `residual-h2 20260824122327` stay on the Identity picker until you `cap system tenants delete` them (switch off that tenant first). Prefer reuse for shared users such as testera. No in-repo test should pass `--force-new` against a shared human Identity user.
 
+### Input value history
+
+```bash
+cap data input-values history --metric <id> --org-node <id> --data-interval month --start-date 2026-01-01 [--json]
+```
+
+Returns the capture-cell audit log, including after the value has been cleared.
+
 ### Validate Data
 
 ```bash
 cap data input-values validate <id> --result <approve|reject> [--comments "..."] [--json]
+cap data input-values validate --ids <id>[,<id>] --result <approve|reject> [--comments "..."] [--json]
 cap data change-requests validate <id> --result <approve|reject> [--comments "..."] [--json]
 cap data narrative-values validate <id> --result <approve|reject> [--comments "..."] [--json]
 ```

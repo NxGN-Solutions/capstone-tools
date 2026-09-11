@@ -644,7 +644,7 @@ Table widgets are the dashboard table widget type. They use normal Input and Cal
 - `dataGrouping` plus optional `additionalDataGrouping` and `orgNodeRowSelectionMode` control row grouping under the dashboard-selected org node.
 - `showMetricsInColumns` is allowed only when the chain is OrgNode only; it switches from one row per metric to metric columns.
 - `showTotalRow` adds an engine-sourced total row for the dashboard org node. It requires OrgNode-only grouping with `showMetricsInColumns`. The footer is the parent engine value, not a client or filtered sum of body rows.
-- `showMetricValue`, `metricPropertyColumns`, and `metricAttributeTypeIds` control custom columns.
+- `showMetricValue`, `metricPropertyColumns`, and `metricAttributeTypeIds` control the Columns tab (metric value plus extra metadata columns).
 - `narrativeSelectionMode: Dynamic` uses the narrative scope arrays. Empty arrays mean all permitted values when `narrativeScopeConfigured` is true.
 - `narrativeSelectionMode: Static` ignores narrative scope arrays and renders the explicit `narratives[]` list.
 - `styleConfiguration` controls the semantic HTML table renderer. Keep it sparse and use safe tokens or validated hex values.

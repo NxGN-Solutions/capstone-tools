@@ -160,6 +160,7 @@ cap data time-periods list --data-interval year --json
 ```bash
 cap data input-values validate <id> --result approve --json
 cap data input-values validate <id> --result reject --comments "Reason for rejection" --json
+cap data input-values validate --ids <id1>,<id2> --result approve --json
 ```
 
 
