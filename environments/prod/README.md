@@ -2,6 +2,6 @@
 
 API URL: `https://capstone.nxgncloud.com/api`
 
-Release: https://github.com/NxGN-Solutions/capstone-tools/releases/tag/prod-v0.4.82
+Release: https://github.com/NxGN-Solutions/capstone-tools/releases/tag/prod-v0.4.106.1
 
 Use `manifest.json` in this directory for environment-specific update checks.
