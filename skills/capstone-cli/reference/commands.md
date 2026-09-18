@@ -267,14 +267,15 @@ Metric]`.
 ### Get Multiple Items (Bulk)
 
 ```bash
-cap templates widget-templates get-bulk -i <id1> -i <id2> -i <id3> [--json]
-cap model inputs get-bulk -i <id1> -i <id2> --json
-cap model calculations get-bulk -i <id1> -i <id2> --json
+cap templates widget-templates get-bulk -i <id1>,<id2>,<id3> [--json]
+cap model inputs get-bulk --ids <id1>,<id2> --json
+cap model calculations get-bulk --ids <id1>,<id2> --json
 ```
 
-> IDs are passed as **repeated `-i`/`--id` flags**, one GUID per flag. Positional
-> arguments (`get-bulk <id1> <id2>`) and a single comma-joined string
-> (`get-bulk -i "id1,id2"`) are **not** accepted and return a validation error.
+> IDs are passed as a **comma- or whitespace-separated list on one `--ids` (alias
+> `-i`) flag**. ConsoleAppFramework last-wins on repeated flags, so
+> `--ids <id1> --ids <id2>` returns only the last id. Positional arguments
+> (`get-bulk <id1> <id2>`) are not accepted.
 
 Retrieves multiple full entities in one CLI invocation. Returns partial results — valid entities are returned alongside errors for invalid or inaccessible IDs. Model `get-bulk` commands return the same editable DTOs as `get`, so automation can hydrate list results before analysis or save-round-tripping without spawning one process per entity.
 
@@ -284,7 +285,7 @@ Add `--full` to return the full editable widget template DTOs — including nest
 edited and piped back to `save`/`import-json`:
 
 ```bash
-cap templates widget-templates get-bulk -i <id1> -i <id2> --full --json
+cap templates widget-templates get-bulk -i <id1>,<id2> --full --json
 ```
 
 **Supported entities:** `templates widget-templates`, `model inputs`, `model calculations`
@@ -422,7 +423,7 @@ available for direct lookup calls.
 `cap meta lookups get color-tokens --json` is offline and does not require API
 configuration. Use it to discover the shared dashboard/widget color registry,
 deprecated legacy tokens, and aliases. Template `schema --json` color fields
-list the 17 canonical non-deprecated token names in `values[]`.
+list the 21 canonical non-deprecated token names in `values[]`.
 
 Some widget-template enum sets are schema-owned rather than standalone lookup
 endpoints. For Pie/Donut center, legend-value, and slice-label modes, read
@@ -864,7 +865,12 @@ echo '{
       "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
       "partitioningRankMode": { "id": 0, "name": "None" },
       "partitioningRankLimit": null,
-      "sortOrder": 0
+      "sortOrder": 0,
+      "bands": [
+        { "backgroundColor": "danger-subtle", "foregroundColor": "text-primary" },
+        { "lowerBoundValue": 90, "backgroundColor": "warning-subtle", "foregroundColor": "text-primary" },
+        { "lowerBoundValue": 95, "backgroundColor": "success-subtle", "foregroundColor": "text-primary" }
+      ]
     }
   ],
   "metricAttributeTypeIds": ["<sector-attribute-type-id>"],
@@ -890,14 +896,7 @@ echo '{
     },
     "valueCells": {
       "textAlign": "End"
-    },
-    "conditionalFormatRules": [
-      {
-        "configuredColumnId": "metric:<metric-guid-n>",
-        "operator": "Negative",
-        "style": { "foregroundColor": "danger" }
-      }
-    ]
+    }
   }
 }' | cap templates widget-templates create --json
 ```

@@ -60,8 +60,8 @@ Check with any WCAG contrast formula before committing.
 1. Dashboard header panel (`header.style`)
 2. Info Card accent bars (`panel.accentColor`)
 3. XY chart series color + inverted tooltip background
-4. Conditional-format thresholds may additionally use amber `#B45309`
-   (exception highlighting — see Layer 6)
+4. Metric bands use registry tokens only (`danger-subtle`, `warning-subtle`,
+   `success-subtle`, or other canonical tokens) — see Layer 5.4
 
 Every other color in every payload must be a semantic token from the tables
 below.
@@ -77,7 +77,7 @@ cap templates widget-templates schema --widget-type info --json
 cap templates dashboard-templates schema --json
 ```
 
-`schema --json` lists the 17 canonical, non-deprecated token names in color
+`schema --json` lists the 21 canonical, non-deprecated token names in color
 field `values[]`. The meta lookup returns the full registry: canonical tokens,
 deprecated legacy tokens, and aliases. The table below is checked against
 `docs/cli/reference/color-tokens.json`; update the generated artifact and this
@@ -93,6 +93,10 @@ table together.
 | `danger` | Status | `#b42318` | `--cap-color-danger` | Canonical | Negative / breach state |
 | `info` | Status | `#3667e3` | `--cap-color-info` | Canonical | Informational state |
 | `neutral` | Status | `#667085` | `--cap-color-neutral` | Canonical | No-signal state |
+| `success-subtle` | Status | `#d1fadf` | `--cap-color-success-subtle` | Canonical | Positive state fill |
+| `warning-subtle` | Status | `#fef0c7` | `--cap-color-warning-subtle` | Canonical | Caution state fill |
+| `danger-subtle` | Status | `#fee4e2` | `--cap-color-danger-subtle` | Canonical | Negative state fill |
+| `info-subtle` | Status | `#dbe4fe` | `--cap-color-info-subtle` | Canonical | Informational state fill |
 | `surface` | Surface | `#ffffff` | `--cap-color-surface` | Canonical | Card/panel background |
 | `surface-canvas` | Surface | `#f9fafd` | `--cap-color-surface-canvas` | Canonical | Page/canvas background |
 | `surface-muted` | Surface | `#f7f8fb` | `--cap-color-surface-muted` | Canonical | Quiet chrome (tab strip, filter bar) |
@@ -465,29 +469,38 @@ data item — axis label text is the axis `name` (put the unit there:
   "rowLabels":  { "fontFamily": "theme", "fontSize": 13, "foregroundColor": "text-primary" },
   "valueCells": { "fontFamily": "theme", "fontSize": 13, "foregroundColor": "text-secondary",
                   "textAlign": "End" },
-  "rowLabelHeader": "Scope",
-  "conditionalFormatRules": [
-    { "configuredColumnId": "metric:⟨metric-id⟩", "operator": "Negative",
-      "style": { "foregroundColor": "danger" } },
-    { "configuredColumnId": "metric:⟨metric-id⟩", "operator": "GreaterThan", "threshold": 250000,
-      "style": { "foregroundColor": "#B45309" } }
-  ]
+  "rowLabelHeader": "Scope"
 }
+```
+
+Author bands on the metric (or a static `dataItems[].bands[]` override), not on
+table style. A typical Red · Amber · Green override:
+
+```json
+"bands": [
+  { "backgroundColor": "danger-subtle", "foregroundColor": "text-primary" },
+  { "lowerBoundValue": 90, "backgroundColor": "warning-subtle", "foregroundColor": "text-primary" },
+  { "lowerBoundValue": 95, "backgroundColor": "success-subtle", "foregroundColor": "text-primary" }
+]
 ```
 
 Table rules:
 
 - Numbers are **right-aligned** (`textAlign: End`), row labels left.
 - `rowLabelHeader` gets a real name ("Scope", "Project") — never the default.
-- Conditional rules highlight **genuine exceptions only**: tune thresholds so
-  ≤ ~20% of visible rows fire. A rule firing on most rows is wallpaper, not a
-  signal. `danger` token for hard breaches, amber `#B45309` for watch items.
+- Bands highlight **genuine exceptions only**: tune bounds so ≤ ~20% of visible
+  rows leave the expected band. A band that paints most rows is wallpaper, not
+  a signal. Use `danger-subtle` fill for hard breaches, `warning-subtle` for
+  watch items, `success-subtle` for in-range values. Band colours are registry
+  tokens only; do not send hex.
 - The footnote **explains the color coding**: "Amber: open AR above $250k.
   Red: projected cost overrun."
+- `showConditionalFormatting` (default true) paints the bands; set
+  `allowConditionalFormattingToggle` when viewers may switch formatting off.
 
 Variant `Watchlist`: same styling; content = **top-N worst** by the risk
 metric (rank + limit), titled as a watchlist ("Project Risk Watchlist"), with
-the same conditional rules. Use it to answer the "which ones?" question
+the same metric bands. Use it to answer the "which ones?" question
 without shipping the whole population.
 
 Tables answer *exact-value lookup*. If the task is comparison or ranking, use

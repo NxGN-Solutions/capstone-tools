@@ -111,6 +111,8 @@ cap model metrics list --json
 - `metricSelectionMode` - { id: 0, name: "Static" } (explicit metrics) or { id: 1, name: "Dynamic" }
 - `timePeriodAggregationMethod` - Required for Dynamic widgets that collapse multiple selected periods into one value. Use Sum for additive metrics, Average for rates/percentages, Last Value for snapshots, and None only for deliberate time-series output.
 - `dataItems` - Array of metric configurations for metric-set widgets; omit or set to `[]` for TextBlock
+- `showConditionalFormatting` - Default `true`. Whether band colours paint on Table, Info Card, and XY render
+- `allowConditionalFormattingToggle` - Default `true`. Whether viewers may switch formatting on or off
 
 > **Dynamic metric selection:** Set `metricSelectionMode` to
 > `{ id: 1, name: "Dynamic" }` to resolve metrics at render time instead of
@@ -147,7 +149,8 @@ cap model metrics list --json
 - `narrativeSelectionMode` - `Dynamic` for Narrative Scope, or `Static` for explicit `narratives[]`
 - `narrativeScopeConfigured` and narrative scope arrays - Use when Dynamic Narrative Scope is intentionally authored
 - `narratives` - Used when `narrativeSelectionMode` is Static
-- `styleConfiguration` - Bounded Table style slots, row/column overrides, conditional formatting, and categorical color tags
+- `styleConfiguration` - Bounded Table style slots, row/column overrides, and categorical color tags
+- `dataItems[].bands` - Optional metric-band override for Static metric selection. Omit or `null` inherits the metric default; `[]` disables formatting for that item. A ladder list has an unbounded first band; later bands use exactly one of `lowerBoundValue` or `lowerBoundMetric`. Interval lists may set both ends, including `upperBoundValue` / `upperBoundMetric`. Colours are registry tokens only (`success-subtle`, `warning-subtle`, `danger-subtle`, `info-subtle`, or other canonical tokens)
 
 Do not author `includedDataTypes` or `orgNodeTemplateId` for new Table templates. The CLI/API may accept them for legacy compatibility, but current authoring uses Narrative Properties and the dashboard template owns the org-node-template lens.
 
@@ -603,7 +606,12 @@ Table widgets are the dashboard table widget type. They use normal Input and Cal
       "metricPartitioningMode": { "id": 0, "name": "None" },
       "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
       "partitioningRankMode": { "id": 0, "name": "None" },
-      "partitioningRankLimit": null
+      "partitioningRankLimit": null,
+      "bands": [
+        { "backgroundColor": "danger-subtle", "foregroundColor": "text-primary" },
+        { "lowerBoundValue": 90, "backgroundColor": "warning-subtle", "foregroundColor": "text-primary" },
+        { "lowerBoundValue": 95, "backgroundColor": "success-subtle", "foregroundColor": "text-primary" }
+      ]
     }
   ],
   "metricAttributeTypeIds": ["<metric-attribute-type-id>"],
@@ -627,20 +635,14 @@ Table widgets are the dashboard table widget type. They use normal Input and Cal
       "textTransform": "Uppercase",
       "letterSpacing": 1
     },
-    "valueCells": { "textAlign": "End" },
-    "conditionalFormatRules": [
-      {
-        "configuredColumnId": "metric:<metric-guid-n>",
-        "operator": "Negative",
-        "style": { "foregroundColor": "danger" }
-      }
-    ]
+    "valueCells": { "textAlign": "End" }
   }
 }
 ```
 
 **Key fields:**
 - `dataItems` are the static metric selections. Use dynamic metric filters instead when `metricSelectionMode` is Dynamic.
+- `dataItems[].bands` overrides the metric's colour bands for this widget. Omit to inherit; `[]` disables formatting.
 - `dataGrouping` plus optional `additionalDataGrouping` and `orgNodeRowSelectionMode` control row grouping under the dashboard-selected org node.
 - `showMetricsInColumns` is allowed only when the chain is OrgNode only; it switches from one row per metric to metric columns.
 - `showTotalRow` adds an engine-sourced total row for the dashboard org node. It requires OrgNode-only grouping with `showMetricsInColumns`. The footer is the parent engine value, not a client or filtered sum of body rows.

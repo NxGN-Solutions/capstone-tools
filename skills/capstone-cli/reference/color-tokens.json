@@ -74,6 +74,42 @@
       "deprecated": false
     },
     {
+      "name": "success-subtle",
+      "role": "Positive state fill",
+      "lightHex": "#d1fadf",
+      "darkHex": null,
+      "cssVariable": "--cap-color-success-subtle",
+      "category": "Status",
+      "deprecated": false
+    },
+    {
+      "name": "warning-subtle",
+      "role": "Caution state fill",
+      "lightHex": "#fef0c7",
+      "darkHex": null,
+      "cssVariable": "--cap-color-warning-subtle",
+      "category": "Status",
+      "deprecated": false
+    },
+    {
+      "name": "danger-subtle",
+      "role": "Negative state fill",
+      "lightHex": "#fee4e2",
+      "darkHex": null,
+      "cssVariable": "--cap-color-danger-subtle",
+      "category": "Status",
+      "deprecated": false
+    },
+    {
+      "name": "info-subtle",
+      "role": "Informational state fill",
+      "lightHex": "#dbe4fe",
+      "darkHex": null,
+      "cssVariable": "--cap-color-info-subtle",
+      "category": "Status",
+      "deprecated": false
+    },
+    {
       "name": "surface",
       "role": "Card/panel background",
       "lightHex": "#ffffff",

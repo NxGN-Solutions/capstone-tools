@@ -142,7 +142,7 @@ Table metric scope uses `metricTypeFilters`, `metricDisciplineFilters`, `metricF
 
 Table custom columns are controlled with `showMetricValue`, `metricPropertyColumns` (`MetricProperty` EnumDTO list; widget default `[]`), and `metricAttributeTypeIds`. Dynamic Narrative Scope uses `narrativeDisciplineFilters`, `narrativeFrameworkFilters`, `narrativeMetricAttributeFilters`, `narrativeDisciplineNodeAttributeFilters`, `narrativeFrameworkNodeAttributeFilters`, and `narrativeAttributeFilters`.
 
-Table `styleConfiguration` uses bounded semantic HTML table slots (`panel`, `header`, `title`, `description`, `gridHeader`, `rowLabels`, `metadataCells`, `valueCells`, `totalCells`, `missingValueCells`, `emptyState`, `errorState`, `footnote`, `paginator`) plus `rowLabelHeader`, `zebraStripeColor`, `columnOverrides[]`, `rowOverrides[]`, `conditionalFormatRules[]`, and `categoricalColorTags[]`.
+Table `styleConfiguration` uses bounded semantic HTML table slots (`panel`, `header`, `title`, `description`, `gridHeader`, `rowLabels`, `metadataCells`, `valueCells`, `totalCells`, `missingValueCells`, `emptyState`, `errorState`, `footnote`, `paginator`) plus `rowLabelHeader`, `zebraStripeColor`, `columnOverrides[]`, `rowOverrides[]`, and `categoricalColorTags[]`. Metric colour bands live on the metric (`bands`) or a static `dataItems[].bands[]` override, not on table style.
 
 Do not author `includedDataTypes` or `orgNodeTemplateId` for new Table widgets. They are legacy compatibility/adapter fields. Arbitrary `columns[]`, expression columns, and `OrgNodeAttribute` row grouping are deferred beyond the current Table authoring contract.
 
@@ -315,6 +315,11 @@ the unified `cap data change-requests` surface.
     "name": "Month"
   },
   "precision": 2,
+  "bands": [
+    { "backgroundColor": "danger-subtle", "foregroundColor": "text-primary" },
+    { "lowerBoundValue": 90, "backgroundColor": "warning-subtle", "foregroundColor": "text-primary" },
+    { "lowerBoundValue": 95, "backgroundColor": "success-subtle", "foregroundColor": "text-primary" }
+  ],
   "orgStructureAggregationMethod": {
     "id": 0,
     "name": "Sum"
@@ -340,6 +345,8 @@ the unified `cap data change-requests` surface.
   "attributeValues": []
 }
 ```
+
+`bands` is optional. Omit the field (or send `null`) to leave stored bands unchanged on update. Send `[]` to clear them. A ladder list has an unbounded first band and later bands use exactly one of `lowerBoundValue` or `lowerBoundMetric`. An interval list may bound every row, including the first, with optional `upperBoundValue` / `upperBoundMetric`; list the in-spec interval first and leave outermost tails unbounded. Colours are registry tokens only.
 
 **Command:**
 ```bash
@@ -372,6 +379,11 @@ EOF
     "name": "Day"
   },
   "precision": 2,
+  "bands": [
+    { "backgroundColor": "danger-subtle", "foregroundColor": "text-primary" },
+    { "lowerBoundValue": 90, "backgroundColor": "warning-subtle", "foregroundColor": "text-primary" },
+    { "lowerBoundValue": 95, "backgroundColor": "success-subtle", "foregroundColor": "text-primary" }
+  ],
   "calculationPhase": {
     "id": 1,
     "name": "After Aggregations"
@@ -388,6 +400,8 @@ EOF
   "attributeValues": []
 }
 ```
+
+`bands` is optional on calculations with the same omit/`null`/empty-list rules as inputs.
 
 `friendlyName` is optional. Use it for user-facing labels while keeping `name`
 stable for formulas, imports, and model identity. Translation arrays are edit-UI
