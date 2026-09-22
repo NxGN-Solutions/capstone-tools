@@ -433,7 +433,7 @@ endpoints. For Pie/Donut center, legend-value, and slice-label modes, read
 
 ### Reporting Commands
 
-Computed values, dashboards, and widgets. Most require `--data-interval` and `--periods` (exceptions: `widgets get-data` auto-detects the interval from the widget template but still requires `--periods`; `computed-values query` and `computed-values audit` can resolve recent periods with `--period-count`).
+Computed values, dashboards, and widgets. `--periods` is required for live data. `--data-interval` is the request grain: `day`, `week`, `month`, `quarter`, `year`, or `match-selected`. Period names are resolved preferring that grain, then other types (`month` + `FY 26` works). Omit `--data-interval` on dashboards to use `defaultDataInterval`, else match-selected. Typed widget commands omit `--data-interval` to match selected periods (a pinned widget interval still wins). `computed-values query` and `computed-values audit` can resolve recent periods with `--period-count`.
 
 ```bash
 # Computed values (via report template filter lens)
@@ -470,23 +470,25 @@ for audit findings while still getting the JSON body.
 ```bash
 # Widget data (type-specific — returns typed JSON for rendering)
 cap reporting widgets info-card <widget-template-id> --org-nodes <id> --data-interval month --periods "Jan 25" [--json]
-cap reporting widgets pie-chart <widget-template-id> --org-nodes <id> --data-interval month --periods "Jan 25" [--json]
-cap reporting widgets xy-chart <widget-template-id> --org-nodes <id> --data-interval month --periods "Jan 25" [--json]
+cap reporting widgets pie-chart <widget-template-id> --org-nodes <id> --data-interval month --periods "FY 26" [--json]
+cap reporting widgets xy-chart <widget-template-id> --org-nodes <id> --data-interval match-selected --periods "FY 26" [--json]
 cap reporting widgets table <widget-template-id> --org-nodes <id> --data-interval quarter --periods "Q1 FY 25" [--json]
 cap reporting widgets text-block <widget-template-id> --org-nodes <id> --data-interval month --periods "Jan 25" [--json]
 
 # Widget data (legacy CSV compatibility payload, not dashboard Table render JSON)
 cap reporting widgets get-data <widget-template-id> --org-node <id> --periods "FY 24, FY 25" [--json]
 
-# Dashboard data
-cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --data-interval month --periods "Jan 25" [--json]
-cap reporting dashboards get-insights <dashboard-template-id> <layout-node-id> --org-node <id> --data-interval month --periods "Jan 25" [--json]
+# Dashboard data — CSV columns are the union of every widget's effective interval/range
+cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --periods "FY 26" [--json]
+cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --data-interval month --periods "FY 26" [--json]
+cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --data-interval match-selected --periods "FY 26" [--json]
+cap reporting dashboards get-insights <dashboard-template-id> <layout-node-id> --org-node <id> --periods "FY 26" [--json]
 
 # Dashboard template static audit before live data checks
 cap templates dashboard-templates audit <dashboard-template-id> --strict --json
 ```
 
-> **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`, `text-block`) use `--org-nodes` (plural, comma-separated) and can infer `--data-interval`/static periods from the widget template when configured. For `reporting widgets table`, `--data-interval` only resolves `--periods` names; the widget template `DataInterval` selects which stored computed values are returned. The `get-data` command uses `--org-node` (singular ID), auto-detects the data interval from the widget template, requires `--periods`, and returns the legacy CSV compatibility envelope, not the Table dashboard render response. Prefer `reporting computed-values` or typed widget commands for automation-safe checks. Use `cap data time-periods list --data-interval <interval>` to discover available period names.
+> **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`, `text-block`) use `--org-nodes` (plural). `--data-interval` is the request grain (`day|week|month|quarter|year|match-selected`). Names prefer that grain, then other types. Omit `--data-interval` to match selected periods (a pinned widget interval still wins). `dashboards get-data` omit `--data-interval` uses the template `defaultDataInterval`, else match-selected. Its CSV is a **union of columns** across widgets — pinned or Static-range widgets can add extra period columns; use typed widget commands to inspect one widget. CSV `widgets get-data` uses `--org-node` (singular) and returns the legacy CSV envelope. Prefer `reporting computed-values` or typed widget commands for automation-safe checks.
 
 ### Dashboard Template Layout Metadata
 
@@ -503,7 +505,7 @@ cap templates dashboard-templates download-excel -o dashboards.xlsx
 cap templates dashboard-templates upload-excel -f dashboards.xlsx --json
 ```
 
-The JSON contract adds `dashboardStyle` at the template root and the following optional groups on `treeItems`:
+The JSON contract adds `showDataIntervalFilter` (default `false`) and `defaultDataInterval` (`{ "id": 2, "name": "Month" }`, omit for Match selected periods) at the template root, plus `dashboardStyle` and the following optional groups on `treeItems`:
 
 | JSON group | Applies to | Fields |
 |------------|------------|--------|
@@ -572,7 +574,9 @@ cap reporting widgets get-data --help
 
 Use `cap reporting widgets info-card ... --json` when an agent needs resolved
 Info Card text, values, trend tokens, warnings, and returned
-`styleConfiguration` for dashboard-render parity. Use `cap reporting widgets
+`styleConfiguration` for dashboard-render parity. When `valueState` is `NoData`,
+`value`, `formattedValue`, and `rawValue` are null. `Inaccessible` still returns
+`value: "Restricted"`. Use `cap reporting widgets
 pie-chart ... --json` when an agent needs the shared pie/donut render contract
 with returned `styleConfiguration`, `centerNumberFormat`, resolved `center`,
 `labelDisplay`, `legend`, `dataItems[].presentation`,
@@ -1090,12 +1094,16 @@ Example Table row selection (Top 5 rows by a metric column, with a Metric-operan
 ```
 
 > `tableColumnKey` uses the stored `metric:<guid>` form where `<guid>` is the
-> metric ID without dashes (the `N` GUID format).
+> metric ID without dashes (the `N` GUID format). The save-ready `table` sample
+> uses `{ "predicateType": "Null", "operator": "IsNotNull" }`. Comparing a
+> column with itself filters most rows.
 
-Info Card and the other widget types support per-data-item selection at
-`widgetTemplate.dataItems[].valueSelectionConfig` with `ownerScope: "DataItem"`.
-Run `cap templates widget-templates sample --widget-type info --json` for a
-ready-to-edit example that includes a data-item `valueSelectionConfig`.
+Partitioned data items (Children/Descendants) support per-data-item selection at
+`widgetTemplate.dataItems[].valueSelectionConfig` with `ownerScope: "DataItem"`;
+it is rejected on unpartitioned items. Run
+`cap templates widget-templates sample --widget-type info --json` for a
+ready-to-edit example that carries the widget-level static metric-set
+`valueSelectionConfig` instead.
 
 Excel stores `valueSelectionConfig` as a single JSON-in-cell column. A blank cell
 means no value-selection config, and upload rejects stale/removed fields such as

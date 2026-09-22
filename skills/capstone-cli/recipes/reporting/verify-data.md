@@ -58,7 +58,7 @@ cap reporting widgets get-data <widget-template-id> \
 - When the metric or widget data item has bands, typed widget JSON echoes them:
   Info Card `dataItems[].bands` / `dataItems[].bandBounds`; Table `bands` plus
   per-cell `bandBounds`; XY `chartSeries[].bulletFillColours` and the two
-  `showConditionalFormatting` / `allowConditionalFormattingToggle` flags. A
+  `showConditionalFormatting` flag. A
   missing metric bound yields `bandBounds: null` and no colour for that point.
 
 **Alternative — typed output for specific widget types:**
@@ -109,8 +109,21 @@ For Table widgets, use both paths when validating full functionality: `widgets t
 ```bash
 cap reporting dashboards get-data <dashboard-template-id> \
   --org-node <org-node-id> \
-  --data-interval day \
-  --periods "2026-01-20,2026-01-21,2026-01-22" \
+  --periods "FY 26" \
+  --json
+
+# Viewer default Month + FY 26 window (name lookup searches every type):
+cap reporting dashboards get-data <dashboard-template-id> \
+  --org-node <org-node-id> \
+  --data-interval month \
+  --periods "FY 26" \
+  --json
+
+# Explicit match-selected (no request interval):
+cap reporting dashboards get-data <dashboard-template-id> \
+  --org-node <org-node-id> \
+  --data-interval match-selected \
+  --periods "FY 26" \
   --json
 ```
 
@@ -121,6 +134,7 @@ cap reporting dashboards get-data <dashboard-template-id> \
 - Values are present — empty cells indicate missing data or misconfigured calculations
 - Org node hierarchy appears (e.g., Example Enterprise, Example Enterprise->Example Site 1, etc.)
 - Calculation-derived metrics have computed values (not just input metrics)
+- Extra period columns besides `--periods` usually come from pinned or Static-range widgets (the CSV is a union). Inspect one widget with `reporting widgets xy-chart` / `table` / `info-card`.
 
 **Optional flags:**
 

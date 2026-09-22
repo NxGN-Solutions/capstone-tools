@@ -509,7 +509,7 @@ This bypasses the template discovery workflow — no need to list templates, gue
 
 ### `reporting_dashboards_getData`
 
-Get all widget data from a dashboard as CSV. Returns data at each widget's native interval (daily widgets produce daily rows) — you cannot control aggregation. For monthly/quarterly summaries or custom granularity, use `data_computedValues_list` with `dataInterval` instead. Best for: full dashboard export, cross-widget correlation.
+Get all widget data from a dashboard as CSV. Each widget with a pinned template interval returns at that interval. Pass `dataInterval` to set the interval for widgets whose template leaves it to the dashboard. Best for: full dashboard export, cross-widget correlation.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -519,6 +519,7 @@ Get all widget data from a dashboard as CSV. Returns data at each widget's nativ
 | `periodType` | string | No | `month`, `quarter` (default), or `year` |
 | `periodCount` | int | No | Number of recent periods (default: 4) |
 | `scope` | string | No | `peers` or `descendants` (default) |
+| `dataInterval` | int | No | `0=day`, `1=week`, `2=month`, `3=quarter`, `4=year`; applied to widgets with no pinned interval |
 
 **Returns:** CSV data for all widgets on the dashboard. Use for cross-widget correlation analysis.
 
@@ -526,7 +527,7 @@ Get all widget data from a dashboard as CSV. Returns data at each widget's nativ
 
 ### `reporting_widgets_getData`
 
-Get one widget's data as CSV. Use a widget template ID (from `templates_widgets_list`) OR pass `templateJson` for ad-hoc queries. Returns at the widget's configured interval — you cannot change aggregation. For flexible interval control (daily/weekly/monthly), use `data_computedValues_list` instead.
+Get one widget's data as CSV. Use a widget template ID (from `templates_widgets_list`) OR pass `templateJson` for ad-hoc queries. Widgets with a pinned template interval return at that interval. Pass `dataInterval` to set the interval for widgets whose template leaves it to the dashboard.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -536,6 +537,7 @@ Get one widget's data as CSV. Use a widget template ID (from `templates_widgets_
 | `timePeriodNames` | string | No | Comma-separated period names (e.g., `Q1 FY 25,Q2 FY 25`) |
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
 | `periodCount` | int | No | Number of recent periods (default: 4, used with `periodType`) |
+| `dataInterval` | int | No | `0=day`, `1=week`, `2=month`, `3=quarter`, `4=year`; applied to widgets with no pinned interval |
 
 **Returns:** CSV data for the widget's metrics and time periods.
 

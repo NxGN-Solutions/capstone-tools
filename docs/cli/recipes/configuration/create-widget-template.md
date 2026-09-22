@@ -111,8 +111,7 @@ cap model metrics list --json
 - `metricSelectionMode` - { id: 0, name: "Static" } (explicit metrics) or { id: 1, name: "Dynamic" }
 - `timePeriodAggregationMethod` - Required for Dynamic widgets that collapse multiple selected periods into one value. Use Sum for additive metrics, Average for rates/percentages, Last Value for snapshots, and None only for deliberate time-series output.
 - `dataItems` - Array of metric configurations for metric-set widgets; omit or set to `[]` for TextBlock
-- `showConditionalFormatting` - Default `true`. Whether band colours paint on Table, Info Card, and XY render
-- `allowConditionalFormattingToggle` - Default `true`. Whether viewers may switch formatting on or off
+- `showConditionalFormatting` - Default `true`. Hard gate: when false, Table / Info Card / XY never paint band colours, even if a dashboard viewer has switched formatting on. The dashboard template owns `allowConditionalFormattingToggle` (whether viewers see the filter-row toggle). Spreadsheet/report templates still have their own Allow flag for that page.
 
 > **Dynamic metric selection:** Set `metricSelectionMode` to
 > `{ id: 1, name: "Dynamic" }` to resolve metrics at render time instead of
@@ -791,7 +790,9 @@ Table row example (Top 5 rows by a metric column):
   "rankLimit": 5,
   "nullPlacement": "Last",
   "tableRowScope": "LeafOrgNodes",
-  "predicates": []
+  "predicates": [
+    { "predicateType": "Null", "operator": "IsNotNull" }
+  ]
 }
 ```
 

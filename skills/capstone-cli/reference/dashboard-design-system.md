@@ -495,8 +495,10 @@ Table rules:
   tokens only; do not send hex.
 - The footnote **explains the color coding**: "Amber: open AR above $250k.
   Red: projected cost overrun."
-- `showConditionalFormatting` (default true) paints the bands; set
-  `allowConditionalFormattingToggle` when viewers may switch formatting off.
+- `showConditionalFormatting` (default true) is a hard gate on the widget:
+  when false, bands never paint, even if the dashboard viewer toggle is on.
+  The dashboard template's `allowConditionalFormattingToggle` decides whether
+  that toggle is shown.
 
 Variant `Watchlist`: same styling; content = **top-N worst** by the risk
 metric (rank + limit), titled as a watchlist ("Project Risk Watchlist"), with

@@ -138,7 +138,7 @@ cap data input-values upload-excel -f "$WORKBOOKS/monthly-input-values.xlsx" --j
 Verify data is available:
 
 ```bash
-cap data input-values list --json --limit 5
+cap data input-values list --template <capture-template-id> --data-interval month --json --limit 5
 
 cap reporting widgets info-card <widget-id> \
   --org-nodes <org-node-id> \

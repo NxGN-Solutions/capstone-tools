@@ -167,13 +167,13 @@ When deciding which tool to use, follow this decision tree:
 | **Cross-site comparison** | `data_computedValues_list` (per-site orgNodeIds) | Flexible aggregation control |
 | **SEE a dashboard** | `apps_dashboard_render` | Visual HTML rendering |
 | **SEE a single widget** | `apps_widget_pieChart` / `apps_widget_xyChart` / `apps_widget_infoCard` / `apps_widget_table` | Visual HTML rendering |
-| **Full dashboard CSV export** | `reporting_dashboards_getData` | Returns at widget native interval |
-| **Check one widget's values** | `reporting_widgets_getData` | Returns at widget's configured interval |
+| **Full dashboard CSV export** | `reporting_dashboards_getData` | Pinned widgets stay at their interval; pass `dataInterval` for unpinned widgets |
+| **Check one widget's values** | `reporting_widgets_getData` | Pinned widgets stay at their interval; pass `dataInterval` for unpinned widgets |
 | **Data quality / validation** | `data_inputValues_list` | Shows validation status + lock state |
 | **Edit/enter data** | `data_inputValues_save` | Upsert by business key |
 | **AI insights** | `apps_widget_aiSummary` | Pre-generated server insights |
 
-**Key difference:** `reporting_dashboards_getData` and `reporting_widgets_getData` return data at the widget's *native* interval — you cannot control aggregation. For flexible granularity (daily/weekly/monthly), always use `data_computedValues_list` with the `dataInterval` parameter.
+**Key difference:** `reporting_dashboards_getData` and `reporting_widgets_getData` honour a pinned widget-template interval. Pass `dataInterval` (0=day … 4=year) to set the interval for widgets whose template leaves it to the dashboard; omit it to match the selected periods. For ad-hoc metric analysis that is not bound to a widget template, use `data_computedValues_list` with `dataInterval`.
 
 **~80% of data questions** should route to `data_computedValues_list` — it's the primary analysis tool.
 
