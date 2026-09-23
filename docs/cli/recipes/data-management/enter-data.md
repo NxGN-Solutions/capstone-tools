@@ -154,7 +154,7 @@ Proceed? [Yes/No]
 
 **Purpose:** Execute the save command.
 
-> **Important:** The save endpoint requires the full business key (`metric`, `orgNode`, `timePeriodType`, `startDate`) for every input value, even when updating an existing record by ID. The `id` field uses the zero ID for new values, or an existing input value ID for updates. Omit `unitOfMeasure` to post the metric definition (storage) unit. Include `unitOfMeasure.id` when the number is in an override display unit (for example a row copied from `data input-values list`).
+> **Important:** The save endpoint requires the full business key (`metric`, `orgNode`, `timePeriodType`, `startDate`) for every input value, even when updating an existing record by ID. The `id` field uses the zero ID for new values, or an existing input value ID for updates. Include `unitOfMeasure.id` to say which unit the number is in: an org node's override unit (as `data input-values list` shows it) is converted to the metric unit. Omitting `unitOfMeasure` means the metric definition (storage) unit, but on an org node with a unit override the save is rejected with `MissingUnitOfMeasure`, so a number copied from the screen can never be stored off by the conversion factor.
 
 **Command:**
 ```bash

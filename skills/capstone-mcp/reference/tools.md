@@ -380,6 +380,8 @@ Save input values (batch upsert). Uses business-key matching — zero IDs resolv
 
 **Business key:** `metric` + `orgNode` + `timePeriodType` + `startDate` uniquely identifies each value. The `id` field can always be the zero ID — the API resolves existing records by business key. This makes saves idempotent.
 
+**Units:** the value is read in the unit the capture grid shows for that org node — the node's unit override (or the nearest ancestor's) when one exists, otherwise the metric unit. The tool resolves that unit for you, and the API converts it to the stored metric unit with the conversion factor for the value's fiscal year.
+
 **TimePeriodType values:**
 
 | ID | Name |

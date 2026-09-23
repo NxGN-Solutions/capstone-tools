@@ -448,7 +448,23 @@ cap data input-values create \
   --json
 ```
 
-**Units:** `cap data input-values save` treats omitted `unitOfMeasure` as the **metric definition (storage) unit**. After `list` shows override (display) units, a payload copied from `list` must include `unitOfMeasure.id` or the display number will be stored as-is.
+**Units:** values are stored in the metric definition unit. `list`, `get` and the capture grid show each org node's **effective unit**: the node's unit override (or the nearest ancestor's), converted with the unit's conversion factor for the value's fiscal year.
+
+- Send `unitOfMeasure.id` on every row to say which unit the number is in. A value in the override unit is converted to the metric unit, and a value in the metric unit is stored as sent.
+- Omitting `unitOfMeasure` means the metric unit, **except** on an org node that has a unit override. There the save is rejected with `MissingUnitOfMeasure`, because a bare number copied from the screen would be stored off by the conversion factor.
+- A unit with no conversion from the metric unit is rejected with `InvalidUnitOfMeasureConversion`.
+
+```json
+{
+  "id": "<empty-id>",
+  "metric": { "id": "<metric-id>" },
+  "orgNode": { "id": "<override-org-node-id>" },
+  "timePeriodType": { "id": 2, "name": "Month" },
+  "startDate": "2026-08-01",
+  "value": 1500,
+  "unitOfMeasure": { "id": "<us-dollars-unit-id>" }
+}
+```
 
 **`save`** uses JSON input (batch):
 ```bash
