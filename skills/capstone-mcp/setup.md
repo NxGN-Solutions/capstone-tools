@@ -52,14 +52,14 @@ Add the Capstone server:
     "capstone": {
       "command": "capstone-mcp",
       "env": {
-        "CAPSTONE_API_URL": "https://your-capstone-instance.example.com"
+        "CAPSTONE_API_URL": "https://your-capstone-instance.example.com/api"
       }
     }
   }
 }
 ```
 
-Replace `https://your-capstone-instance.example.com` with your actual Capstone API URL. Environment-scoped releases include `config/claude-desktop.capstone-mcp.json` with this value already filled in; replace only the `command` path.
+Replace `https://your-capstone-instance.example.com/api` with your actual Capstone API base URL. On a standard deployment the API is served under the `/api` path of the Capstone site; without it the server receives the web app's HTML page and login fails with "returned a web page instead of an API response". Environment-scoped releases include `config/claude-desktop.capstone-mcp.json` with this value already filled in; replace only the `command` path.
 
 Restart Claude Desktop after saving.
 

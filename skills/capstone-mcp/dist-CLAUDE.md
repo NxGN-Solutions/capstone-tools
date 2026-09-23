@@ -20,7 +20,7 @@ Add the Capstone server (adjust the path to where you extracted the binary):
     "capstone": {
       "command": "/path/to/capstone-mcp",
       "env": {
-        "CAPSTONE_API_URL": "https://your-capstone-instance.example.com"
+        "CAPSTONE_API_URL": "https://your-capstone-instance.example.com/api"
       }
     }
   }
@@ -34,14 +34,14 @@ Add the Capstone server (adjust the path to where you extracted the binary):
     "capstone": {
       "command": "C:\\path\\to\\capstone-mcp.exe",
       "env": {
-        "CAPSTONE_API_URL": "https://your-capstone-instance.example.com"
+        "CAPSTONE_API_URL": "https://your-capstone-instance.example.com/api"
       }
     }
   }
 }
 ```
 
-Replace `https://your-capstone-instance.example.com` with your actual Capstone API URL (provided by your administrator).
+Replace `https://your-capstone-instance.example.com/api` with your actual Capstone API base URL (provided by your administrator). On a standard deployment the API is served under the `/api` path of the Capstone site; leaving `/api` off makes login fail with "returned a web page instead of an API response".
 
 Restart Claude Desktop after saving.
 
