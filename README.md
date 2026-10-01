@@ -97,16 +97,12 @@ failure, `5` as timeout, and `6` as partial result. Do not grep stderr text for
 control flow. For imports and upserts, flat entities match by exact full name only
 after trimming leading/trailing whitespace, and tree entities match by exact
 full path only after trimming leading/trailing whitespace. Matching is
-case-sensitive. Excel upload and JSON batch/upsert use the same identity
-semantics. `upsertIdentity.surfaces` describes when to use JSON
-`import-json --upsert` or Excel `upload-excel`. For rerunnable tenant builds,
-prefer `import-json --upsert --json` for masterdata, model definitions, and
-widget/dashboard templates before using one-item create/save loops. Use
-`cap system tenants snapshot --output snapshot --json` when you need a
-reviewable export of those same import-ready JSON surfaces plus a manifest.
-Restore is a reviewed workflow, not an automatic command: run
-`cap workflows show restore-from-snapshot --json`, inspect the dry-run plans,
-validate calculations, then apply the explicit `import-json --upsert` commands.
+case-sensitive. CLI Excel upload uses the same identity semantics as the web
+app Excel upload; `upsertIdentity.surfaces` lists that single `excel-upload`
+surface. For rerunnable tenant builds, load masterdata, model definitions, and
+widget/dashboard templates with `upload-excel --json`; use `create --file` or
+`save --file` for single items. For backup and restore, use `download-excel` / `upload-excel`, the same files the
+web app uses; run `cap workflows show backup-restore --json` for the upload order.
 For post-build analysis checks, pair `cap data recalculation wait <version> --json`
 with `cap reporting computed-values audit --metrics <ids> --strict --json`.
 Before live dashboard checks, run `cap templates dashboard-templates audit
@@ -193,4 +189,4 @@ These downloads and documents are distributed under the [Capstone Tools Distribu
 
 For help, use your Capstone implementation, support, or account contact. Security reporting guidance is in [SECURITY.md](SECURITY.md), and support request guidance is in [SUPPORT.md](SUPPORT.md).
 
-Last updated: `2026-09-24T07:32:25Z`
+Last updated: `2026-10-01T06:29:28Z`

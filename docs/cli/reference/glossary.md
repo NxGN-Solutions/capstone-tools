@@ -321,12 +321,12 @@ cap templates report-templates get <id> --json
 | 1 | PieChart | Part-to-whole relationships, breakdowns |
 | 2 | XYChart | Time series, trends, multi-metric comparison |
 | 4 | Table | Metric-backed dashboard table/grid |
-| 6 | TextBlock | Metric-aware dashboard text slots |
+| 6 | TextBlock | Metric- and narrative-aware dashboard text slots |
 
 **Key Properties:**
 - `widgetType` - Visualization type (InfoCard, PieChart, XYChart, Table, TextBlock)
 - `discipline` - Categorization for organization and permissions
-- `dataItems` - Array of metrics to display for metric-set widgets; TextBlock does not support data items and discovers metrics from text tokens
+- `dataItems` - Array of metrics to display for metric-set widgets; TextBlock does not support data items and discovers metrics and narratives from text tokens (`[metric-guid]`, `{narrative-guid}`)
 - `dataRangeMode` - Static (fixed) or Dynamic (relative) date range
 - `dataInterval` - Monthly, Quarterly, Annual, etc.
 - `pieChartWidgetTemplateType` / `centerMode` / `sliceLabelMode` - PieChart-only display options for pie vs donut, donut center content, and labels rendered on slices

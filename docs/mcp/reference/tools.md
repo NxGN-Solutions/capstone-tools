@@ -380,7 +380,7 @@ Save input values (batch upsert). Uses business-key matching — zero IDs resolv
 
 **Business key:** `metric` + `orgNode` + `timePeriodType` + `startDate` uniquely identifies each value. The `id` field can always be the zero ID — the API resolves existing records by business key. This makes saves idempotent.
 
-**Units:** the value is read in the unit the capture grid shows for that org node — the node's unit override (or the nearest ancestor's) when one exists, otherwise the metric unit. The tool resolves that unit for you, and the API converts it to the stored metric unit with the conversion factor for the value's fiscal year.
+**Units:** the value is read in the unit the capture grid shows for that org node — the node's unit override (or the nearest ancestor's) when one exists, otherwise the metric unit. The tool resolves that unit for you, and the API converts it to the stored metric unit with the unit conversion (a fixed factor, or the factor metric's value for that node and period).
 
 **TimePeriodType values:**
 
@@ -654,7 +654,7 @@ Get detailed configuration of a specific capture template.
 
 ---
 
-## MCP Apps — Visualization (6 tools)
+## MCP Apps — Visualization (7 tools)
 
 > **Date parameter note:** App tools use `startDate`/`endDate` (ISO format dates), unlike data tools which use `timePeriodNames` or `periodType+periodCount`. This is because Apps render visual time ranges, while data tools operate on discrete named periods. **Exceptions:** `apps_chart_render` (ad-hoc visualization) uses neither — data is provided inline. `apps_widget_aiSummary` also uses neither — it takes dashboard and org node IDs only.
 
@@ -687,7 +687,7 @@ apps_dashboard_render({
 
 ### `apps_widget_infoCard`
 
-Render a KPI info card as HTML showing metric values with labels, units, and trend indicators. Use when the user wants to SEE a metric card. For raw numbers, use `reporting_widgets_getData` or `data_computedValues_list` instead. Uses `startDate`/`endDate` (ISO yyyy-MM-dd).
+Render a KPI info card as HTML showing metric values with labels, units, and trend indicators, plus narrative text resolved in its title, description, and footnote. Use when the user wants to SEE a metric card. For raw numbers, use `reporting_widgets_getData` or `data_computedValues_list` instead. Uses `startDate`/`endDate` (ISO yyyy-MM-dd).
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -697,7 +697,7 @@ Render a KPI info card as HTML showing metric values with labels, units, and tre
 | `endDate` | string | Yes | End date (ISO format) |
 | `timePeriodType` | string | No | Period type (default: `month`) |
 
-**Returns:** HTML info card with metric values, labels, and units.
+**Returns:** HTML info card with metric values, labels, and units. Narrative tokens (`{narrative-guid}`) in the title, description, and footnote render as HTML-encoded plain text with line breaks kept; see [Widget text tokens](#widget-text-tokens).
 
 ---
 
@@ -758,6 +758,37 @@ Render a table widget as HTML. Shows dashboard-shaped table rows, columns, forma
 
 ---
 
+### `apps_widget_textBlock`
+
+Render a TextBlock widget as HTML with server-resolved title, subtitle, description, footnote, token spans, warnings, diagnostics, and style metadata. Use when the user wants to SEE dashboard text or inspect metric- and narrative-aware text tokens. For raw numeric analysis, use `data_computedValues_list` instead. Uses `startDate`/`endDate` (ISO yyyy-MM-dd).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `widgetTemplateId` | string (ID) | Yes | Widget template ID (TextBlock type) |
+| `orgNodeIds` | string | Yes | Comma-separated org node IDs |
+| `startDate` | string | Yes | Start date (ISO format) |
+| `endDate` | string | Yes | End date (ISO format) |
+| `timePeriodType` | string | No | Period type (default: `month`) |
+
+**Returns:** HTML with the four text slots, metric, trend, period, and narrative text resolved by the API, plus warnings. Narrative text is HTML-encoded plain text with line breaks kept, and narrative warnings carry `data-source-narrative-id`. Pass a single org node ID: narrative tokens show "Select a single org unit" when several are passed.
+
+---
+
+### Widget text tokens
+
+InfoCard and TextBlock text is resolved by the API; MCP renders the result. Stored token syntax in widget template JSON:
+
+| Token | Meaning |
+|-------|---------|
+| `[metric-guid]`, `[metric-guid]\|-1\|` | Metric value, optionally offset by widget periods |
+| `#trend[metric-guid]` | Metric value with trend direction |
+| `@[period]`, `@[period:-1]` | Period label |
+| `{narrative-guid}`, `{narrative-guid}\|-1\|` | Narrative text for the selected org unit (TextBlock title/subtitle/description/footnote and InfoCard title/description/footnote only; no `#trend`) |
+
+A narrative token resolves only when the narrative's capture interval equals the widget's data interval ("Not applicable" otherwise). Other states are "No data", "Restricted", "Unavailable", and "Select a single org unit".
+
+---
+
 ### `apps_widget_aiSummary`
 
 Render pre-generated AI insights (trends, anomalies, correlations) as HTML cards. These are server-computed insights from the Capstone engine, not your own analysis. Requires a dashboard template ID and a specific dashboard section node ID.
@@ -776,7 +807,7 @@ Render pre-generated AI insights (trends, anomalies, correlations) as HTML cards
 
 ### `apps_chart_render`
 
-Render a chart from **raw data** as interactive HTML. No template needed — provide data inline. Use this for ad-hoc visualizations after querying data with `data_computedValues_list` or `data_inputValues_list`. For template-based rendering, use `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_infoCard`, or `apps_widget_table` instead.
+Render a chart from **raw data** as interactive HTML. No template needed — provide data inline. Use this for ad-hoc visualizations after querying data with `data_computedValues_list` or `data_inputValues_list`. For template-based rendering, use `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_infoCard`, `apps_widget_textBlock`, or `apps_widget_table` instead.
 
 > **Convention exception:** Unlike other `apps_` tools, `apps_chart_render` does **not** use `startDate`/`endDate` parameters. Data is provided inline via the `data` parameter.
 
@@ -869,7 +900,7 @@ Create a new widget template from JSON config. Checks for name collisions — if
 |-------|------|-------|
 | `name` | string | Template name |
 | `discipline` | `{id: "id"}` | Discipline category |
-| `widgetType` | `{id: int}` | 0=InfoCard, 1=PieChart, 2=XYChart, 4=Table |
+| `widgetType` | `{id: int}` | 0=InfoCard, 1=PieChart, 2=XYChart, 4=Table, 6=TextBlock |
 | `dataRangeMode` | `{id: int}` | Data range mode |
 | `metricSelectionMode` | `{id: int}` | Metric selection mode |
 
@@ -881,7 +912,10 @@ Create a new widget template from JSON config. Checks for name collisions — if
   `valueSelectionConfig`, which controls filtering/ranking/diagnostics.
 - **XYChart** (`widgetType.id: 2`): Data items require `xyChartWidgetTemplateDataItemType` with `id`
 - **Table** (`widgetType.id: 4`): Also requires `rowFields` and `valueFields`; configured period or selected metric/calculation columns are represented as separate value fields
+- **TextBlock** (`widgetType.id: 6`): Requires at least one non-blank `title`, `subtitle`, `description`, or `footnote`; omit `dataItems` (metrics and narratives are discovered from text tokens)
 - **All data items** need `metric` (with `id`) and `metricPartitioningMode` (with `id`)
+
+Text fields use stored tokens: `[metric-guid]`, `[metric-guid]|-1|`, `#trend[metric-guid]`, `@[period:n]`, `{narrative-guid}`, and `{narrative-guid}|-1|`. Narrative tokens are allowed only in TextBlock and InfoCard title, subtitle, description, and footnote, and must match the widget data interval. See [Widget text tokens](#widget-text-tokens).
 
 **Pie/Donut styling fields:**
 

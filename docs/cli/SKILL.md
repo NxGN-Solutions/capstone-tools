@@ -218,7 +218,7 @@ status, run `cap schema --json` or read [reference/commands.md](./reference/comm
 | `data` | Captured values, narratives, change requests, locks | `time-periods list`, `input-values *`, `narrative-values *`, `change-requests *`, `data-lock lock|unlock` |
 | `reporting` | Computed values and dashboard/widget output | `computed-values list/query/audit`, `widgets info-card/pie-chart/xy-chart/table`, `dashboards get-data/get-insights` |
 | `security`, `system` | User Excel import/export and tenant administration | `security users download-excel/upload-excel`, `system tenants *`, `system tenants fiscal-config update` |
-| `notifications` | Notification template administration | `notifications templates create/get/list/save/delete` |
+| `notifications` | Notification template and rule administration | `notifications templates create/get/list/save/delete/download-excel/upload-excel`, `notifications rules create/get/list/save/delete/download-excel/upload-excel` |
 
 Most reporting commands require `--data-interval` and `--periods`. Type-specific
 widget commands use `--org-nodes` (plural). `widgets get-data` is the legacy CSV
@@ -261,8 +261,7 @@ cap <domain> <entity> upload-excel file.xlsx
 
 ### Import And Upsert Identity
 
-Use the same identity contract for JSON batch/upsert work and Excel upload
-work:
+Excel upload uses one identity contract, the same one the web app uses:
 
 | Entity shape | Match key |
 |--------------|-----------|
@@ -273,51 +272,32 @@ Names are unique for flat entities; paths are unique for tree entities. Do not
 use fuzzy matching, aliases, partial names, or tree-node short names when
 planning imports. Read `cap schema --json` and use the `upsertIdentity` section
 when an agent needs to confirm the current contract. `upsertIdentity.surfaces`
-describes the two parallel ingestion paths: `json-batch-upsert` for rerunnable
-JSON payloads and `excel-upload` for spreadsheet workflows that need row/cell
-diagnostics.
+has one entry, `excel-upload`: bulk loading, backup/restore, and bulk edits all
+go through `download-excel` / `upload-excel` with row/cell diagnostics. Create or
+update a single item with `create --file` or `save --file`.
 
-For masterdata, model definition, and widget/dashboard template JSON imports,
-prefer explicit upsert for rerunnable builds:
-
-```bash
-cap model inputs import-json --file inputs.json --upsert --json
-cap model calculations validate-batch --file calculations.json --upsert --json
-cap model calculations import-json --file calculations.json --upsert --json
-cap masterdata org-nodes import-json --file org-nodes.json --upsert --json
-cap masterdata disciplines import-json --file disciplines.json --upsert --json
-cap masterdata frameworks import-json --file frameworks.json --upsert --json
-cap masterdata units import-json --file units.json --upsert --json
-cap templates widget-templates import-json --file widget-templates.json --upsert --json
-cap templates dashboard-templates import-json --file dashboard-templates.json --upsert --json
-```
-
-Use `--dry-run --upsert` to preview `would-create` and `would-update` actions
-before mutating a tenant.
-
-Use snapshot export when you need a reviewable or versionable copy of the current
-tenant's model-building surface:
+Masterdata and model commands take the workbook positionally; template commands
+take it with `-f`:
 
 ```bash
-cap system tenants snapshot --output snapshot --json
+cap model inputs upload-excel inputs.xlsx --json
+cap model calculations upload-excel calculations.xlsx --json
+cap masterdata org-nodes upload-excel org-nodes.xlsx --json
+cap masterdata units upload-excel units.xlsx --json
+cap templates widget-templates upload-excel -f widget-templates.xlsx --json
+cap templates dashboard-templates upload-excel -f dashboard-templates.xlsx --json
 ```
 
-The snapshot command hydrates full DTOs for units, org nodes, disciplines,
-frameworks, inputs, calculations, widget templates, and dashboard templates. It
-writes JSON arrays that can be re-imported with the matching `import-json
---upsert` commands listed in `manifest.json`. Snapshot is read-only against the
-API; restore is the explicit import/upsert path after review.
-
-For restore planning, ask the CLI for the reviewed workflow instead of looking
-for an automatic restore command:
+For backup and restore, use the same Excel `download-excel` / `upload-excel`
+commands the web app uses; there is no separate CLI export format. Excel files
+reference entities by name, so a backup restores into any tenant. Ask the CLI
+for the upload order:
 
 ```bash
-cap workflows show restore-from-snapshot --json
+cap workflows show backup-restore --json
 ```
 
-Follow its dry-run first sequence, validate calculation batches before applying
-them, and verify the restored model with recalculation wait plus computed-value
-and dashboard-template audits.
+See `recipes/data-management/backup-restore.md`.
 
 ### Capture Template Preflight Checklist
 

@@ -88,7 +88,7 @@ Claude uses the `/discover-structure` prompt to explore your tenant. If you see 
 | Reporting (2) | `reporting_dashboards_getData`, `reporting_widgets_getData` | Dashboard/widget data as CSV |
 | Templates (6) | `templates_dashboards_list`, `templates_widgets_list`, `templates_spreadsheetReports_list`, `templates_spreadsheetCaptures_list`, `templates_spreadsheetReports_get`, `templates_spreadsheetCaptures_get` | Discover templates |
 | Template CRUD (10) | `templates_widgets_create/save/delete`, `templates_reports_create/save/delete`, `templates_dashboards_get/create/save/delete` | Create, update, and delete templates |
-| Apps (7) | `apps_dashboard_render`, `apps_widget_infoCard`, `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_table`, `apps_widget_aiSummary`, `apps_chart_render` | Visual widgets in conversation |
+| Apps (8) | `apps_dashboard_render`, `apps_widget_infoCard`, `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_table`, `apps_widget_textBlock`, `apps_widget_aiSummary`, `apps_chart_render` | Visual widgets in conversation |
 | Status (1) | `GetStatus` | Server health check |
 
 ### Resources (Auto-Loaded Context)

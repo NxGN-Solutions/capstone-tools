@@ -29,7 +29,7 @@ Capstone is a **data management platform** for organizations that need to consol
 | Time period, date range, interval | Time Period | `data_timePeriods_list` | Day, Week, Month, Quarter, Year |
 | Raw data, submitted value | Input Value | `data_inputValues_list` | Actual captured data points |
 | Aggregated result, computed | Computed Value | `data_computedValues_list` | Calculated/rolled-up values |
-| Dashboard widget, visualization | Widget | `apps_widget_*` | Info Card, Pie Chart, XY Chart, Table |
+| Dashboard widget, visualization | Widget | `apps_widget_*` | Info Card, Pie Chart, XY Chart, Table, TextBlock |
 | Chart configuration, widget setup | Widget Template | `templates_widgets_list` | Defines widget data and display |
 | Dashboard layout, page configuration | Dashboard Template | `templates_dashboards_list` | Organizes widgets into sections |
 | Data entry form, capture sheet | Capture Template | `templates_spreadsheetCaptures_list` | Defines data entry structure |
@@ -146,7 +146,7 @@ When the user's request matches a prompt, use it. Prompts encode best-practice w
 | **Reporting** (2) | `reporting_dashboards_getData`, `reporting_widgets_getData` | Dashboard/widget data as CSV |
 | **Templates** (6) | `templates_dashboards_list`, `templates_widgets_list`, `templates_spreadsheetReports_list`, `templates_spreadsheetCaptures_list`, `templates_spreadsheetReports_get`, `templates_spreadsheetCaptures_get` | Discover and inspect templates |
 | **Template CRUD** (10) | `templates_widgets_create/save/delete`, `templates_reports_create/save/delete`, `templates_dashboards_get/create/save/delete` | Create, update, and delete widget/report/dashboard templates |
-| **Apps** (7) | `apps_dashboard_render`, `apps_widget_infoCard`, `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_table`, `apps_widget_aiSummary`, `apps_chart_render` | Visual widgets rendered in conversation |
+| **Apps** (8) | `apps_dashboard_render`, `apps_widget_infoCard`, `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_table`, `apps_widget_textBlock`, `apps_widget_aiSummary`, `apps_chart_render` | Visual widgets rendered in conversation |
 | **Status** (1) | `GetStatus` | Server status and auth check |
 
 > **Full tool reference:** [reference/tools.md](reference/tools.md)
@@ -166,7 +166,7 @@ When deciding which tool to use, follow this decision tree:
 | **Daily detail / anomaly detection** | `data_computedValues_list` (dataInterval=0) | Flexible aggregation control |
 | **Cross-site comparison** | `data_computedValues_list` (per-site orgNodeIds) | Flexible aggregation control |
 | **SEE a dashboard** | `apps_dashboard_render` | Visual HTML rendering |
-| **SEE a single widget** | `apps_widget_pieChart` / `apps_widget_xyChart` / `apps_widget_infoCard` / `apps_widget_table` | Visual HTML rendering |
+| **SEE a single widget** | `apps_widget_pieChart` / `apps_widget_xyChart` / `apps_widget_infoCard` / `apps_widget_table` / `apps_widget_textBlock` | Visual HTML rendering |
 | **Full dashboard CSV export** | `reporting_dashboards_getData` | Pinned widgets stay at their interval; pass `dataInterval` for unpinned widgets |
 | **Check one widget's values** | `reporting_widgets_getData` | Pinned widgets stay at their interval; pass `dataInterval` for unpinned widgets |
 | **Data quality / validation** | `data_inputValues_list` | Shows validation status + lock state |
@@ -190,6 +190,7 @@ MCP Apps render interactive visualizations directly in the conversation. Use the
 | `apps_widget_pieChart` | Pie/donut chart with styled render metadata | "Show the energy breakdown" |
 | `apps_widget_xyChart` | Bar/line/column chart | "Show the emissions trend" |
 | `apps_widget_table` | Table widget | "Show the metric table" |
+| `apps_widget_textBlock` | TextBlock text with metric and narrative tokens resolved | "Show the quarterly commentary" |
 | `apps_widget_aiSummary` | AI-generated summary card | "Summarize the dashboard insights" |
 
 **When to use Apps vs raw data:**

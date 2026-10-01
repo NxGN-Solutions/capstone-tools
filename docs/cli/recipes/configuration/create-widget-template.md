@@ -92,9 +92,11 @@ cap model metrics list --json
 **For PieChart:** Multiple metrics that form parts of a whole
 **For XYChart:** One or more metrics to plot over time
 **For Table:** Metrics become row sources; value columns can use row metrics, selected metrics, or calculation metrics
-**For TextBlock:** Metrics are discovered from tokens in `title`, `subtitle`, `description`, and `footnote`; do not create hidden data-item rows for those references
+**For TextBlock:** Metrics and narratives are discovered from tokens in `title`, `subtitle`, `description`, and `footnote`; do not create hidden data-item rows for those references
 
 **Note metric IDs** for `dataItems[]` configuration or raw CLI text tokens. Widget Template Excel can accept metric-name tokens and transpose them to IDs during upload.
+
+**Narrative tokens (TextBlock and InfoCard text only):** find narrative IDs with `cap model narratives list --json`. Raw CLI JSON uses `{<narrative-id>}` or `{<narrative-id>}|-1|`; the editor and Excel use `{Narrative Name}`. The narrative's capture interval must equal the widget's data interval.
 
 ---
 
@@ -154,11 +156,11 @@ cap model metrics list --json
 Do not author `includedDataTypes` or `orgNodeTemplateId` for new Table templates. The CLI/API may accept them for legacy compatibility, but current authoring uses Narrative Properties and the dashboard template owns the org-node-template lens.
 
 **Required fields for TextBlock widgets:**
-- At least one of `title`, `subtitle`, `description`, or `footnote` - Text slots that support the same metric, trend, and period tokens as other widget text fields
+- At least one of `title`, `subtitle`, `description`, or `footnote` - Text slots that support the same metric, trend, and period tokens as other widget text fields, plus narrative tokens
 - `dataRangeMode`, `metricSelectionMode`, and `timePeriodAggregationMethod`
 - `dataInterval`, `dataPeriodStart`, and `dataPeriodEnd` when `dataRangeMode` is `Static`
 
-TextBlock does not support `dataItems`; metrics are discovered only from explicit text tokens. `styleConfiguration` is optional and uses bounded TextBlock slots for `panel`, `title`, `subtitle`, `description`, `footnote`, `trend`, and `stateMessages`. TextBlock style colors accept registry tokens from `cap meta lookups get color-tokens` or `#RGB`/`#RRGGBB`/`#RRGGBBAA` hex values, font family uses the shared `theme`/`sans`/`serif`/`mono`/`nunito`/`roboto`/`poppins`/`arial` catalogue, and font weight accepts `Normal`/`Medium`/`Semibold`/`Bold`.
+TextBlock does not support `dataItems`; metrics and narratives are discovered only from explicit text tokens. `styleConfiguration` is optional and uses bounded TextBlock slots for `panel`, `title`, `subtitle`, `description`, `footnote`, `trend`, and `stateMessages`. TextBlock style colors accept registry tokens from `cap meta lookups get color-tokens` or `#RGB`/`#RRGGBB`/`#RRGGBBAA` hex values, font family uses the shared `theme`/`sans`/`serif`/`mono`/`nunito`/`roboto`/`poppins`/`arial` catalogue, and font weight accepts `Normal`/`Medium`/`Semibold`/`Bold`.
 
 **Data Interval Reference:**
 | ID | Name |
@@ -189,7 +191,7 @@ Leave **empty** in most cases. The title, values, and footnote already tell the 
 
 #### `subtitle` (TextBlock only)
 
-Use a subtitle for a short secondary heading below the title. It supports the same metric, trend, and period tokens as title, description, and footnote. Keep it brief; longer commentary belongs in `description`.
+Use a subtitle for a short secondary heading below the title. It supports the same metric, trend, period, and narrative tokens as title, description, and footnote. Keep it brief; longer commentary belongs in `description`.
 
 #### `footnote` (widget-level)
 
@@ -197,6 +199,7 @@ Use a subtitle for a short secondary heading below the title. It supports the sa
 | Use Case | Example |
 |----------|---------|
 | Trend indicator | `#trend[<change-calculation-metric-name>] since @[period:-1]` in the editor/Excel; `#trend[<change-calculation-metric-id>] since @[period:-1]` in raw CLI JSON |
+| Narrative text (TextBlock/InfoCard) | `{<narrative-name>}` in the editor/Excel; `{<narrative-id>}` in raw CLI JSON. Renders the narrative's text for the selected org unit; `#trend` is not supported |
 | Interpretive hint | `Positive = Cola earns more per unit than Orange` |
 | Data caveat | `Excludes weekends and public holidays` |
 
@@ -336,7 +339,7 @@ left-accent, and full-bleed style fragments, use
 the CLI-first guide for translating dashboard mockups into
 `styleConfiguration` JSON.
 
-Raw CLI JSON posts directly to the API, so metric tokens inside `title`, `subtitle`, `description`, `footnote`, and data item `name` should use stored metric IDs. The widget editor and Widget Template Excel accept metric names and transpose them to IDs internally.
+Raw CLI JSON posts directly to the API, so metric tokens inside `title`, `subtitle`, `description`, `footnote`, and data item `name` should use stored metric IDs. The widget editor and Widget Template Excel accept metric names and transpose them to IDs internally. InfoCard `title`, `description`, and `footnote` also accept narrative tokens (`{<narrative-id>}`); data item `name` does not.
 
 **Naming convention:** `{Metric} | Comparison | {Interval} | Card`
 
@@ -657,14 +660,14 @@ Table widgets are the dashboard table widget type. They use normal Input and Cal
 
 #### TextBlock Example:
 
-TextBlock widgets render metric-aware dashboard text without chart, card-value, or table rows. Metrics are discovered only from explicit text tokens in `title`, `subtitle`, `description`, and `footnote`.
+TextBlock widgets render metric- and narrative-aware dashboard text without chart, card-value, or table rows. Metrics and narratives are discovered only from explicit text tokens in `title`, `subtitle`, `description`, and `footnote`.
 
 ```json
 {
   "name": "Portfolio Status | Monthly | TextBlock",
   "title": "Portfolio Status",
   "subtitle": "Performance for @[period]",
-  "description": "Total emissions were [<metric-id>] for @[period].",
+  "description": "Total emissions were [<metric-id>] for @[period].\n{<monthly-narrative-id>}",
   "footnote": "#trend[<change-metric-id>] since @[period:-1]",
   "widgetType": { "id": 6, "name": "TextBlock" },
   "discipline": { "id": "<discipline-id>" },
@@ -703,7 +706,9 @@ TextBlock widgets render metric-aware dashboard text without chart, card-value, 
 }
 ```
 
-Widget-template Excel roundtrips TextBlock text through `Title`, `Subtitle`, `Description`, and `Footnote`, and style JSON through `Text Block Style`. In Excel, metric-name tokens are accepted in the text slots and transposed to metric IDs on upload.
+Widget-template Excel roundtrips TextBlock text through `Title`, `Subtitle`, `Description`, and `Footnote`, and style JSON through `Text Block Style`. In Excel, metric-name and narrative-name tokens (`[Metric Name]`, `{Narrative Name}`) are accepted in the text slots and transposed to IDs on upload. Unknown or ambiguous narrative names, and GUIDs, are row/column errors.
+
+The example's `{<monthly-narrative-id>}` must reference a narrative captured monthly, matching the pinned `dataInterval`; otherwise save fails with `WIDGET_TOKEN_NARRATIVE_INTERVAL_MISMATCH`. Other narrative save codes are `WIDGET_TOKEN_NARRATIVE_NOT_SUPPORTED`, `WIDGET_TOKEN_NARRATIVE_TREND_NOT_SUPPORTED`, `WIDGET_TOKEN_NARRATIVE_REFERENCE_INVALID` (braces that aren't a `{narrative-guid}` reference), and `WIDGET_TOKEN_NARRATIVE_REFERENCE_MISSING`.
 
 Use the typed render command to inspect resolved text, spans, style, warnings, and diagnostics:
 
@@ -714,6 +719,8 @@ cap reporting widgets text-block <widget-template-id> \
   --periods "Jan 2026" \
   --json
 ```
+
+Narrative spans have `tokenKind: 4` and `sourceNarrativeId`. Pass a single org node: with none or several, narrative tokens return `AmbiguousOrgNode` ("Select a single org unit").
 
 **Naming convention:** `{Subject} | {Interval} | TextBlock`
 

@@ -304,6 +304,9 @@ Row | Column | Error
 - `isValid: false` means some rows had errors (partial success)
 - `items` contains successfully imported records
 - `uploadErrors` lists row/column/message for each failure
+- `uploadWarnings` lists row/column/message for rows that imported but need attention, such as a reference to a metric that is not imported yet; warnings do not make `isValid` false
+
+Async uploads (inputs, calculations, input values) report both in `errors`; an entry with `"severity": "Warning"` is a warning. A succeeded upload with only warnings exits `0`; any error exits `6`.
 
 ---
 
@@ -337,6 +340,7 @@ Widget commands have two output families:
 | `cap reporting widgets pie-chart` | Typed pie-chart DTO | Slice/percentage validation |
 | `cap reporting widgets xy-chart` | Typed XY-chart render DTO, JSON-first | Browser-aligned series, axis, value, render metadata, and metric metadata validation |
 | `cap reporting widgets table` | Typed Table render DTO | Dashboard grid/table render validation |
+| `cap reporting widgets text-block` | Typed TextBlock render DTO | Resolved text slots, token spans (metric, trend, period, narrative), warnings |
 
 Typed widget render contracts keep raw numeric values numeric and expose
 formatted strings only for display fields such as Info Card values, Text Block
@@ -344,6 +348,11 @@ metric tokens, Pie legend/center labels, and Table cell display values. These
 formatted display strings use the shared server formatter with invariant
 thousands grouping and the metric precision; unit symbols are applied according
 to the unit's configured prefix/suffix position.
+
+Narrative token spans (Info Card and Text Block, `tokenKind: 4`) carry
+`sourceNarrativeId` and return the narrative value's plain text with line
+breaks kept. They have no numeric value. Their `valueState` can also be
+`NotApplicable` (`5`) or `AmbiguousOrgNode` (`6`).
 
 ### XY Chart JSON Mode
 

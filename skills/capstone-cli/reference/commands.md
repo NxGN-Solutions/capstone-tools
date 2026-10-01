@@ -126,20 +126,20 @@ map when checking whether a command family exists.
 | `data time-periods` | `diagnose`, `list` |
 | `masterdata data-sources` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `masterdata discipline-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `masterdata disciplines` | `create`, `delete`, `download-excel`, `get`, `import-json`, `list`, `save`, `upload-excel` |
+| `masterdata disciplines` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `masterdata framework-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `masterdata frameworks` | `create`, `delete`, `download-excel`, `get`, `import-json`, `list`, `save`, `upload-excel` |
+| `masterdata frameworks` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `masterdata org-node-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `masterdata org-nodes` | `create`, `delete`, `download-excel`, `get`, `import-json`, `list`, `save`, `upload-excel` |
-| `masterdata units` | `create`, `delete`, `download-excel`, `get`, `import-json`, `list`, `save`, `upload-excel` |
+| `masterdata org-nodes` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `masterdata units` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `meta lookups` | `get`, `list` |
 | `model calculation-overrides` | `copy`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `model calculations` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `import-json`, `list`, `save`, `upload-excel`, `validate-batch` |
+| `model calculations` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `list`, `save`, `upload-excel` |
 | `model disciplines` | `list` |
 | `model formula-validation` | `validate` |
 | `model frameworks` | `list` |
 | `model input-overrides` | `copy`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `model inputs` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `import-json`, `list`, `save`, `upload-excel` |
+| `model inputs` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `list`, `save`, `upload-excel` |
 | `model lookups` | `get`, `list` |
 | `model metric-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `model metric-framework-nodes` | `copy`, `download-excel`, `list`, `save`, `upload-excel` |
@@ -149,20 +149,21 @@ map when checking whether a command family exists.
 | `model narrative-overrides` | `copy`, `create`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `model narratives` | `create`, `delete`, `delete-preview`, `delete-start`, `delete-status`, `distinct-values`, `download-excel`, `get`, `list`, `lookup`, `save`, `upload-excel` |
 | `model org-nodes` | `list` |
-| `notifications templates` | `create`, `delete`, `get`, `list`, `save` |
+| `notifications rules` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `notifications templates` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `perf` | `memory-throughput` |
 | `reporting computed-values` | `audit`, `download-excel`, `list`, `query` |
 | `reporting dashboards` | `get-data`, `get-insights` |
 | `reporting widgets` | `get-data`, `info-card`, `pie-chart`, `table`, `text-block`, `textblock`, `xy-chart` |
 | `root` | `concepts`, `schema`, `status`, `version` |
 | `security users` | `download-excel`, `upload-excel` |
-| `system tenants` | `bootstrap-local`, `create`, `delete`, `delete-status`, `delete-watch`, `fiscal-config update`, `get`, `list`, `sample`, `save`, `schema`, `snapshot`, `teardown` |
+| `system tenants` | `bootstrap-local`, `create`, `delete`, `delete-status`, `delete-watch`, `fiscal-config update`, `get`, `list`, `sample`, `save`, `schema`, `teardown` |
 | `templates capture-templates` | `create`, `delete`, `download-excel`, `get`, `list`, `sample`, `save`, `schema`, `upload-excel` |
-| `templates dashboard-templates` | `audit`, `create`, `delete`, `download-excel`, `get`, `import-json`, `list`, `rename`, `sample`, `save`, `schema`, `upload-excel` |
+| `templates dashboard-templates` | `audit`, `create`, `delete`, `download-excel`, `get`, `list`, `rename`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates lookups` | `get` |
 | `templates org-node-templates` | `create`, `delete`, `download-excel`, `get`, `list`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates report-templates` | `create`, `delete`, `download-excel`, `get`, `list`, `sample`, `save`, `schema`, `upload-excel` |
-| `templates widget-templates` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `import-json`, `list`, `sample`, `save`, `schema`, `upload-excel` |
+| `templates widget-templates` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `list`, `sample`, `save`, `schema`, `upload-excel` |
 | `update` | `check` |
 | `workflows` | `list`, `show` |
 
@@ -282,7 +283,7 @@ Retrieves multiple full entities in one CLI invocation. Returns partial results 
 By default `templates widget-templates get-bulk` returns compact widget summaries.
 Add `--full` to return the full editable widget template DTOs — including nested
 `valueSelectionConfig` — matching the `get` payload shape, so the output can be
-edited and piped back to `save`/`import-json`:
+edited and piped back to `save --file`:
 
 ```bash
 cap templates widget-templates get-bulk -i <id1>,<id2> --full --json
@@ -290,10 +291,10 @@ cap templates widget-templates get-bulk -i <id1>,<id2> --full --json
 
 **Supported entities:** `templates widget-templates`, `model inputs`, `model calculations`
 
-### Identity For Imports And Upserts
+### Identity For Excel Uploads
 
-The CLI uses one canonical identity contract for JSON batch/upsert workflows and
-Excel upload workflows:
+The CLI uses one canonical identity contract for Excel upload workflows, the same
+one the web app Excel upload uses:
 
 | Entity shape | Match key | Rule |
 |--------------|-----------|------|
@@ -302,79 +303,38 @@ Excel upload workflows:
 
 Do not use fuzzy matching, aliases, partial names, or tree-node short names for
 upsert identity. Agents can inspect the `upsertIdentity` section from
-`cap schema --json` before planning imports. The same section includes
-`surfaces` entries for `json-batch-upsert` and `excel-upload`, so automation can
-choose rerunnable JSON imports or spreadsheet uploads intentionally.
+`cap schema --json` before planning uploads. Its `surfaces` list has a single
+`excel-upload` entry: bulk loading, backup/restore, and bulk edits all go through
+`download-excel` / `upload-excel`. Create or update a single item with
+`create --file` or `save --file`.
 
-Masterdata, model definition, and widget/dashboard template JSON imports post
-save requests using the same API identity semantics. Use `--upsert` with
-`--dry-run` to preview create/update actions before applying:
-
-```bash
-cap masterdata units import-json --file units.json --upsert --json
-cap masterdata org-nodes import-json --file org-nodes.json --upsert --json
-cap masterdata disciplines import-json --file disciplines.json --upsert --json
-cap masterdata frameworks import-json --file frameworks.json --upsert --json
-cap model inputs import-json --file inputs.json --upsert --json
-cap model calculations validate-batch --file calculations.json --upsert --json
-cap model calculations import-json --file calculations.json --upsert --json
-cap templates widget-templates import-json --file widget-templates.json --upsert --json
-cap templates dashboard-templates import-json --file dashboard-templates.json --upsert --json
-```
-
-`--dry-run --upsert` returns `would-create` and `would-update` plan actions
-without posting changes. Successful upserts return `updated` counts and `idMap`
-entries alongside created items.
-
-### Tenant Snapshot Export
-
-Use snapshot export when you need an auditable, import-ready copy of the current
-tenant's model-building surface:
+Masterdata and model commands take the workbook path positionally; template
+commands take it with `-f`:
 
 ```bash
-cap system tenants snapshot --output snapshot --json
+cap masterdata units upload-excel units.xlsx --json
+cap masterdata org-nodes upload-excel org-nodes.xlsx --json
+cap masterdata disciplines upload-excel disciplines.xlsx --json
+cap masterdata frameworks upload-excel frameworks.xlsx --json
+cap model inputs upload-excel inputs.xlsx --json
+cap model calculations upload-excel calculations.xlsx --json
+cap templates widget-templates upload-excel -f widget-templates.xlsx --json
+cap templates dashboard-templates upload-excel -f dashboard-templates.xlsx --json
 ```
 
-The command reads from the API only and writes JSON files locally:
+### Backup and Restore
 
-| File | Re-import command | Identity |
-|------|-------------------|----------|
-| `masterdata/units.json` | `cap masterdata units import-json --file masterdata/units.json --upsert --json` | Exact full name |
-| `masterdata/org-nodes.json` | `cap masterdata org-nodes import-json --file masterdata/org-nodes.json --upsert --json` | Exact full path |
-| `masterdata/disciplines.json` | `cap masterdata disciplines import-json --file masterdata/disciplines.json --upsert --json` | Exact full path |
-| `masterdata/frameworks.json` | `cap masterdata frameworks import-json --file masterdata/frameworks.json --upsert --json` | Exact full path |
-| `model/inputs.json` | `cap model inputs import-json --file model/inputs.json --upsert --json` | Exact full name |
-| `model/calculations.json` | `cap model calculations import-json --file model/calculations.json --upsert --json` | Exact full name |
-| `templates/widget-templates.json` | `cap templates widget-templates import-json --file templates/widget-templates.json --upsert --json` | Exact full name |
-| `templates/dashboard-templates.json` | `cap templates dashboard-templates import-json --file templates/dashboard-templates.json --upsert --json` | Exact full name |
-
-`manifest.json` records counts, paths, import commands, and identity rules.
-Snapshot export is not restore: review the files, run `--dry-run --upsert`
-imports, validate calculations, then apply the explicit upsert commands.
-
-### Restore From Snapshot Workflow
-
-There is no automatic `cap restore` command. Restore is an explicit reviewed
-workflow over the snapshot files so users can inspect which entities would be
-created or updated before mutating a tenant.
+Back up and restore a tenant's model configuration (masterdata, model, templates) with the same
+Excel download and upload the web app uses. There is no separate CLI export format. Excel files
+reference other entities by name, not by id, so a backup restores into the same tenant or into
+another one. Captured values use their own capture-template workflow.
 
 ```bash
-cap workflows show restore-from-snapshot --json
+cap workflows show backup-restore --json
 ```
 
-The workflow order is:
-
-1. Confirm the active target tenant with `cap status --json` and
-   `cap auth whoami --json`.
-2. Dry-run masterdata imports from `snapshot/masterdata/*.json`, then apply
-   units, org nodes, disciplines, and frameworks with `import-json --upsert`.
-3. Dry-run model imports, run
-   `cap model calculations validate-batch --file snapshot/model/calculations.json --upsert --json`,
-   then apply inputs and calculations.
-4. Dry-run template imports, then apply widget templates before dashboard
-   templates.
-5. Wait for recalculation settlement and audit computed values/dashboard
-   templates before treating the target tenant as restored.
+See [Backup and Restore Recipe](../recipes/data-management/backup-restore.md) for
+the download commands and the upload order.
 
 ### Discover Time Periods
 
@@ -499,7 +459,6 @@ cap templates dashboard-templates schema --json
 cap templates dashboard-templates sample --json
 cap templates dashboard-templates get <id> --json
 cap templates dashboard-templates save --file dashboard.json --json
-cap templates dashboard-templates import-json --file dashboard-templates.json --upsert --json
 cap templates dashboard-templates audit <id> --strict --json
 cap templates dashboard-templates download-excel -o dashboards.xlsx
 cap templates dashboard-templates upload-excel -f dashboards.xlsx --json
@@ -541,7 +500,7 @@ Use safe color values only: registry design tokens from `cap meta lookups get co
 
 Structured lengths are JSON objects, not CSS strings. Use a single `value` or side-specific `top`, `right`, `bottom`, and `left` numbers with `unit: { "id": 0, "name": "Px" }` or `unit: { "id": 1, "name": "Rem" }`. Free-text CSS shorthands such as `"1rem 2rem"` are rejected.
 
-Excel dashboard-template workbooks include `Dashboard Style JSON` on the dashboard row and row-level metadata columns named `nodeLayoutJson`, `nodeStyleJson`, `placementLayoutJson`, and `calloutJson`. These cells contain the same JSON objects used by `save` and `import-json`.
+Excel dashboard-template workbooks include `Dashboard Style JSON` on the dashboard row and row-level metadata columns named `nodeLayoutJson`, `nodeStyleJson`, `placementLayoutJson`, and `calloutJson`. These cells contain the same JSON objects used by `save`.
 
 `WidgetSize` remains the default width for widget and narrative placements. Use `placementLayout.widthBehavior` only when a placement should Auto-size or Fill its available track. Widget-template internals — including all chrome — are configured through `templates widget-templates`; dashboard placement layout only controls how that widget is sized and positioned within its track.
 
@@ -558,10 +517,9 @@ cap templates widget-templates schema --widget-type info --json
 cap templates widget-templates sample --widget-type info --json
 cap templates widget-templates create --help
 cap templates widget-templates save --help
-cap templates widget-templates import-json --help
 cap templates widget-templates download-excel --help
 cap templates widget-templates upload-excel --help
-cap templates dashboard-templates import-json --help
+cap templates dashboard-templates upload-excel --help
 cap templates dashboard-templates audit --help
 cap reporting widgets --help
 cap reporting widgets info-card --help
@@ -576,7 +534,10 @@ Use `cap reporting widgets info-card ... --json` when an agent needs resolved
 Info Card text, values, trend tokens, warnings, and returned
 `styleConfiguration` for dashboard-render parity. When `valueState` is `NoData`,
 `value`, `formattedValue`, and `rawValue` are null. `Inaccessible` still returns
-`value: "Restricted"`. Use `cap reporting widgets
+`value: "Restricted"`. Narrative tokens add two value states: `NotApplicable`
+(`5`, "Not applicable": interval mismatch or org exclusion) and
+`AmbiguousOrgNode` (`6`, "Select a single org unit": zero or several
+`--org-nodes`). Pass exactly one `--org-nodes` id to resolve narrative text. Use `cap reporting widgets
 pie-chart ... --json` when an agent needs the shared pie/donut render contract
 with returned `styleConfiguration`, `centerNumberFormat`, resolved `center`,
 `labelDisplay`, `legend`, `dataItems[].presentation`,
@@ -590,7 +551,12 @@ needs the shared dashboard table contract with `timePeriodColumns`,
 paging support. Use `cap reporting widgets text-block ... --json` when an agent
 needs the shared TextBlock render contract with resolved `titleContent`,
 `subtitleContent`, `descriptionContent`, `footnoteContent`, token spans,
-`styleConfiguration`, `warnings`, and `diagnostics`. Use `cap reporting widgets
+`styleConfiguration`, `warnings`, and `diagnostics`. Narrative spans (in
+`text-block` and `info-card` output) have `tokenKind: 4` and carry
+`sourceNarrativeId`; their `text` is the narrative value's plain text, with
+line breaks kept. Narrative warnings (`TEXTBLOCK_TOKEN_NARRATIVE_*`,
+`INFOCARD_TOKEN_NARRATIVE_*`) also carry `sourceNarrativeId`, and text mode
+appends `narrative: <guid>`. Use `cap reporting widgets
 get-data ... --json` when an agent needs the legacy CSV compatibility envelope
 for analysis workflows.
 
@@ -756,7 +722,7 @@ echo '{
   ]
 }' | cap templates widget-templates create --json
 
-Info Card comparisons use ordinary selected metrics, Calculation metrics, and display-property tokens. Raw API/CLI JSON uses stored GUID-form tokens such as `[metric-guid]`, `[metric-guid]|-1|`, or `#trend[metric-guid]`; the widget editor and Widget Template Excel use metric names and transpose them to GUIDs internally. Widget Template Excel preserves the same bounded style contract in the `Info Card Style` JSON column; do not add target, benchmark, prior, delta, or delta-percent columns or CLI-only fields.
+Info Card comparisons use ordinary selected metrics, Calculation metrics, and display-property tokens. Raw API/CLI JSON uses stored GUID-form tokens such as `[metric-guid]`, `[metric-guid]|-1|`, `#trend[metric-guid]`, `{narrative-guid}`, or `{narrative-guid}|-1|`; the widget editor and Widget Template Excel use metric names (`[Metric Name]`) and narrative names (`{Narrative Name}`) and transpose them to GUIDs internally. Narrative tokens are allowed only in TextBlock and InfoCard title, subtitle (TextBlock), description, and footnote; find narrative ids with `cap model narratives list --json`. Widget Template Excel preserves the same bounded style contract in the `Info Card Style` JSON column; do not add target, benchmark, prior, delta, or delta-percent columns or CLI-only fields.
 
 Info Card style JSON is schema-limited. `fontFamily` must be one of `theme`, `sans`, `serif`, `mono`, `nunito`, `roboto`, `poppins`, or `arial`; `fontSize`, `borderWidth`, and panel `accentWidth` are bounded integers. `accentSide` and `accentWidth` are panel-only fields. A border renders only with positive `borderWidth` plus safe `borderColor`; a panel accent edge renders only with `accentSide`, positive `accentWidth`, and safe `accentColor`.
 
@@ -910,7 +876,7 @@ echo '{
 ### Widget Value Selection
 
 Widget templates can carry advanced `valueSelectionConfig` in JSON create/save
-payloads, `import-json` batches, and widget-template Excel import/export. The
+payloads and widget-template Excel import/export. The
 same validator runs for API, CLI JSON, and Excel upload, so unsupported matrix
 cells and unknown nested fields fail consistently.
 
@@ -1110,7 +1076,7 @@ means no value-selection config, and upload rejects stale/removed fields such as
 `changeFilter`, `moversMode`, and `includeOnlyChanged`, as well as removed
 change-typed predicate types (`AbsoluteChange`, `PercentChange`, `SignChange`).
 
-Pie and donut templates use the same shared WidgetTemplate API and CLI command surface as the existing widget types. Manage them with `cap templates widget-templates list|get|get-bulk|create|save|import-json|delete|download-excel|upload-excel`, and render live data with `cap reporting widgets pie-chart ...`.
+Pie and donut templates use the same shared WidgetTemplate API and CLI command surface as the existing widget types. Manage them with `cap templates widget-templates list|get|get-bulk|create|save|delete|download-excel|upload-excel`, and render live data with `cap reporting widgets pie-chart ...`.
 
 **Pie/donut display fields:**
 
@@ -1128,9 +1094,9 @@ Widget-template Excel download/upload includes the display columns above plus `C
 
 The dashboard editor presents `centerMetricId` through the searchable metric grid picker. The CLI and Excel contracts still use the explicit metric ID/name fields so imports remain stable and diffable.
 
-Table templates use the same shared WidgetTemplate API and CLI command surface as the existing widget types. Manage them with `cap templates widget-templates list|get|get-bulk|create|save|import-json|delete|download-excel|upload-excel`, and set the widget type to `{ "id": 4, "name": "Table" }` in JSON or the corresponding Table widget type in Excel. Table data comes from selected Input or Calculation metrics, their ComputedValues, and optional dynamic or static narrative rows; do not encode hidden widget-only calculations in the template.
+Table templates use the same shared WidgetTemplate API and CLI command surface as the existing widget types. Manage them with `cap templates widget-templates list|get|get-bulk|create|save|delete|download-excel|upload-excel`, and set the widget type to `{ "id": 4, "name": "Table" }` in JSON or the corresponding Table widget type in Excel. Table data comes from selected Input or Calculation metrics, their ComputedValues, and optional dynamic or static narrative rows; do not encode hidden widget-only calculations in the template.
 
-TextBlock templates use the same shared WidgetTemplate API, CLI command surface, and widget-template Excel download/upload workflow. Manage them with `cap templates widget-templates list|get|get-bulk|create|save|import-json|delete|download-excel|upload-excel`, set the widget type to `{ "id": 6, "name": "TextBlock" }`, and render live data with `cap reporting widgets text-block ...`. TextBlock discovers metrics from explicit tokens in `title`, `subtitle`, `description`, and `footnote`; do not create hidden `dataItems[]` rows for those references. Excel roundtrips `Subtitle` and `Text Block Style` columns alongside the existing title/description/footnote fields.
+TextBlock templates use the same shared WidgetTemplate API, CLI command surface, and widget-template Excel download/upload workflow. Manage them with `cap templates widget-templates list|get|get-bulk|create|save|delete|download-excel|upload-excel`, set the widget type to `{ "id": 6, "name": "TextBlock" }`, and render live data with `cap reporting widgets text-block ...`. TextBlock discovers metrics and narratives from explicit tokens in `title`, `subtitle`, `description`, and `footnote` (for example `"description": "{<narrative-id>}|-1|"`); do not create hidden `dataItems[]` rows for those references. Excel roundtrips `Subtitle` and `Text Block Style` columns alongside the existing title/description/footnote fields.
 
 **Widget Types:**
 | ID | Name | Use Case |
@@ -1171,6 +1137,15 @@ cap <domain> <entity> delete <id> [--json]
 ```bash
 cap model inputs delete <id>
 ```
+
+**Metrics and narratives used by templates.** Widget and spreadsheet template use never blocks deleting a metric (input or calculation) or a narrative.
+- The delete preview lists the templates under "Used by templates (removed from them on delete)" (API: `warnings` on the preview response; UI: a warning in the delete dialog).
+- The delete then removes the item from those templates. Deleted:
+  - widget data items and spreadsheet rows for the metric
+  - widget and spreadsheet bands bounded by it
+  - Table widget and spreadsheet capture template narrative selections
+- Text tokens (`[metric-guid]`, `{narrative-guid}`), pie centre metrics and value selections keep the id and render as "Unavailable". The widget template editor warns about them without blocking save.
+- A metric is still blocked when a calculation formula, another metric's band, or a unit conversion factor uses it.
 
 ### Delete Tenant
 
@@ -1283,6 +1258,14 @@ cap data change-requests validate <request-id> --result approve --comments "Appr
 cap data data-lock unlock --data-interval quarter --periods "Q1 FY 25" --org-nodes <id> --discipline-nodes <id> --description "Reopen narrative capture" --json
 ```
 
+Narrative names must be unique per tenant per language (trimmed,
+case-insensitive, including auto-created translation stubs) and cannot contain
+`{` or `}`, because widget text references narratives as `{Narrative Name}`.
+A database unique index enforces the name rule, so concurrent saves of the
+same name also fail cleanly. `model narratives create`/`save` return 409 for a
+duplicate name and 422 for braces; `model narratives upload-excel` fails with
+the named conflict.
+
 Narrative JSON input uses the Capstone narrative request
 contracts. Use `--file <path>` or pipe JSON on stdin; use `--json` so automation
 receives full IDs and contract-shaped response envelopes.
@@ -1356,9 +1339,8 @@ The default timeout is `3000` seconds (50 minutes). Use `--timeout-seconds <n>` 
 Non-async Excel upload commands return `ExcelUploadResult` in JSON mode:
 `items`, row counts such as `savedRows`/`newRows`/`updatedRows`, `isValid`, and
 `uploadErrors` with `rowIndex`, `columnIndex`, and `errorMessage`. Keep these
-row/cell diagnostics for spreadsheet workflows; use `import-json --upsert` when
-the source of truth is JSON and `orderedPlan`/`idMap` diagnostics are more
-useful.
+row/cell diagnostics for spreadsheet workflows; for a single item kept as JSON,
+use `create --file` or `save --file`.
 
 **Entities supporting Excel upload:**
 - `model inputs`, `model calculations`
@@ -1440,11 +1422,11 @@ This table is a high-level availability summary only.
 | `templates` | All CRUD + Excel, schema/sample helpers, dashboard audit/rename | ✅ Available |
 | `data` | availability, lookups, time-periods, recalculation, input-values, narrative-values, change-requests, data-lock | ✅ Available |
 | `reporting` | computed-values, dashboards, widgets | ✅ Available |
-| `notifications` | notification templates | ✅ Available |
+| `notifications` | notification templates (CRUD + Excel), notification rules (CRUD + Excel) | ✅ Available |
 | `perf` | memory-throughput diagnostics | ✅ Available |
 | `security` | users Excel import/export | ✅ Available |
 | `security` | user CRUD, roles, version | ⏳ Planned |
-| `system` | tenant CRUD, schema/sample, teardown, tenant fiscal config, local bootstrap, snapshot; language list via `auth languages` | ✅ Available |
+| `system` | tenant CRUD, schema/sample, teardown, tenant fiscal config, local bootstrap; language list via `auth languages` | ✅ Available |
 | `system` | language CRUD, translations | ⏳ Planned |
 
 ---

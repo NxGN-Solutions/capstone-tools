@@ -39,20 +39,15 @@ to that repository when they need current guidance.
 - Use the `upsertIdentity` section from `cap schema --json` for imports:
   flat entities match by exact full name only after trimming leading/trailing
   whitespace, and tree entities match by exact full path only after trimming
-  leading/trailing whitespace. Matching is case-sensitive. JSON batch/upsert
-  workflows and Excel upload workflows use the same identity semantics. Use
-  `upsertIdentity.surfaces` to choose JSON
-  `import-json --upsert` or Excel `upload-excel` based on the diagnostics the
-  workflow needs.
-- For rerunnable tenant builds, prefer `import-json --upsert --json` for
-  masterdata, model definitions, and widget/dashboard templates before falling
-  back to one-item create/save loops.
-- Use `cap system tenants snapshot --output snapshot --json` when a workflow
-  needs a reviewable export of those same import-ready JSON surfaces plus a
-  manifest. Treat restore as explicit reviewed `import-json --upsert` commands,
-  not as an automatic mutation; use
-  `cap workflows show restore-from-snapshot --json` for the dry-run, validate,
-  apply, and audit sequence.
+  leading/trailing whitespace. Matching is case-sensitive. CLI Excel upload
+  uses the same identity semantics as the web app Excel upload;
+  `upsertIdentity.surfaces` lists that single `excel-upload` surface.
+- For rerunnable tenant builds, load masterdata, model definitions, and
+  widget/dashboard templates with `upload-excel --json` (masterdata/model take
+  the file positionally, templates take `-f <file>`); use `create --file` or
+  `save --file` for single items.
+- For backup and restore, use `download-excel` / `upload-excel` (the same files
+  the web app uses); `cap workflows show backup-restore --json` lists the upload order.
 - After model or seed changes, run `cap data recalculation wait <version>
   --json`, then use `cap reporting computed-values audit --metrics <ids>
   --strict --json` for automation-safe output verification.

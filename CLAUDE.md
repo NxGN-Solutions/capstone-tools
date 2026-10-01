@@ -88,18 +88,15 @@ See `docs/mcp/setup.md` for complete configuration examples.
 - For imports and upserts, use the `upsertIdentity` schema contract: flat
   entities match by exact full name only after trimming leading/trailing
   whitespace, and tree entities match by exact full path only after trimming
-  leading/trailing whitespace. Matching is case-sensitive. Excel upload and
-  JSON batch/upsert use the same identity semantics. Use
-  `upsertIdentity.surfaces` to choose JSON `import-json --upsert` or Excel
-  `upload-excel` based on the diagnostics the workflow needs.
-- For rerunnable tenant builds, prefer `import-json --upsert --json` for
-  masterdata, model definitions, and widget/dashboard templates before using
-  one-item create/save loops.
-- Use `cap system tenants snapshot --output snapshot --json` when you need a
-  reviewable export of those same import-ready JSON surfaces plus a manifest.
-  Restore is the explicit reviewed `import-json --upsert` path; use
-  `cap workflows show restore-from-snapshot --json` for the dry-run, validate,
-  apply, and audit sequence.
+  leading/trailing whitespace. Matching is case-sensitive. CLI Excel upload
+  uses the same identity semantics as the web app Excel upload;
+  `upsertIdentity.surfaces` lists that single `excel-upload` surface.
+- For rerunnable tenant builds, load masterdata, model definitions, and
+  widget/dashboard templates with `upload-excel --json` (masterdata/model take
+  the file positionally, templates take `-f <file>`); use `create --file` or
+  `save --file` for single items.
+- For backup and restore, use `download-excel` / `upload-excel` (the same files
+  the web app uses); `cap workflows show backup-restore --json` lists the upload order.
 - After model or seed changes, run `cap data recalculation wait <version>
   --json`, then use `cap reporting computed-values audit --metrics <ids>
   --strict --json` for automation-safe output verification.
@@ -110,4 +107,4 @@ See `docs/mcp/setup.md` for complete configuration examples.
 
 Current release: `see environment manifests` (`environment-specific`)
 
-Last updated: `2026-09-24T07:32:25Z`
+Last updated: `2026-10-01T06:29:28Z`

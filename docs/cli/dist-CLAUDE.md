@@ -241,7 +241,7 @@ Use `CAPSTONE_OUTPUT_VERSION=2` only when a workflow expects the shared
 `{ ok, data, error, warnings, meta }` envelope. Leave it unset for legacy
 per-command JSON shapes.
 
-The CLI uses the same identity semantics for JSON batch/upsert and Excel upload:
+The CLI Excel upload uses the same identity semantics as the web app Excel upload:
 
 | Entity shape | Match key |
 |--------------|-----------|
@@ -254,33 +254,29 @@ to confirm the current contract.
 
 ## Model Build And Restore Workflows
 
-Prefer rerunnable JSON imports for tenant builds:
+Load tenant builds with the same Excel upload the web app uses. Masterdata and
+model commands take the workbook positionally; template commands take it with `-f`:
 
 ```
-cap masterdata units import-json --file units.json --upsert --json
-cap masterdata org-nodes import-json --file org-nodes.json --upsert --json
-cap masterdata disciplines import-json --file disciplines.json --upsert --json
-cap masterdata frameworks import-json --file frameworks.json --upsert --json
-cap model inputs import-json --file inputs.json --upsert --json
-cap model calculations validate-batch --file calculations.json --upsert --json
-cap model calculations import-json --file calculations.json --upsert --json
-cap templates widget-templates import-json --file widget-templates.json --upsert --json
-cap templates dashboard-templates import-json --file dashboard-templates.json --upsert --json
+cap masterdata units upload-excel units.xlsx --json
+cap masterdata org-nodes upload-excel org-nodes.xlsx --json
+cap masterdata disciplines upload-excel disciplines.xlsx --json
+cap masterdata frameworks upload-excel frameworks.xlsx --json
+cap model inputs upload-excel inputs.xlsx --json
+cap model calculations upload-excel calculations.xlsx --json
+cap templates widget-templates upload-excel -f widget-templates.xlsx --json
+cap templates dashboard-templates upload-excel -f dashboard-templates.xlsx --json
 ```
 
-Use Excel upload when users need spreadsheet review and row/cell diagnostics;
-use JSON import when agents need source-controlled payloads, dry-run plans, and
-repeatable builds.
+Upload results carry row/cell diagnostics. For a single item kept as JSON, use
+`create --file` or `save --file`.
 
-For snapshots and reviewed restore planning:
+For backup and restore, use the same Excel download/upload the web app uses. Excel
+files reference entities by name, so they restore into any tenant:
 
 ```
-cap system tenants snapshot --output snapshot --json
-cap workflows show restore-from-snapshot --json
+cap workflows show backup-restore --json
 ```
-
-Snapshot export is read-only. Restore is not an automatic command; follow the
-workflow's dry-run, validate, apply, and audit sequence.
 
 ## JSON Output — Critical Details
 
@@ -410,7 +406,7 @@ For standard workflows, **read the recipe first** from `docs/recipes/`. Recipes 
 
 - All commands support `--json` for machine-readable output — prefer this when parsing results
 - Run `cap schema --json` and `cap workflows list --json` before generating automation
-- Use `import-json --upsert --dry-run --json` before applying large model-build changes
+- Use `cap workflows show build-model --json` or `cap workflows show backup-restore --json` before applying large model-build changes
 - Use `cap status` to see current auth state, tenant, and config at a glance
 - Token refresh is automatic — *but* if refresh fails (revoked session, server restart, expired login), the CLI exits with the auth error code (`3`) and other queries may otherwise return empty. Run `cap auth doctor`, then `cap auth login` to recover
 - Excel import/export is available on most entities: `download-excel` and `upload-excel`

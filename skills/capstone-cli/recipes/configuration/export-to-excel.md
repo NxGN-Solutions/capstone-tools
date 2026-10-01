@@ -141,6 +141,15 @@ cap <domain> <entity> upload-excel <filename>.xlsx --json
 > cap templates dashboard-templates upload-excel -f dashboards.xlsx --json
 > ```
 
+> **Widget template text uses names.** In the Title, Subtitle, Description and
+> Footnote columns, write metric tokens as `[Metric Name]` and, for TextBlock
+> and InfoCard rows, narrative tokens as `{Narrative Name}` or
+> `{Narrative Name}|-1|`. Download writes names in the request language
+> (fallback default). Upload matches narrative names case-insensitively;
+> unknown or ambiguous narrative names, and GUIDs, are reported as row/column
+> errors. In Pie, XY and Table rows a `{Name}` that matches a narrative is an
+> error; other braces stay as literal text.
+
 **Examples:**
 ```bash
 # Re-import edited metrics

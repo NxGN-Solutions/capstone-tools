@@ -448,7 +448,7 @@ cap data input-values create \
   --json
 ```
 
-**Units:** values are stored in the metric definition unit. `list`, `get` and the capture grid show each org node's **effective unit**: the node's unit override (or the nearest ancestor's), converted with the unit's conversion factor for the value's fiscal year.
+**Units:** values are stored in the metric definition unit. `list`, `get` and the capture grid show each org node's **effective unit**: the node's unit override (or the nearest ancestor's), converted with the unit's conversion factor (a fixed factor, or the factor metric's value for that node and period).
 
 - Send `unitOfMeasure.id` on every row to say which unit the number is in. A value in the override unit is converted to the metric unit, and a value in the metric unit is stored as sent.
 - Omitting `unitOfMeasure` means the metric unit, **except** on an org node that has a unit override. There the save is rejected with `MissingUnitOfMeasure`, because a bare number copied from the screen would be stored off by the conversion factor.
@@ -746,6 +746,43 @@ echo '{ "id": "<existing-id>", ... }' | cap masterdata units save --json
 ```
 
 > **Note:** `symbolPosition` is an `EnumDTO` with `id` and `name`. Values: `0`/`Suffix` (default), `1`/`Prefix`. Currency symbols (USD, ZAR, EUR) should use Prefix; all other units use Suffix.
+
+### Conversions
+
+Each item in `conversions` has a `destination` unit and **exactly one** of:
+
+- `conversionFactor` — a fixed number (destination units per one source unit: displayed = stored × factor), or
+- `conversionFactorMetric` — the metric (input or calculation) whose value per org node, interval and period supplies the factor, also in destination units per source unit.
+
+Set the unused field to `null` or leave it out. Each destination may appear only once per unit.
+
+Fixed factor (on a `kWh` unit — 1 kWh = 0.001 MWh):
+
+```json
+"conversions": [
+  {
+    "id": "<empty-id>",
+    "destination": { "name": "MWh" },
+    "conversionFactor": 0.001
+  }
+]
+```
+
+Metric-referenced factor (on a `ZAR` unit — the "USD per ZAR" metric holds USD per 1 ZAR, e.g. 0.054; for a rate quoted as ZAR per USD, reference a calculation such as `1 / [ZAR per USD]`):
+
+```json
+"conversions": [
+  {
+    "id": "<empty-id>",
+    "destination": { "name": "USD" },
+    "conversionFactorMetric": { "name": "USD per ZAR" }
+  }
+]
+```
+
+`destination` and `conversionFactorMetric` are resolved by `id` or, when the id is empty, by `name`. `cap masterdata units get --json` shows them flattened to names (`"destination": "USD"`, `"conversionFactorMetric": "USD per ZAR"`).
+
+> **Note:** Converted values are blank for periods where the factor metric has no value, and capture in the converted unit is rejected until that period's rate has been calculated.
 
 ---
 

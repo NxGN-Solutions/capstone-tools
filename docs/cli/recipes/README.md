@@ -86,6 +86,7 @@ Each recipe includes:
 | [Seed Tenant](./data-management/seed-tenant.md) | Full tenant seeding from approved Excel workbooks | ✅ Available |
 | [Enter Data](./data-management/enter-data.md) | Manual data entry workflow | ✅ Available |
 | [Bulk Import Data](./data-management/bulk-import.md) | Excel upload workflow | ✅ Available |
+| [Back Up and Restore](./data-management/backup-restore.md) | Excel download/upload backup and restore, in dependency order | ✅ Available |
 | [Review Approvals](./data-management/review-approvals.md) | Change request approval workflow | ✅ Available |
 
 ---
@@ -185,6 +186,7 @@ recipes/
     ├── seed-tenant.md
     ├── enter-data.md
     ├── bulk-import.md
+    ├── backup-restore.md
     └── review-approvals.md
 ```
 

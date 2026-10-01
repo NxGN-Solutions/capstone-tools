@@ -694,7 +694,7 @@ DashboardTemplateTreeItemDTO extends TreeNodeDTO:
   WidgetSize: EnumDTO?            ← { "id": 2, "name": "50%" }
   SortOrder: int
   AISummaryContext: EnumDTO?      ← { "id": 0, "name": "Peers" }
-  NodeLayout: DashboardTemplateNodeLayoutDTO?           ← structural nodes only (layoutMode incl. Tabs)
+  NodeLayout: DashboardTemplateNodeLayoutDTO?           ← structural nodes only (layoutMode Tabs is rejected; use useTabSheet)
   NodeStyle: DashboardTemplateNodeStyleDTO?             ← structural nodes only
   PlacementLayout: DashboardTemplatePlacementLayoutDTO? ← widget/narrative placements only (layout only; widget chrome lives on the widget template's styleConfiguration)
   Callout: DashboardTemplateCalloutDTO?                 ← structural nodes and Narrative placements only
@@ -737,11 +737,31 @@ These shape the dashboard *shell* — the frame around the widgets. They are add
 }
 ```
 
-**Tab strip** (dashboard-level) styles the canvas-root tab strip; only meaningful when the canvas renders as Tabs (`useTabSheet: true`, or a root node with `nodeLayout.layoutMode: Tabs`). `hoverBackgroundColor`/`hoverForegroundColor` style the `.nav-link:hover` state (tab-strip-specific; omit to keep the default hover):
+**Tab strip** (dashboard-level) styles the canvas-root tab strip, its tabs and the active tab; only meaningful when the canvas renders as Tabs, which the API turns on only through `useTabSheet: true` (`nodeLayout.layoutMode: Tabs` and a canvas `dashboardStyle.layoutMode` are rejected by the validator). The `style` box fields style the strip; its header fields style the **active tab**:
+
+| Field | Styles | Unset |
+|-------|--------|-------|
+| `style.backgroundColor`, `style.borderWidth`, `style.borderRadius`, `style.shadow` | The strip | Transparent strip, default line |
+| `style.foregroundColor`, `style.fontFamily`, `style.fontWeight`, `style.fontSize` | Tab labels | Inherited |
+| `style.borderColor` | The strip line and the active tab's side borders | The app border color |
+| `style.typography` | Tab spacing: Compact, Standard or Emphasis | The app's tab padding |
+| `tabBorderRadius` | Each tab's top corners (single value, same bounds as `borderRadius`) | 4px |
+| `hoverBackgroundColor`, `hoverForegroundColor` | A tab on hover | Default hover |
+| `style.headerBackgroundColor` | The active tab's background | White |
+| `style.titleColor` | The active tab's label | The accent, then the label color |
+| `style.accentColor` | The active tab's underline | No underline |
+| `style.accentWidth` | The underline's thickness | 2px |
+| `style.contentBackgroundColor` | Nothing: ignored with a save warning (the tab body's background is the tab node's `nodeStyle.contentBackgroundColor`) | — |
 
 ```json
 "tabStrip": {
-  "style": { "foregroundColor": "text-primary", "headerBackgroundColor": "surface-muted" },
+  "style": {
+    "backgroundColor": "surface-muted",
+    "foregroundColor": "text-primary",
+    "headerBackgroundColor": "surface",
+    "accentColor": "primary"
+  },
+  "tabBorderRadius": { "value": 4, "unit": { "id": 0, "name": "Px" } },
   "hoverBackgroundColor": "surface-muted",
   "hoverForegroundColor": "text-primary"
 }

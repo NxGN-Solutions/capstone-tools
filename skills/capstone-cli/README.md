@@ -41,10 +41,13 @@ cap meta lookups list # All known lookup names across CLI domains (then: meta lo
 ```
 
 `cap schema --json` is authoritative; it includes exit-code semantics and the
-`upsertIdentity` contract used for JSON batch/upsert and Excel uploads.
+`upsertIdentity` contract used for Excel uploads.
 
 ## Notes
 
 - Most reporting commands require `--data-interval` and `--periods`.
-- `notifications templates` (`create`/`get`/`list`/`save`/`delete`) administers
-  notification templates; see [reference/commands.md](./reference/commands.md).
+- `notifications templates` (`create`/`get`/`list`/`save`/`delete`/`download-excel`/`upload-excel`)
+  administers notification templates, and `notifications rules`
+  (`create`/`get`/`list`/`save`/`delete`/`download-excel`/`upload-excel`) administers
+  notification rules; `create` and `save` accept the output of `get --json` as is;
+  see [reference/commands.md](./reference/commands.md).

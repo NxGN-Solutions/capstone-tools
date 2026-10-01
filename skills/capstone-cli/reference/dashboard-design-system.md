@@ -208,11 +208,17 @@ four text slots; they establish hierarchy so section titles don't have to.
 
 ### Tab strip — neutral, never branded
 
+The strip sits in quiet chrome (`surface-muted`); the active tab is the white `surface` it opens onto. No
+accent: the tab strip stays neutral. The strip's header fields style the active tab (`headerBackgroundColor`,
+`titleColor`, `accentColor`, `accentWidth`); see the tab-strip field table in
+[Build a dashboard](../recipes/configuration/build-dashboard.md).
+
 ```json
 {
   "style": {
+    "backgroundColor": "surface-muted",
     "foregroundColor": "text-primary",
-    "headerBackgroundColor": "surface-muted"
+    "headerBackgroundColor": "surface"
   },
   "hoverBackgroundColor": "surface-muted",
   "hoverForegroundColor": "text-primary"

@@ -90,7 +90,19 @@ cap masterdata org-nodes list --json
 cap model metric-attribute-types upload-excel "$WORKBOOKS/metric-attribute-types.xlsx" --json
 cap model inputs upload-excel "$WORKBOOKS/inputs.xlsx" --json
 cap model calculations upload-excel "$WORKBOOKS/calculations.xlsx" --json
+
+# Input bands that reference calculations were skipped with a warning, because the
+# calculations did not exist yet. Re-upload inputs to fill them in.
+cap model inputs upload-excel "$WORKBOOKS/inputs.xlsx" --json
+
+# Conversions whose factor is a metric were skipped with a warning in Step 2,
+# because the metric did not exist yet. Re-upload units to fill them in.
+cap masterdata units upload-excel "$WORKBOOKS/units-of-measure.xlsx" --json
 ```
+
+Warnings alone exit `0`; any row error exits `6`.
+
+Re-uploading the same units workbook is safe: conversions upsert on their destination, so the metric-factor conversions are filled in without duplicates. Until then, a skipped conversion leaves any existing conversion to that destination unchanged.
 
 Verify:
 
@@ -124,7 +136,26 @@ cap templates capture-templates list --json --limit 5
 
 ---
 
-### Step 5: Upload Input Values
+### Step 5: Upload Notification Templates and Rules
+
+**Purpose:** Seed notification templates, then the rules that send them. Rules name their template, so templates go first. Both commands require the `-f` flag.
+
+```bash
+cap notifications templates upload-excel -f "$WORKBOOKS/notification-templates.xlsx" --json
+cap notifications rules upload-excel -f "$WORKBOOKS/notification-rules.xlsx" --json
+```
+
+A name that already exists updates that template or rule, so the tenant's seeded default templates are updated in place. Importing a template as the default for its notification type returns a warning naming the default it replaces.
+
+Verify:
+
+```bash
+cap notifications templates list --json
+```
+
+---
+
+### Step 6: Upload Input Values
 
 **Purpose:** Seed data values so computed values and widget data are available. Upload larger intervals first, then smaller intervals.
 
@@ -163,6 +194,7 @@ Uploads are idempotent when the workbook business keys match existing data. Re-u
 | Model (`model *`) | Positional | `cap model inputs upload-excel file.xlsx` |
 | Templates (`templates *`) | `-f` required | `cap templates widget-templates upload-excel -f file.xlsx` |
 | Input values (`data input-values`) | `-f` required | `cap data input-values upload-excel -f file.xlsx` |
+| Notifications (`notifications *`) | `-f` required | `cap notifications templates upload-excel -f file.xlsx` |
 
 If a template upload returns no items or appears to do nothing, check that the command uses `-f`.
 

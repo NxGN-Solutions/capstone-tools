@@ -28,17 +28,14 @@ Canonical public repository: https://github.com/NxGN-Solutions/capstone-tools
 - `cap schema --json` includes `upsertIdentity`: flat entities match by exact
   full name only after trimming leading/trailing whitespace, tree entities match
   by exact full path only after trimming leading/trailing whitespace, matching is
-  case-sensitive, and Excel upload follows the same identity semantics as JSON
-  batch/upsert. Use `upsertIdentity.surfaces` to choose JSON
-  `import-json --upsert` or Excel `upload-excel`.
-- For rerunnable tenant builds, prefer `import-json --upsert --json` for
-  masterdata, model definitions, and widget/dashboard templates before using
-  one-item create/save loops.
-- Use `cap system tenants snapshot --output snapshot --json` for a reviewable
-  export of import-ready JSON files plus `manifest.json`; restore is the
-  explicit reviewed `import-json --upsert` path. Use
-  `cap workflows show restore-from-snapshot --json` for dry-run, validate,
-  apply, and audit steps.
+  case-sensitive, and CLI Excel upload follows the same identity semantics as
+  the web app Excel upload. `upsertIdentity.surfaces` lists that single
+  `excel-upload` surface.
+- For rerunnable tenant builds, load masterdata, model definitions, and
+  widget/dashboard templates with `upload-excel --json`; use `create --file` or
+  `save --file` for single items.
+- For backup and restore, use `download-excel` / `upload-excel` (the same files
+  the web app uses); `cap workflows show backup-restore --json` lists the upload order.
 - For post-build analysis checks, pair `cap data recalculation wait <version>
   --json` with `cap reporting computed-values audit --metrics <ids> --strict
   --json`.
