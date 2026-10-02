@@ -91,11 +91,13 @@ cap masterdata units list --json
 - Arithmetic: `+`, `-`, `*`, `/`
 - Conditional: `IF [condition] THEN [value] ELSE [value]`
 - Comparison: `=`, `<>`, `>`, `<`, `>=`, `<=`
-- Math: `SQRT()`, `POW()`, `MOD()`, `PI()`
-- Aggregation: `SUM()`, `AVG()`, `COUNT()`, `MIN()`, `MAX()`, `FIRST()`, `LAST()`, `SUMPRODUCT()`
+- Math: `ABS()`, `SQRT()`, `POW()`, `MOD()`, `PI()`
+- Aggregation: `SUM()`, `AVG()`, `MEAN()`, `COUNT()`, `MIN()`, `MAX()`, `FIRST()`, `LAST()`, `SUMPRODUCT()`
+- Statistics: `MEDIAN()`, `VARIANCE()`, `VARIANCEP()`, `STDEV()`, `STDEVP()`
 - Null handling: `IFNULL()`, `COALESCE()`, `DIV()`
 - Time: `NOW()`, `MONTH()`, `YEAR()`, `YEARSTART()`, `YEAREND()`, `MONTHSTART()`, `MONTHEND()`, `DATEOFFSET()`, `ISFUTURE()`
 - Duration: `DAYS()`, `WEEKS()`, `MONTHS()`, `QUARTERS()`, `YEARS()`
+- Forecasting: `FORECAST()`, `HOLT()`, `HOLTWINTERS()`, `HOLTWINTERSM()`
 
 **Common patterns:**
 

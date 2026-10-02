@@ -287,11 +287,11 @@ Check which time periods have data. Useful for finding periods to query before c
 
 ### `data_inputValues_list`
 
-Query raw input data (manually entered or imported values) with validation status and lock state. Returns a compact pivot table: one row per metric×org, time periods as columns. Use a capture template ID (from `templates_spreadsheetCaptures_list`) OR pass `templateJson` for ad-hoc queries. For calculated/aggregated results, use `data_computedValues_list` instead.
+Query raw input data (manually entered or imported values) with validation status and lock state. Returns a compact pivot table: one row per metric×org, time periods as columns. Use a capture template ID (from `templates_captures_list`) OR pass `templateJson` for ad-hoc queries. For calculated/aggregated results, use `data_computedValues_list` instead.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `templateId` | string (ID) | Conditional | Capture template ID (from `templates_spreadsheetCaptures_list`). Optional if `templateJson` is provided. |
+| `templateId` | string (ID) | Conditional | Capture template ID (from `templates_captures_list`). Optional if `templateJson` is provided. |
 | `templateJson` | string (JSON) | Conditional | Inline capture template JSON (alternative to `templateId`). Minimum: `{"name":"Ad-hoc","dataGrouping":{"id":1},"spreadsheetTemplateMetrics":[{"metric":{"id":"METRIC_GUID"},"sortOrder":0}]}`. `dataGrouping` id: 0=None, 1=OrgNode, 2=Discipline, 3=Framework. Optional `additionalDataGrouping` is an ordered list of `{id: 1|2|3}` Then By levels. Get metric IDs from `model_metrics_list`. |
 | `timePeriodNames` | string | No | Comma-separated period names (e.g., `Jan 2025,Feb 2025`) |
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
@@ -392,17 +392,19 @@ Save input values (batch upsert). Uses business-key matching — zero IDs resolv
 | 3 | Quarter |
 | 4 | Year |
 
-**Returns:** Save result with success/failure status.
+**Comments:** add `"comments": "..."` to explain a value. Omitting it keeps the stored comment; `""` clears it.
+
+**Returns:** Save result with success/failure status. Values saved in a range that needs a comment, without one, are listed by id: ask the user why each value is correct, then save it again with `comments`.
 
 ---
 
 ### `data_computedValues_list`
 
-**Primary data analysis tool.** Returns a compact pivot table: one row per metric×org, time periods as columns. Use a report template ID (from `templates_spreadsheetReports_list`) OR pass `templateJson` for ad-hoc queries. Set `dataInterval` for granularity: 0=day, 1=week, 2=month, 3=quarter, 4=year. Use for monthly summaries, weekly trends, daily drill-downs, cross-site comparisons. Returns read-only calculated results.
+**Primary data analysis tool.** Returns a compact pivot table: one row per metric×org, time periods as columns. Use a report template ID (from `templates_reports_list`) OR pass `templateJson` for ad-hoc queries. Set `dataInterval` for granularity: 0=day, 1=week, 2=month, 3=quarter, 4=year. Use for monthly summaries, weekly trends, daily drill-downs, cross-site comparisons. Returns read-only calculated results.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `templateId` | string (ID) | Conditional | Report template ID (from `templates_spreadsheetReports_list`). Optional if `templateJson` is provided. |
+| `templateId` | string (ID) | Conditional | Report template ID (from `templates_reports_list`). Optional if `templateJson` is provided. |
 | `templateJson` | string (JSON) | Conditional | Inline report template JSON (alternative to `templateId`). Minimum: `{"name":"Ad-hoc","dataGrouping":{"id":1},"spreadsheetTemplateMetrics":[{"metric":{"id":"METRIC_GUID"},"sortOrder":0}]}`. `dataGrouping` id: 0=None, 1=OrgNode, 2=Discipline, 3=Framework. Optional `additionalDataGrouping` is an ordered list of `{id: 1|2|3}` Then By levels. Optional `expandCalculations` / `expandCalculationsMaxDepth` (1..20) nest formula dependencies under calculation rows. Get metric IDs from `model_metrics_list`. |
 | `timePeriodNames` | string | No | Comma-separated period names (e.g., `Jan 2025,Feb 2025`) |
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
@@ -604,7 +606,7 @@ List widget templates (name + ID + type). Widget names encode their content: 'Su
 
 ---
 
-### `templates_spreadsheetReports_list`
+### `templates_reports_list`
 
 List available report templates (define which metrics appear in computed value queries).
 
@@ -617,7 +619,7 @@ List available report templates (define which metrics appear in computed value q
 
 ---
 
-### `templates_spreadsheetCaptures_list`
+### `templates_captures_list`
 
 List available capture templates (define which metrics appear in data entry forms).
 
@@ -630,27 +632,27 @@ List available capture templates (define which metrics appear in data entry form
 
 ---
 
-### `templates_spreadsheetReports_get`
+### `templates_reports_get`
 
 Get detailed configuration of a specific report template.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `templateId` | string (ID) | Yes | Report template ID |
+| `id` | string (ID) | Yes | Report template ID |
 
 **Returns:** Template configuration including filters (discipline, framework, metric type), org node assignments, and included metrics.
 
 ---
 
-### `templates_spreadsheetCaptures_get`
+### `templates_captures_get`
 
 Get detailed configuration of a specific capture template.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `templateId` | string (ID) | Yes | Capture template ID |
+| `id` | string (ID) | Yes | Capture template ID |
 
-**Returns:** Template configuration including assigned metrics, org nodes, and data entry settings.
+**Returns:** Template configuration including assigned metrics, org nodes, and data entry settings: `showPendingFilter` (the capture and validation grids offer a "Show pending only" toggle) and `showOnlyPending` (they open showing only values still to capture, or waiting for the viewing user's validation). `data_inputValues_list` does not apply the pending filter.
 
 ---
 

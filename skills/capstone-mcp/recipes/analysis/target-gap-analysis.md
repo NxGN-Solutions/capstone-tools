@@ -25,7 +25,7 @@ Both arguments are optional — defaults to all metrics with targets in the most
 |--------------|--------|------------|
 | Metrics with targets | `capstone://model/metrics` resource or `model_metrics_list` | Ask: "Which metrics or goals should I check?" |
 | Time period | User request or `data_availability` | Ask: "Which time period?" |
-| Report template | `templates_spreadsheetReports_list` | Auto-select first matching template |
+| Report template | `templates_reports_list` | Auto-select first matching template |
 | Scope (location) | `capstone://model/organization` resource | Default: company-wide (root org node) |
 
 ---
@@ -43,7 +43,7 @@ Filter the response `gridRows` to identify metrics that have target values confi
 ### 2. Resolve report template
 
 ```
-templates_spreadsheetReports_list()
+templates_reports_list()
 ```
 
 Find a report template that includes the target metrics. Use the template `id` for the data query.
@@ -107,7 +107,7 @@ Actionable steps to close gaps.
 model_metrics_list({ search: "emissions" })
 → Found: GHG Emissions (met-abc123, target: 8,000 tonnes/year)
 
-templates_spreadsheetReports_list()
+templates_reports_list()
 → Found: ESG Report (rpt-def456)
 
 data_computedValues_list({

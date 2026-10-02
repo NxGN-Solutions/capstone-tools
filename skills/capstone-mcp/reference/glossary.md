@@ -280,8 +280,8 @@ SUM([A], [B], [C])                Sum of values
 **Definition:** Defines the structure of a data entry form — which metrics, org nodes, and time periods appear for data capture. Required for querying input values.
 
 **MCP Tools:**
-- `templates_spreadsheetCaptures_list` — List capture templates
-- `templates_spreadsheetCaptures_get` — Get template configuration
+- `templates_captures_list` — List capture templates
+- `templates_captures_get` — Get template configuration
 
 ---
 
@@ -292,8 +292,8 @@ SUM([A], [B], [C])                Sum of values
 **Definition:** Defines which metrics appear in computed value queries. Acts as a filter lens — its discipline, metric type, and framework filters determine which metrics are visible.
 
 **MCP Tools:**
-- `templates_spreadsheetReports_list` — List report templates
-- `templates_spreadsheetReports_get` — Get template configuration
+- `templates_reports_list` — List report templates
+- `templates_reports_get` — Get template configuration
 
 > **Important:** New metrics automatically appear in a report template's output if they match its filter criteria. You don't need to explicitly add metrics to templates.
 

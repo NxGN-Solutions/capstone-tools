@@ -117,6 +117,7 @@ map when checking whether a command family exists.
 | `auth apikey` | `create`, `list`, `prune`, `rotate`, `delete` |
 | `config` | `get`, `list`, `set`, `show`, `unset` |
 | `data` | `availability` |
+| `data bulk-validation` | `preview`, `validate` |
 | `data change-requests` | `create`, `delete`, `get`, `list`, `save`, `validate` |
 | `data data-lock` | `lock`, `unlock` |
 | `data input-values` | `create`, `download-excel`, `get`, `history`, `list`, `save`, `upload-excel`, `validate` |
@@ -375,6 +376,9 @@ cap <domain> lookups get <name> [--json]
 | `templates` | `widget-sizes`, `widget-types`, `data-grouping-types`, `data-range-modes`, `metric-selection-modes`, `metric-partitioning-modes`, `partitioning-rank-modes`, `org-node-row-selection-modes`, `org-node-template-types`, `org-node-template-visibility-modes`, `pie-chart-types`, `xy-chart-data-item-types`, `ai-summary-contexts` |
 | `data` | `change-request-reasons`, `change-request-status-types`, `change-request-validation-levels` |
 | `meta` | `color-tokens` |
+
+`model lookups get time-period-types` and `templates lookups get data-intervals`
+return only the current tenant's enabled reporting periods, not every interval.
 
 Use `meta lookups` when building scripts or agents that need one discovery
 surface for all enum/reference values. The domain-specific commands remain
@@ -1222,6 +1226,14 @@ cap data input-values history --metric <id> --org-node <id> --data-interval mont
 
 Returns the capture-cell audit log, including after the value has been cleared.
 
+### Save input values with comments
+
+```bash
+cap data input-values save --file values.json [--json]
+```
+
+Each item may carry `"comments"`. A value saved in a band marked `requireComment` without a comment is still saved; the command prints a `Comment required: ...` warning for it (also in the JSON `warnings`). Re-save the value with `"comments"` to explain it. Omitting `comments` keeps the stored comment; `""` clears it.
+
 ### Validate Data
 
 ```bash
@@ -1235,6 +1247,43 @@ cap data narrative-values validate <id> --result <approve|reject> [--comments ".
 |--------|-------------|
 | approve | Approve the value (moves to next validation level or complete) |
 | reject | Reject the value (requires --comments explaining reason) |
+
+### Bulk Validation
+
+Use `preview` and `validate` to approve or reject every input and narrative value in a
+validation template's scope in one action, with one shared comment. Run
+`preview` first. It counts what would be decided and what would be skipped,
+without writing anything.
+
+```bash
+cap data bulk-validation preview \
+  --template <spreadsheet-template-id> \
+  --data-interval month \
+  --periods "Jan 2026,Jun 2026" \
+  --org-nodes <org-node-id>[,<org-node-id>] \
+  --discipline-nodes <discipline-id> \
+  --json
+
+cap data bulk-validation validate \
+  --template <spreadsheet-template-id> \
+  --data-interval month \
+  --periods "Jan 2026,Jun 2026" \
+  --org-nodes <org-node-id> \
+  --result approve \
+  --comments "H1 sign-off" \
+  --json
+```
+
+- **Scope:** the template bounds the scope.
+  - Org node and discipline IDs are used exactly as given. Child nodes are not added.
+  - If you leave one of the two flags out, every org node (or discipline) in the template is included.
+  - You must pass at least one of `--org-nodes` and `--discipline-nodes`.
+- **Interval:** `--data-interval` is an exact filter. A monthly scope never touches quarterly or annual values.
+- **Overwrites:** any earlier decision you made on a value in scope is replaced.
+- **Skipped values:** values you can't validate, and values that don't require validation, are skipped and counted.
+- **Locked values:** these are still validated.
+- **Limit:** one run decides at most 20,000 values. `preview` reports when a scope is over the limit.
+- **Results:** `validate` prints the four counts per kind. It does not send cell ids, and `--json` includes an empty `results` list on each kind.
 
 ### Narrative Workflow
 
@@ -1420,7 +1469,7 @@ This table is a high-level availability summary only.
 | `masterdata` | discipline-attribute-types, framework-attribute-types, org-node-attribute-types | ✅ Available |
 | `masterdata` | data-exports | ⏳ Planned |
 | `templates` | All CRUD + Excel, schema/sample helpers, dashboard audit/rename | ✅ Available |
-| `data` | availability, lookups, time-periods, recalculation, input-values, narrative-values, change-requests, data-lock | ✅ Available |
+| `data` | availability, lookups, time-periods, recalculation, input-values, narrative-values, change-requests, data-lock, bulk-validation | ✅ Available |
 | `reporting` | computed-values, dashboards, widgets | ✅ Available |
 | `notifications` | notification templates (CRUD + Excel), notification rules (CRUD + Excel) | ✅ Available |
 | `perf` | memory-throughput diagnostics | ✅ Available |

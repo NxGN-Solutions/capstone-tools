@@ -30,7 +30,7 @@ Compare actual performance against targets to identify gaps.
 | `metricNames` | string | No | Comma-separated metric names (default: all metrics with targets) |
 | `period` | string | No | Time period (e.g., "Q1 FY 25", default: most recent) |
 
-**Orchestrates:** `model_metrics_list` → `templates_spreadsheetReports_list` → `data_computedValues_list` → gap calculation → status report
+**Orchestrates:** `model_metrics_list` → `templates_reports_list` → `data_computedValues_list` → gap calculation → status report
 
 **Recipe:** [Target Gap Analysis](../recipes/analysis/target-gap-analysis.md) | **CLI:** [Target Gap Analysis](../../cli/recipes/analysis/target-gap-analysis.md)
 
@@ -45,7 +45,7 @@ Detect statistical outliers in the data.
 | `period` | string | No | Time range (e.g., "last 12 months") |
 | `sensitivity` | string | No | `low` (3 std dev), `medium` (2, default), `high` (1.5) |
 
-**Orchestrates:** `model_metrics_list` → `templates_spreadsheetReports_list` → `data_computedValues_list` (current + historical) → statistical analysis → anomaly report
+**Orchestrates:** `model_metrics_list` → `templates_reports_list` → `data_computedValues_list` (current + historical) → statistical analysis → anomaly report
 
 **Recipe:** [Spot Anomalies](../recipes/analysis/spot-anomalies.md) | **CLI:** [Spot Anomalies](../../cli/recipes/analysis/spot-anomalies.md)
 
@@ -60,7 +60,7 @@ Compare performance between two locations or organizational units.
 | `location1` | string | Yes | First location/org node name |
 | `location2` | string | Yes | Second location/org node name |
 
-**Orchestrates:** `model_orgNodes_list` → `templates_spreadsheetReports_list` → `data_computedValues_list` (per location) → comparison table
+**Orchestrates:** `model_orgNodes_list` → `templates_reports_list` → `data_computedValues_list` (per location) → comparison table
 
 **Recipe:** [Compare Operations](../recipes/analysis/compare-operations.md) | **CLI:** [Compare Operations](../../cli/recipes/analysis/compare-operations.md)
 
@@ -75,7 +75,7 @@ Analyze time-series trends in the data.
 | `metricNames` | string | No | Comma-separated metric names (default: key metrics) |
 | `periods` | string | No | Time range (e.g., "last 12 months", "FY 2024") |
 
-**Orchestrates:** `model_metrics_list` → `data_timePeriods_list` → `templates_spreadsheetReports_list` → `data_computedValues_list` → trend analysis → projections
+**Orchestrates:** `model_metrics_list` → `data_timePeriods_list` → `templates_reports_list` → `data_computedValues_list` → trend analysis → projections
 
 **Recipe:** [Find Trends](../recipes/analysis/find-trends.md) | **CLI:** [Find Trends](../../cli/recipes/analysis/find-trends.md)
 

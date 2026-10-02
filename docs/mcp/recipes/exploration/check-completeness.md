@@ -138,7 +138,7 @@ model_metrics_list({ includeCalculations: false })
 model_orgNodes_list()
 → 15 leaf sites → Expected: 30 × 15 = 450 data points
 
-templates_spreadsheetReports_list()
+templates_reports_list()
 → Found: Full Report Template (rpt-abc123)
 
 data_computedValues_list({

@@ -25,7 +25,7 @@ Both arguments are optional — defaults to key metrics over available historica
 |--------------|--------|------------|
 | Metric(s) | `capstone://model/metrics` resource or `model_metrics_list` | Ask: "Which metric should I analyze?" |
 | Time range | User request or `data_availability` | Default: 12 most recent periods |
-| Report template | `templates_spreadsheetReports_list` | Auto-select first template |
+| Report template | `templates_reports_list` | Auto-select first template |
 | Location scope | User request | Default: company-wide (root org node) |
 
 ---
@@ -53,7 +53,7 @@ Identify available periods for the metric's data interval.
 ### 3. Resolve report template
 
 ```
-templates_spreadsheetReports_list()
+templates_reports_list()
 ```
 
 Find a template including the target metrics.
@@ -130,7 +130,7 @@ Estimate:
 model_metrics_list({ search: "emissions" })
 → Found: Total GHG Emissions (met-abc123)
 
-templates_spreadsheetReports_list()
+templates_reports_list()
 → Found: ESG Report (rpt-def456)
 
 data_computedValues_list({

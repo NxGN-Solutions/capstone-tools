@@ -32,8 +32,8 @@ Capstone is a **data management platform** for organizations that need to consol
 | Dashboard widget, visualization | Widget | `apps_widget_*` | Info Card, Pie Chart, XY Chart, Table, TextBlock |
 | Chart configuration, widget setup | Widget Template | `templates_widgets_list` | Defines widget data and display |
 | Dashboard layout, page configuration | Dashboard Template | `templates_dashboards_list` | Organizes widgets into sections |
-| Data entry form, capture sheet | Capture Template | `templates_spreadsheetCaptures_list` | Defines data entry structure |
-| Report layout, spreadsheet template | Report Template | `templates_spreadsheetReports_list` | Defines report structure |
+| Data entry form, capture sheet | Capture Template | `templates_captures_list` | Defines data entry structure |
+| Report layout, spreadsheet template | Report Template | `templates_reports_list` | Defines report structure |
 | Edit request, correction request | Change Request | Not in MCP v1 | Use CLI for change requests |
 | Period freeze, lock, close period | Data Lock | Not in MCP v1 | Use CLI for data locks |
 | Organization, company, client | Tenant | `ListTenants`, `SwitchTenant` | Isolated data environment |
@@ -79,7 +79,7 @@ Resources provide pre-loaded context:
 All data queries need three things: **what** (template/metrics), **where** (org node), **when** (time periods).
 
 ```
-templates_spreadsheetReports_list  → pick a report template
+templates_reports_list  → pick a report template
 model_orgNodes_list                → pick org node(s)
 data_timePeriods_list              → pick time period(s)
 data_computedValues_list           → get the data
@@ -144,7 +144,7 @@ When the user's request matches a prompt, use it. Prompts encode best-practice w
 | **Model** (5) | `model_metrics_list`, `model_metrics_get`, `model_orgNodes_list`, `model_frameworks_list`, `model_disciplines_list` | Read model structure |
 | **Data** (5) | `data_timePeriods_list`, `data_availability`, `data_inputValues_list`, `data_inputValues_save`, `data_computedValues_list` | Query and save data |
 | **Reporting** (2) | `reporting_dashboards_getData`, `reporting_widgets_getData` | Dashboard/widget data as CSV |
-| **Templates** (6) | `templates_dashboards_list`, `templates_widgets_list`, `templates_spreadsheetReports_list`, `templates_spreadsheetCaptures_list`, `templates_spreadsheetReports_get`, `templates_spreadsheetCaptures_get` | Discover and inspect templates |
+| **Templates** (6) | `templates_dashboards_list`, `templates_widgets_list`, `templates_reports_list`, `templates_captures_list`, `templates_reports_get`, `templates_captures_get` | Discover and inspect templates |
 | **Template CRUD** (10) | `templates_widgets_create/save/delete`, `templates_reports_create/save/delete`, `templates_dashboards_get/create/save/delete` | Create, update, and delete widget/report/dashboard templates |
 | **Apps** (8) | `apps_dashboard_render`, `apps_widget_infoCard`, `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_table`, `apps_widget_textBlock`, `apps_widget_aiSummary`, `apps_chart_render` | Visual widgets rendered in conversation |
 | **Status** (1) | `GetStatus` | Server status and auth check |
@@ -231,7 +231,7 @@ MCP Apps render interactive visualizations directly in the conversation. Use the
 | `dataInterval` | Enum: Day(0), Week(1), Month(2), Quarter(3), Year(4) | All data/reporting tools |
 | `dashboardTemplateId` | `templates_dashboards_list` | Dashboard tools |
 | `widgetTemplateId` | `templates_widgets_list` | Widget tools |
-| `templateId` | `templates_spreadsheetReports_list` | Computed value and input value queries |
+| `templateId` | `templates_reports_list` | Computed value and input value queries |
 
 > **Note:** Data tools use `timePeriodNames` or `periodType+periodCount` for period selection. App tools use `startDate`/`endDate` (ISO format). See [tools reference](reference/tools.md) for details.
 
@@ -319,7 +319,7 @@ When analyzing retrieved data, use these techniques based on the user's question
 | dashboards/ | `apps_dashboard_render`, `apps_widget_*` |
 | widget-templates/ | `templates_widgets_list` |
 | dashboard-templates/ | `templates_dashboards_list` |
-| spreadsheet-templates/ | `templates_spreadsheetReports_list`, `templates_spreadsheetCaptures_list` |
+| spreadsheet-templates/ | `templates_reports_list`, `templates_captures_list` |
 
 ---
 

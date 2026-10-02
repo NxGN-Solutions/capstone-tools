@@ -20,7 +20,7 @@ This recipe has **no prompt shortcut** — it's a direct tool workflow for answe
 | Metric(s) | `capstone://model/metrics` resource or `model_metrics_list` | Ask: "What specifically do you want to measure? (e.g., electricity, water, safety)" |
 | Time range | User request or `data_availability` | Ask: "Which time period? (e.g., Q1 2025, last 6 months)" |
 | Location scope | `capstone://model/organization` resource or `model_orgNodes_list` | Default: root org node (company-wide) |
-| Report template | `templates_spreadsheetReports_list` | Auto-select first matching template |
+| Report template | `templates_reports_list` | Auto-select first matching template |
 
 ---
 
@@ -71,10 +71,10 @@ Match by name from the response `gridRows`. If no location specified, use the ro
 Find a report template that includes the target metrics:
 
 ```
-templates_spreadsheetReports_list()
+templates_reports_list()
 ```
 
-Pick the template most likely to include the metric. If uncertain, call `templates_spreadsheetReports_get({ templateId: "..." })` to inspect its configuration.
+Pick the template most likely to include the metric. If uncertain, call `templates_reports_get({ id: "..." })` to inspect its configuration.
 
 **If no suitable template exists:** "I couldn't find a report template that includes [metric]. Would you like me to check input values directly instead?"
 
@@ -158,7 +158,7 @@ February data for Site C is still pending approval.
 model_metrics_list({ search: "emissions" })
 → Found: Total GHG Emissions (met-abc123), Scope 1 (met-def456), Scope 2 (met-ghi789)
 
-templates_spreadsheetReports_list()
+templates_reports_list()
 → Found: ESG Quarterly Report (rpt-jkl012) — includes environmental metrics
 
 data_computedValues_list({

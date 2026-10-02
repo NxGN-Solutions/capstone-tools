@@ -145,7 +145,7 @@ cap notifications templates upload-excel -f "$WORKBOOKS/notification-templates.x
 cap notifications rules upload-excel -f "$WORKBOOKS/notification-rules.xlsx" --json
 ```
 
-A name that already exists updates that template or rule, so the tenant's seeded default templates are updated in place. Importing a template as the default for its notification type returns a warning naming the default it replaces.
+A name that already exists updates that template or rule, so the tenant's seeded default templates are updated in place. A scheduled rule fills either `Cron Expression` or the period-end columns `Period Type` (Month, Quarter or Year), `Period End Offsets` (comma-separated signed days, e.g. `-5, -3, 0`) and `Fire Time` (`HH:mm`), not both; a workbook exported before the period-end columns existed still uploads, and its cron replaces a period-end schedule. Importing a template as the default for its notification type returns a warning naming the default it replaces.
 
 Verify:
 

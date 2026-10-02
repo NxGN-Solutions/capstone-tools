@@ -346,7 +346,16 @@ the unified `cap data change-requests` surface.
 }
 ```
 
-`bands` is optional. Omit the field (or send `null`) to leave stored bands unchanged on update. Send `[]` to clear them. A ladder list has an unbounded first band and later bands use exactly one of `lowerBoundValue` or `lowerBoundMetric`. An interval list may bound every row, including the first, with optional `upperBoundValue` / `upperBoundMetric`; list the in-spec interval first and leave outermost tails unbounded. Colours are registry tokens only.
+`bands` is optional. Omit the field (or send `null`) to leave stored bands unchanged on update. Send `[]` to clear them. A ladder list has an unbounded first band and later bands use exactly one of `lowerBoundValue` or `lowerBoundMetric`. An interval list may bound every row, including the first, with optional `upperBoundValue` / `upperBoundMetric`; list the in-spec interval first and leave outermost tails unbounded. Colours are registry tokens only. On inputs only, `"requireComment": true` on a band asks for a comment when a value is captured in it; calculations reject it. A `lowerBoundMetric`/`upperBoundMetric` must share the owner's unit and may be captured at any interval: the bound is the metric's computed value for the same org node and period.
+
+On an input, a band may also set `"autoValidate": true` (default `false`). When the input requires validation and a saved value lands in that band, the value is stored `Approved` instead of `ValidationRequired`, and the change history records an Approve entry by System naming the band and its limits. If a limit cannot be resolved (for example a referenced metric has no value for that org node and period yet), the value needs validation as usual. The check runs only when a value is saved; editing bands later does not re-evaluate stored values. `autoValidate` is for input bands only: calculation saves and template band overrides reject it. In the Excel Bands column, a trailing ` auto` on an entry sets it.
+
+```json
+"bands": [
+  { "backgroundColor": "danger-subtle", "foregroundColor": "text-primary" },
+  { "lowerBoundValue": 90, "backgroundColor": "success-subtle", "foregroundColor": "text-primary", "autoValidate": true }
+]
+```
 
 **Command:**
 ```bash
@@ -401,7 +410,7 @@ EOF
 }
 ```
 
-`bands` is optional on calculations with the same omit/`null`/empty-list rules as inputs.
+`bands` is optional on calculations with the same omit/`null`/empty-list rules as inputs. Calculation bands reject `autoValidate`.
 
 `friendlyName` is optional. Use it for user-facing labels while keeping `name`
 stable for formulas, imports, and model identity. Translation arrays are edit-UI
@@ -803,6 +812,13 @@ MIN(), MAX(), FIRST(), LAST()     Range aggregation
 IFNULL(a, b), COALESCE(a, b, ..) Null handling
 DIV(a, b[, fallback])            Safe division; the fallback defaults to 0
 SUMPRODUCT(r1, r2)               Sum of products
+MEDIAN(...), MEAN(...)            Median; mean (alias of AVG)
+STDEV(...), STDEVP(...)           Standard deviation: sample; population
+VARIANCE(...), VARIANCEP(...)     Variance: sample; population
+FORECAST(alpha, r)                Single exponential smoothing forecast
+HOLT(alpha, beta, r)              Holt linear-trend forecast
+HOLTWINTERS(a, b, g, period, r)   Holt-Winters additive forecast
+HOLTWINTERSM(a, b, g, period, r)  Holt-Winters multiplicative forecast
 ```
 
 **Safe division pattern:**
@@ -817,7 +833,7 @@ Use `cap model formula-validation validate <calculation-name> --formula '<formul
 
 ### Formula Parser Provenance
 
-The formula language is parser-backed. Runtime parsing and core formula behavior come from the `Formula.Parser` v1.4.1 package, implemented with F#/FParsec. This bundled CLI reference is a curated subset for common Capstone usage, not a full grammar specification. If a construct is not listed here, validate it before use rather than assuming the document is exhaustive.
+The formula language is parser-backed. Runtime parsing and core formula behavior come from the `Formula.Parser` v1.4.3 package, implemented with F#/FParsec. This bundled CLI reference is a curated subset for common Capstone usage, not a full grammar specification. If a construct is not listed here, validate it before use rather than assuming the document is exhaustive.
 
 Capstone registers these additional time functions:
 

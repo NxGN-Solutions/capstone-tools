@@ -24,7 +24,7 @@ Both arguments are optional — defaults to available data range with medium sen
 | What's Needed | Source | If Missing |
 |--------------|--------|------------|
 | Metrics | `capstone://model/metrics` resource or `model_metrics_list` | Auto-use all numeric metrics |
-| Report template | `templates_spreadsheetReports_list` | Auto-select first template |
+| Report template | `templates_reports_list` | Auto-select first template |
 | Historical data | `data_computedValues_list` with multiple periods | Need at least 6 periods for baseline |
 | Baseline period count | User request | Default: 12 periods |
 
@@ -35,7 +35,7 @@ Both arguments are optional — defaults to available data range with medium sen
 ### 1. Resolve report template
 
 ```
-templates_spreadsheetReports_list()
+templates_reports_list()
 ```
 
 Pick a template covering the metrics of interest.
@@ -112,7 +112,7 @@ All other values within normal ranges.
 
 **Claude:**
 ```
-templates_spreadsheetReports_list()
+templates_reports_list()
 → Found: ESG Report (rpt-abc123)
 
 data_computedValues_list({

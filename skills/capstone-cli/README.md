@@ -51,3 +51,14 @@ cap meta lookups list # All known lookup names across CLI domains (then: meta lo
   (`create`/`get`/`list`/`save`/`delete`/`download-excel`/`upload-excel`) administers
   notification rules; `create` and `save` accept the output of `get --json` as is;
   see [reference/commands.md](./reference/commands.md).
+- A scheduled notification rule fires on either a `cronExpression` or period-end
+  offsets, never both. Period-end offsets are `timePeriodType` (Month, Quarter or
+  Year; quarters and years follow the tenant's fiscal calendar),
+  `periodEndOffsetDays` (signed days from the period's last day, -31 to 31, e.g.
+  `[-5, -3, 0]`) and `fireTime` (`HH:mm`), all in the rule's `timeZoneId`. A
+  reminder that fires after period end still chases the period that just ended.
+  `rules list` shows each rule's schedule; `rules get` shows the fields.
+- Capture templates have `showPendingFilter` (offer a "Show pending only" toggle
+  on the capture and validation grids) and `showOnlyPending` (open with it on:
+  capture shows only values still to capture, validation only values waiting
+  for the viewing user). Reminder email links open templates with it on.

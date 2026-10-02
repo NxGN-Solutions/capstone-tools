@@ -282,12 +282,27 @@ cap model inputs get <id> --json   # Shows aggregation settings
 
 **Capstone Term:** Capture Template (Spreadsheet Template)
 
-**Definition:** Defines the structure of a data entry form—which metrics, org nodes, and time periods appear for data capture.
+**Definition:** Defines the structure of a data entry form—which metrics, org nodes, and time periods appear for data capture. `showPendingFilter` offers a "Show pending only" toggle on its capture and validation grids, and `showOnlyPending` opens it switched on.
 
 **CLI:**
 ```bash
 cap templates capture-templates list --json
 cap templates capture-templates get <id> --json
+```
+
+
+---
+
+### Reminder / Alert / Scheduled Email
+
+**Capstone Term:** Notification Rule
+
+**Definition:** Sends a notification template when an event happens (Event Driven) or on a schedule (Scheduled). A schedule is a cron expression or period-end offsets: signed days from the end of each month, fiscal quarter or fiscal year, at a fire time in the rule's time zone. Each scheduled fire sends a recipient one email listing the capture templates to open for their pending work.
+
+**CLI:**
+```bash
+cap notifications rules list --json
+cap notifications rules get <id> --json
 ```
 
 

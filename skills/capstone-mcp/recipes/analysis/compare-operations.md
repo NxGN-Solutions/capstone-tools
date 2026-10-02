@@ -24,7 +24,7 @@ Both location arguments are required.
 | What's Needed | Source | If Missing |
 |--------------|--------|------------|
 | Location names/IDs | `capstone://model/organization` resource or `model_orgNodes_list` | Ask: "Which two locations should I compare?" |
-| Report template | `templates_spreadsheetReports_list` | Auto-select first template |
+| Report template | `templates_reports_list` | Auto-select first template |
 | Time period | User request or `data_availability` | Default: most recent period |
 | Metrics to compare | User request | Default: all available metrics |
 
@@ -45,7 +45,7 @@ Match location names from the response `gridRows`. Extract the `id` for each mat
 ### 2. Resolve report template
 
 ```
-templates_spreadsheetReports_list()
+templates_reports_list()
 ```
 
 Pick a template covering the comparison metrics.
@@ -113,7 +113,7 @@ Flag metrics where the difference exceeds 20%.
 model_orgNodes_list()
 → Found: Site A (org-111), Site B (org-222)
 
-templates_spreadsheetReports_list()
+templates_reports_list()
 → Found: ESG Report (rpt-abc123)
 
 data_computedValues_list({

@@ -106,8 +106,8 @@ Templates define **which metrics are visible** in a query. They act as a filter 
 
 | Template Type | Tool | Purpose |
 |---------------|------|---------|
-| Report Template | `templates_spreadsheetReports_list` | Filter metrics for computed values |
-| Capture Template | `templates_spreadsheetCaptures_list` | Filter metrics for input values |
+| Report Template | `templates_reports_list` | Filter metrics for computed values |
+| Capture Template | `templates_captures_list` | Filter metrics for input values |
 | Dashboard Template | `templates_dashboards_list` | Organize widgets for dashboard data |
 | Widget Template | `templates_widgets_list` | Define single widget data source |
 
