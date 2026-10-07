@@ -58,6 +58,9 @@ cap meta lookups list # All known lookup names across CLI domains (then: meta lo
   `[-5, -3, 0]`) and `fireTime` (`HH:mm`), all in the rule's `timeZoneId`. A
   reminder that fires after period end still chases the period that just ended.
   `rules list` shows each rule's schedule; `rules get` shows the fields.
+- Capture and report templates have `showRowsWithValuesFilter` (let viewers
+  switch between all rows and rows with values; `showOnlyRowsWithValues` is the
+  default and applies as-is when the flag is false).
 - Capture templates have `showPendingFilter` (offer a "Show pending only" toggle
   on the capture and validation grids) and `showOnlyPending` (open with it on:
   capture shows only values still to capture, validation only values waiting

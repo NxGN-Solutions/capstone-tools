@@ -151,7 +151,7 @@ cap model metrics list --json
 - `narrativeScopeConfigured` and narrative scope arrays - Use when Dynamic Narrative Scope is intentionally authored
 - `narratives` - Used when `narrativeSelectionMode` is Static
 - `styleConfiguration` - Bounded Table style slots, row/column overrides, and categorical color tags
-- `dataItems[].bands` - Optional metric-band override for Static metric selection. Omit or `null` inherits the metric default; `[]` disables formatting for that item. A ladder list has an unbounded first band; later bands use exactly one of `lowerBoundValue` or `lowerBoundMetric`. Interval lists may set both ends, including `upperBoundValue` / `upperBoundMetric`. Colours are registry tokens only (`success-subtle`, `warning-subtle`, `danger-subtle`, `info-subtle`, or other canonical tokens)
+- `dataItems[].bands` - Optional metric-band override for Static metric selection. Omit or `null` inherits the metric default (each org node's effective bands: its input or calculation override's bands, else the metric's); `[]` disables formatting for that item. A ladder list has an unbounded first band; later bands use exactly one of `lowerBoundValue` or `lowerBoundMetric`. Interval lists may set both ends, including `upperBoundValue` / `upperBoundMetric`. Colours are registry tokens only (`success-subtle`, `warning-subtle`, `danger-subtle`, `info-subtle`, or other canonical tokens)
 
 Do not author `includedDataTypes` or `orgNodeTemplateId` for new Table templates. The CLI/API may accept them for legacy compatibility, but current authoring uses Narrative Properties and the dashboard template owns the org-node-template lens.
 

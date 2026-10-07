@@ -79,7 +79,7 @@ Switch to a different tenant. Changes become your default for future sessions.
 
 ---
 
-## Model Read (5 tools)
+## Model Read (9 tools)
 
 ### `model_metrics_list`
 
@@ -173,6 +173,50 @@ Tree Path: Energy > Electricity Consumption
   "calculationPhase": { "id": 1, "name": "After Aggregations" }
 }
 ```
+
+---
+
+### `model_inputOverrides_list`
+
+List input overrides. One row is an input metric at an org node.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `search` | string | No | Metric name contains this text |
+| `orgNodeId` | string (ID) | No | Only overrides for this org node |
+| `disciplineId` | string (ID) | No | Only overrides in this discipline |
+| `limit` | int | No | Maximum rows (default: 200) |
+
+**Returns:** Text rows with id, discipline, unit, precision, validation, capture, and bands (`Inherited`, `None (formatting off)`, or a count). `GET` is not used; the call is `POST Model/InputOverrides/GetTreeGridList`.
+
+### `model_inputOverrides_get`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string (ID) | Yes | Input override ID |
+
+**Returns:** Text for one override, including each band's bounds and colour. `GET Model/InputOverrides?id=`.
+
+### `model_calculationOverrides_list`
+
+List calculation overrides. Same shape as input overrides, without validation and capture flags. Calculation bands reject comment-required and auto-validate.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `search` | string | No | Metric name contains this text |
+| `orgNodeId` | string (ID) | No | Only overrides for this org node |
+| `disciplineId` | string (ID) | No | Only overrides in this discipline |
+| `limit` | int | No | Maximum rows (default: 200) |
+
+**Returns:** Text rows. `POST Model/CalculationOverrides/GetTreeGridList`.
+
+### `model_calculationOverrides_get`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string (ID) | Yes | Calculation override ID |
+
+**Returns:** Text for one override. `GET Model/CalculationOverrides?id=`.
 
 ---
 
@@ -297,9 +341,9 @@ Query raw input data (manually entered or imported values) with validation statu
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
 | `periodCount` | int | No | Number of recent periods (default: 4, used with `periodType`) |
 | `dataInterval` | int | No | Day=0, Week=1, Month=2 (default), Quarter=3, Year=4 |
-| `orgNodeIds` | string | No | Comma-separated org node IDs |
-| `disciplineNodeIds` | string | No | Comma-separated discipline IDs |
-| `frameworkNodeIds` | string | No | Comma-separated framework IDs |
+| `orgNodeIds` | string | No | Comma-separated org node IDs. Held inside the template's Limit to org nodes (inside its defaults when `showOrgNodeFilter` is false); omit to use the template defaults |
+| `disciplineNodeIds` | string | No | Comma-separated discipline IDs, held inside the template's Limit to disciplines the same way |
+| `frameworkNodeIds` | string | No | Comma-separated framework IDs, held inside the template's Limit to frameworks the same way |
 | `metricNames` | string | No | Include only metrics matching these names (comma-separated, case-insensitive substring match, e.g. `Revenue,Profit`) |
 | `excludeMetricNames` | string | No | Exclude metrics matching these names (comma-separated, case-insensitive substring match, e.g. `Change %`) |
 | `limit` | int | No | Maximum pivot rows to return (default: 500) |
@@ -394,6 +438,8 @@ Save input values (batch upsert). Uses business-key matching — zero IDs resolv
 
 **Comments:** add `"comments": "..."` to explain a value. Omitting it keeps the stored comment; `""` clears it.
 
+**Excluded org nodes (`OrgNodeExcluded`):** an input excluded at an org node cannot be captured there; the capture grid shows the cell as n/a. If any value targets such an (input, org node) pair, the save fails with 400 and nothing in the request is saved; the error reads `The input is excluded at this org node and cannot be captured there.` Clearing a value (an empty `value`) at an excluded org node is rejected too. The exclusion covers that org node only, not its children.
+
 **Returns:** Save result with success/failure status. Values saved in a range that needs a comment, without one, are listed by id: ask the user why each value is correct, then save it again with `comments`.
 
 ---
@@ -410,9 +456,9 @@ Save input values (batch upsert). Uses business-key matching — zero IDs resolv
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
 | `periodCount` | int | No | Number of recent periods (default: 4, used with `periodType`) |
 | `dataInterval` | int | No | Day=0, Week=1, Month=2 (default), Quarter=3, Year=4 |
-| `orgNodeIds` | string | No | Comma-separated org node IDs |
-| `disciplineNodeIds` | string | No | Comma-separated discipline IDs |
-| `frameworkNodeIds` | string | No | Comma-separated framework IDs |
+| `orgNodeIds` | string | No | Comma-separated org node IDs. Held inside the template's Limit to org nodes (inside its defaults when `showOrgNodeFilter` is false); omit to use the template defaults |
+| `disciplineNodeIds` | string | No | Comma-separated discipline IDs, held inside the template's Limit to disciplines the same way |
+| `frameworkNodeIds` | string | No | Comma-separated framework IDs, held inside the template's Limit to frameworks the same way |
 | `metricNames` | string | No | Include only metrics matching these names (comma-separated, case-insensitive substring match) |
 | `excludeMetricNames` | string | No | Exclude metrics matching these names (comma-separated, case-insensitive substring match, e.g. `Change %`) |
 | `includeMetricDetails` | bool | No | Include metric formula, aggregation, and discipline info section (default: false) |
@@ -640,7 +686,7 @@ Get detailed configuration of a specific report template.
 |-----------|------|----------|-------------|
 | `id` | string (ID) | Yes | Report template ID |
 
-**Returns:** Template configuration including filters (discipline, framework, metric type), org node assignments, and included metrics.
+**Returns:** Template configuration including filters (discipline, framework, metric type), the Limit to lists (`Org Nodes (Limit to)`, `Disciplines (Limit to)`, `Frameworks (Limit to)`) and the Default lists (`Default Org Nodes`, `Default Disciplines`, `Default Frameworks`), included metrics, plus `showOnlyRowsWithValues` and `showRowsWithValuesFilter` (viewers can switch between all rows and rows with values).
 
 ---
 
@@ -652,7 +698,7 @@ Get detailed configuration of a specific capture template.
 |-----------|------|----------|-------------|
 | `id` | string (ID) | Yes | Capture template ID |
 
-**Returns:** Template configuration including assigned metrics, org nodes, and data entry settings: `showPendingFilter` (the capture and validation grids offer a "Show pending only" toggle) and `showOnlyPending` (they open showing only values still to capture, or waiting for the viewing user's validation). `data_inputValues_list` does not apply the pending filter.
+**Returns:** Template configuration including assigned metrics, the Limit to and Default lists for org nodes, disciplines and frameworks (as `templates_reports_get`), and data entry settings: `showRowsWithValuesFilter` (viewers can switch between all rows and rows with values), `showPendingFilter` (the capture and validation grids offer a "Show pending only" toggle) and `showOnlyPending` (they open showing only values still to capture, or waiting for the viewing user's validation). `data_inputValues_list` does not apply the pending filter.
 
 ---
 
@@ -981,9 +1027,11 @@ Create a new report template from JSON config. Checks for name collisions — if
 | `name` | string | Template name |
 | `dataGrouping` | `{id: "id"}` | Data grouping to use |
 
-Optional: `expandCalculations` (bool) and `expandCalculationsMaxDepth` (1..20, default 10). Expansion is rejected when `showMetricsInColumns` is true.
+Optional: `expandCalculations` (bool) and `expandCalculationsMaxDepth` (1..20, default 10). Expansion is rejected when `showMetricsInColumns` is true. `showMetricsInColumns` needs at least one grouping level (`MetricsInColumnsRequiresGrouping`); each row is then one combination of the grouping values, and metrics that do not apply to a row are marked not applicable.
 
-**Returns:** Success message with the new template ID and name.
+`orgNodes`, `disciplines` and `frameworks` are the Limit to lists (no viewer reaches outside them); `defaultOrgNodes`, `defaultDisciplines` and `defaultFrameworks` are the starting picks and must sit inside the matching Limit to list (`DefaultOutsideLimit`). When rows are grouped without Org Node, a fixed site filter (`showOrgNodeFilter` false) must resolve to exactly one org node, the single default or else the single Limit to pick (`SingleOrgNodeRequired`); an open one may have at most one default org node (`SingleDefaultOrgNodeRequired`).
+
+**Returns:** Success message with the new template ID and name, followed by the template's lint warnings when there are any (see [Lint warnings](#report-template-lint-warnings)).
 
 ---
 
@@ -998,7 +1046,19 @@ Update an existing report template by ID. Same required fields as `templates_rep
 
 If the config contains an `id` field, it must match the `id` parameter or be the empty ID.
 
-**Returns:** Success message with the updated template ID and name.
+**Returns:** Success message with the updated template ID and name, followed by the template's lint warnings when there are any.
+
+<a id="report-template-lint-warnings"></a>
+**Lint warnings.** After a successful create or save, the tool calls `POST Templates/SpreadsheetReportTemplates/Lint` and appends each warning as `- [Code] field: message` under `Warnings (saved anyway; fix these so the rows show):`. Warnings never block the save. Codes:
+
+| Code | Meaning |
+|------|---------|
+| `RowTypesExcludeBoundNarratives` | Narratives are bound but Narrative is not in `includedDataTypes` (empty means every type). |
+| `RowTypesExcludeBoundCalculations` | Calculation metrics are bound but Calculation is not in `includedDataTypes`. |
+| `DataTypesAndMetricTypesDisjoint` | `metricTypes` is set and shares no metric type with `includedDataTypes`. |
+| `NarrativesOutsideIntervalOrScope` | Bound narratives no longer match `dataInterval`, the Limit to `orgNodes` or the Limit to `disciplines`. |
+
+If the warning check fails, the result says so and the save still stands. There is no capture template save tool.
 
 ---
 

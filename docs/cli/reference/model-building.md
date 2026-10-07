@@ -346,9 +346,9 @@ the unified `cap data change-requests` surface.
 }
 ```
 
-`bands` is optional. Omit the field (or send `null`) to leave stored bands unchanged on update. Send `[]` to clear them. A ladder list has an unbounded first band and later bands use exactly one of `lowerBoundValue` or `lowerBoundMetric`. An interval list may bound every row, including the first, with optional `upperBoundValue` / `upperBoundMetric`; list the in-spec interval first and leave outermost tails unbounded. Colours are registry tokens only. On inputs only, `"requireComment": true` on a band asks for a comment when a value is captured in it; calculations reject it. A `lowerBoundMetric`/`upperBoundMetric` must share the owner's unit and may be captured at any interval: the bound is the metric's computed value for the same org node and period.
+`bands` is optional. Omit the field (or send `null`) to leave stored bands unchanged on update. Send `[]` to clear them. A ladder list has an unbounded first band and later bands use exactly one of `lowerBoundValue` or `lowerBoundMetric`. An interval list may bound every row, including the first, with optional `upperBoundValue` / `upperBoundMetric`; list the in-spec interval first and leave outermost tails unbounded. Colours are registry tokens only. On an input, or an input's org-node override, `"requireComment": true` on a band asks for a comment when a value is captured in it; calculations and calculation overrides reject it. A `lowerBoundMetric`/`upperBoundMetric` must be another metric, may use any data interval, and may use another unit when a conversion exists in either direction: the bound is that metric's computed value for the same org node and period.
 
-On an input, a band may also set `"autoValidate": true` (default `false`). When the input requires validation and a saved value lands in that band, the value is stored `Approved` instead of `ValidationRequired`, and the change history records an Approve entry by System naming the band and its limits. If a limit cannot be resolved (for example a referenced metric has no value for that org node and period yet), the value needs validation as usual. The check runs only when a value is saved; editing bands later does not re-evaluate stored values. `autoValidate` is for input bands only: calculation saves and template band overrides reject it. In the Excel Bands column, a trailing ` auto` on an entry sets it.
+On an input, a band may also set `"autoValidate": true` (default `false`). When the input requires validation and a saved value lands in that band, the value is stored `Approved` instead of `ValidationRequired`, and the change history records an Approve entry by System naming the band and its limits. If a limit cannot be resolved (for example a referenced metric has no value for that org node and period yet), the value needs validation as usual. The check runs only when a value is saved; editing bands later does not re-evaluate stored values. `autoValidate` is for input bands and input overrides: calculation saves, calculation overrides and template band overrides reject it. In the Excel Bands column, a trailing ` auto` on an entry sets it.
 
 ```json
 "bands": [
@@ -356,6 +356,8 @@ On an input, a band may also set `"autoValidate": true` (default `false`). When 
   { "lowerBoundValue": 90, "backgroundColor": "success-subtle", "foregroundColor": "text-primary", "autoValidate": true }
 ]
 ```
+
+A `lowerBoundMetric` / `upperBoundMetric` must be another metric (not the metric itself) and may use any data interval. Its unit of measure may differ from the owner's when a unit conversion exists between the two units in either direction; every bound is converted to the metric's unit at evaluation and shown in the node's display unit. With no conversion, the save rejects the band. When a conversion uses a factor metric that has no value for a period, that point is left unpainted. The same rule applies to template rows, widget data items and org-node overrides.
 
 **Command:**
 ```bash
@@ -435,6 +437,47 @@ cat <<'EOF' | cap model inputs save --json
 { "id": "<existing-id>", ... rest of payload ... }
 EOF
 ```
+
+### Org-Node Overrides (Inputs and Calculations)
+
+`model input-overrides` and `model calculation-overrides` hold one row per metric and org node. A row overrides the unit of measure, precision, colour bands and, for inputs, `requireValidation` / `requireDataCapture` for that node and the nodes below it.
+
+```json
+{
+  "id": "<empty-id>",
+  "metric": { "id": "<metric-id>" },
+  "orgNode": { "id": "<org-node-id>" },
+  "unitOfMeasure": { "id": "<unit-id>" },
+  "precision": 1,
+  "requireValidation": true,
+  "requireDataCapture": false,
+  "bands": [
+    { "backgroundColor": "danger-subtle", "foregroundColor": "text-primary" },
+    { "lowerBoundValue": 90, "backgroundColor": "success-subtle", "foregroundColor": "text-primary" }
+  ]
+}
+```
+
+```bash
+cat <<'EOF' | cap model input-overrides save --json
+{ ... payload ... }
+EOF
+```
+
+Calculation overrides use the same shape without `requireValidation` / `requireDataCapture`.
+
+**`bands` on an override:**
+
+- `null` (or omitted) inherits. The node uses the bands of the nearest org node at or above it whose override sets bands; rows with `null` bands are skipped. With none, the metric's `bands` apply.
+- `[]` turns formatting off for the node and its descendants, until a descendant override sets a list.
+- A list replaces the inherited bands, with the same structure rules as metric bands.
+- Constant bounds (`lowerBoundValue` / `upperBoundValue`) are typed in the override's own `unitOfMeasure`. Values are always stored in the metric's unit, so each bound is converted to the metric unit and then shown in the node's display unit. An override with constant bounds whose unit has no conversion from the metric unit is rejected.
+- A spreadsheet-template row or widget data item that sets its own `bands` still wins for colour. Inheriting from the template ("use metric default") means the node's effective bands: the override's, else the metric's. Template rows do not change `requireComment` or `autoValidate`.
+- An input override may set `requireComment` and `autoValidate` on a band. They follow the list: `[]` turns both off, and `null` inherits. Constant bounds stay in the override unit and are converted to the metric unit before the check. Calculation overrides reject both flags.
+
+`get --json` returns `bands` (absent or `null` = inherit); the table output shows `Bands: Inherited`, `None (formatting off)` or the band count. `list` uses the same three labels in a Bands column (a discipline group row shows `-`). `inherited <metric-id> <org-node-id>` prints the unit, precision, flags (inputs) and bands that node would use before its own row. The override Excel workbook has a `Bands` column in the same compact text format as metric workbooks (`danger-subtle; 90:warning-subtle; [Target]:success/white`): blank inherits, `none` turns formatting off, and a workbook without the column leaves stored bands unchanged. An input override cell accepts ` auto` and ` !comment`; a calculation override rejects both.
+
+Capture, report and Table widget data responses carry `orgNodeBands` (metric id → org node id → bands) next to the metric-level `bands`, only for nodes whose effective bands differ; an empty list there means no formatting at that node.
 
 ---
 
@@ -792,6 +835,8 @@ Metric-referenced factor (on a `ZAR` unit — the "USD per ZAR" metric holds USD
 `destination` and `conversionFactorMetric` are resolved by `id` or, when the id is empty, by `name`. `cap masterdata units get --json` shows them flattened to names (`"destination": "USD"`, `"conversionFactorMetric": "USD per ZAR"`).
 
 > **Note:** Converted values are blank for periods where the factor metric has no value, and capture in the converted unit is rejected until that period's rate has been calculated.
+
+Removing a conversion that colour bands depend on is rejected, and the error names the dependent bands. A band depends on a conversion when it references a metric in a different unit, or when an org-node override in that unit has constant bounds.
 
 ---
 

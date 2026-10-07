@@ -48,7 +48,7 @@ MCP provides three integration mechanisms:
 
 | Mechanism | How It Works | User Experience |
 |-----------|-------------|-----------------|
-| **Tools** (41) | You call them directly — invisible to user | User sees results, not tool calls |
+| **Tools** (45) | You call them directly — invisible to user | User sees results, not tool calls |
 | **Resources** (7) | Auto-loaded context about the tenant | You already know the org structure, metrics, etc. |
 | **Prompts** (8) | User invokes via slash commands (e.g., `/target-gap-analysis`) | Guided multi-step workflows |
 
@@ -141,7 +141,7 @@ When the user's request matches a prompt, use it. Prompts encode best-practice w
 | Category | Tools | Purpose |
 |----------|-------|---------|
 | **Auth** (6) | `auth_login`, `auth_logout`, `auth_whoami`, `auth_tenants_list`, `auth_switchTenant`, `auth_languages` | Identity OIDC (PKCE) + API key + tenant switching |
-| **Model** (5) | `model_metrics_list`, `model_metrics_get`, `model_orgNodes_list`, `model_frameworks_list`, `model_disciplines_list` | Read model structure |
+| **Model** (9) | `model_metrics_list`, `model_metrics_get`, `model_orgNodes_list`, `model_frameworks_list`, `model_disciplines_list`, `model_inputOverrides_list`, `model_inputOverrides_get`, `model_calculationOverrides_list`, `model_calculationOverrides_get` | Read model structure and org-node overrides |
 | **Data** (5) | `data_timePeriods_list`, `data_availability`, `data_inputValues_list`, `data_inputValues_save`, `data_computedValues_list` | Query and save data |
 | **Reporting** (2) | `reporting_dashboards_getData`, `reporting_widgets_getData` | Dashboard/widget data as CSV |
 | **Templates** (6) | `templates_dashboards_list`, `templates_widgets_list`, `templates_reports_list`, `templates_captures_list`, `templates_reports_get`, `templates_captures_get` | Discover and inspect templates |
@@ -301,7 +301,7 @@ When analyzing retrieved data, use these techniques based on the user's question
 | Metric/entity creation | No | Use CLI |
 | User/role management | No | Use CLI |
 | Attribute types | No | Use CLI |
-| Metric overrides | No | Use CLI |
+| Metric overrides | List and get | `model_inputOverrides_list/get`, `model_calculationOverrides_list/get`. Save, copy, and Excel stay on the CLI |
 
 ---
 
@@ -327,7 +327,7 @@ When analyzing retrieved data, use these techniques based on the user's question
 
 - [CLI Skill](../cli/SKILL.md) — CLI interface (for Claude Code with Bash access)
 - [Recipes](./recipes/README.md) — Step-by-step workflow guides
-- [Tool Reference](./reference/tools.md) — All 41 tools with parameters and response formats
+- [Tool Reference](./reference/tools.md) — All 45 tools with parameters and response formats
 - [Glossary](./reference/glossary.md) — Detailed term definitions with MCP tools
 - [Data Model](./reference/data-model.md) — Enums, aggregation, query patterns
 - [Setup Guide](./setup.md) — Claude Desktop configuration (human-facing)

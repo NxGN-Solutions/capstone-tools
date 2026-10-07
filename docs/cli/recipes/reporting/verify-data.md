@@ -60,6 +60,12 @@ cap reporting widgets get-data <widget-template-id> \
   per-cell `bandBounds`; XY `chartSeries[].bulletFillColours` and the two
   `showConditionalFormatting` flag. A
   missing metric bound yields `bandBounds: null` and no colour for that point.
+- When an input or calculation override sets bands for an org node, Table JSON
+  (and `data input-values list` JSON, or `data` in `reporting computed-values`
+  JSON) also carries
+  `orgNodeBands` (metric id → org node id → bands) for the nodes whose bands
+  differ from the metric-level `bands`; `[]` there means no formatting at that
+  node.
 
 **Alternative — typed output for specific widget types:**
 

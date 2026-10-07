@@ -282,7 +282,7 @@ cap model inputs get <id> --json   # Shows aggregation settings
 
 **Capstone Term:** Capture Template (Spreadsheet Template)
 
-**Definition:** Defines the structure of a data entry form—which metrics, org nodes, and time periods appear for data capture. `showPendingFilter` offers a "Show pending only" toggle on its capture and validation grids, and `showOnlyPending` opens it switched on.
+**Definition:** Defines the structure of a data entry form—which metrics, org nodes, and time periods appear for data capture. `showRowsWithValuesFilter` lets viewers switch between all rows and rows with values (`showOnlyRowsWithValues` is the default; it always applies when the flag is false). `showPendingFilter` offers a "Show pending only" toggle on its capture and validation grids, and `showOnlyPending` opens it switched on.
 
 **CLI:**
 ```bash
@@ -312,7 +312,7 @@ cap notifications rules get <id> --json
 
 **Capstone Term:** Report Template (Spreadsheet Template)
 
-**Definition:** Defines the structure of a report—which metrics and computed values to display in a spreadsheet format.
+**Definition:** Defines the structure of a report—which metrics and computed values to display in a spreadsheet format. `showRowsWithValuesFilter` lets viewers switch between all rows and rows with values; when false, `showOnlyRowsWithValues` always applies.
 
 **CLI:**
 ```bash

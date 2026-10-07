@@ -134,12 +134,12 @@ map when checking whether a command family exists.
 | `masterdata org-nodes` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `masterdata units` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `meta lookups` | `get`, `list` |
-| `model calculation-overrides` | `copy`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `model calculation-overrides` | `copy`, `download-excel`, `get`, `inherited`, `list`, `save`, `upload-excel` |
 | `model calculations` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `list`, `save`, `upload-excel` |
 | `model disciplines` | `list` |
 | `model formula-validation` | `validate` |
 | `model frameworks` | `list` |
-| `model input-overrides` | `copy`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `model input-overrides` | `copy`, `download-excel`, `get`, `inherited`, `list`, `save`, `upload-excel` |
 | `model inputs` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `list`, `save`, `upload-excel` |
 | `model lookups` | `get`, `list` |
 | `model metric-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
@@ -159,11 +159,11 @@ map when checking whether a command family exists.
 | `root` | `concepts`, `schema`, `status`, `version` |
 | `security users` | `download-excel`, `upload-excel` |
 | `system tenants` | `bootstrap-local`, `create`, `delete`, `delete-status`, `delete-watch`, `fiscal-config update`, `get`, `list`, `sample`, `save`, `schema`, `teardown` |
-| `templates capture-templates` | `create`, `delete`, `download-excel`, `get`, `list`, `sample`, `save`, `schema`, `upload-excel` |
+| `templates capture-templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates dashboard-templates` | `audit`, `create`, `delete`, `download-excel`, `get`, `list`, `rename`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates lookups` | `get` |
 | `templates org-node-templates` | `create`, `delete`, `download-excel`, `get`, `list`, `sample`, `save`, `schema`, `upload-excel` |
-| `templates report-templates` | `create`, `delete`, `download-excel`, `get`, `list`, `sample`, `save`, `schema`, `upload-excel` |
+| `templates report-templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates widget-templates` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `list`, `sample`, `save`, `schema`, `upload-excel` |
 | `update` | `check` |
 | `workflows` | `list`, `show` |
@@ -425,6 +425,12 @@ cap reporting computed-values audit --metrics <metric-id>[,<metric-id>] --data-i
 | `--framework-nodes "<id>"` | Narrow the report template framework scope; framework-grouped reports render metrics under framework paths | No |
 | `--metric-types "<types>"` | `input`, `calculation` (comma-separated) | No |
 
+`--org-nodes`, `--discipline-nodes` and `--framework-nodes` are held inside the
+template's Limit to lists (`orgNodes`, `disciplines`, `frameworks`), or inside
+its default picks when the template fixes that filter. Picks outside are
+dropped, and no rows return when none remain. Omit them to use the template's default picks (`defaultOrgNodes`, else
+`orgNodes`, and so on). `data input-values list` follows the same rule.
+
 `computed-values audit --json` returns `ComputedValueAuditResult` with
 `passed`, `summary`, `modelState`, `findings`, and `missingMetricIds`. Findings
 include stale model state, no data rows, all-null values, and requested metrics
@@ -650,10 +656,16 @@ echo '{...}' | cap <domain> <entity> create [--json]
 - `templates widget-templates`, `templates dashboard-templates`, `templates org-node-templates`
 - `data input-values`, `data change-requests`
 
-For capture and report templates, `showMetricsInColumns: true` requires an
-Org Node-only grouping chain (`dataGrouping: { "id": 1, "name": "OrgNode" }`
-and empty `additionalDataGrouping`). The CLI validates this before calling
-the API. Optional Then By levels go in `additionalDataGrouping`.
+For capture and report templates, `showMetricsInColumns: true` requires at
+least one grouping level (`dataGrouping` other than None; error code
+`MetricsInColumnsRequiresGrouping`, "Metrics as columns needs at least one
+grouping."). The CLI validates this before calling the API. Each grid row is
+then one combination of the chain's values (for example site and discipline),
+and a metric that does not apply to the row (outside its discipline or
+framework node, or excluded at its site) comes back with
+`isNotApplicable: true` on its cell. Without Org Node in the chain, every row
+uses the one selected site. Table widget templates still need an Org Node-only
+chain for metrics as columns. Optional Then By levels go in `additionalDataGrouping`.
 `allowMultiOrgNodeSelect` is coerced false when the chain lacks Org Node.
 `metricPropertyColumns` is the list of metric metadata columns next to the
 metric name (enum `{ "id", "name" }` values). Spreadsheet templates default
@@ -664,6 +676,60 @@ is always metrics-as-rows.
 Report templates may set `expandCalculations: true` with
 `expandCalculationsMaxDepth` between 1 and 20 (default 10). Expansion is
 rejected when `showMetricsInColumns` is true.
+Each of the site, discipline and framework filters has two lists.
+`orgNodes`, `disciplines` and `frameworks` (plus the matching
+`*AttributeFilters`) are the **Limit to** lists: no viewer reaches data
+outside them, whether or not the filter is open. Empty means everything the
+viewer can access. `defaultOrgNodes`, `defaultDisciplines` and
+`defaultFrameworks` are the **Default** picks the grid starts on. They must
+sit inside the matching Limit to list when it has picks (error code
+`DefaultOutsideLimit`). An empty Default starts on the Limit to picks.
+A save replaces every list, so a JSON file without the `default*` keys (for
+example one exported before these fields existed) clears the template's stored
+defaults: export the template first and edit that file to keep them.
+`show*Filter: false` fixes the filter on the Default picks (else the Limit to
+picks). `show*Filter: true` lets the viewer pick anything inside the Limit to
+list; picks outside it are dropped.
+
+When rows are grouped without Org Node (for example `dataGrouping` Discipline),
+a fixed site filter (`showOrgNodeFilter` false) must resolve to exactly one
+org node: one `defaultOrgNodes` pick, or one `orgNodes` pick when there is no
+default (error code `SingleOrgNodeRequired`). An open site filter may have at
+most one `defaultOrgNodes` pick (error code `SingleDefaultOrgNodeRequired`).
+Flat templates (`dataGrouping` None) are exempt.
+
+#### Lint a capture or report template
+
+```bash
+cap templates capture-templates lint --file template.json [--json]
+cap templates report-templates lint --file template.json [--json]
+```
+
+`lint` checks a template JSON file (the same payload as `create` and `save`)
+without saving it. **Errors** are exactly what `save` would reject; **warnings**
+never block a save. Each issue has a stable `code`, a `message`, the top-level
+`field` it belongs to (camelCase, empty when not tied to one field) and an
+editor `stage` (`display`, `structure`, `content` or `columns`). The exit code
+is `2` when there is at least one error and `0` otherwise. `--json` prints the
+API result unchanged: `{ "errors": [...], "warnings": [...] }`.
+
+| Warning code | Template | Meaning |
+|---|---|---|
+| `RowTypesExcludeBoundNarratives` | capture, report | Narratives are bound but Narrative is not in `includedDataTypes` (empty means every type). |
+| `RowTypesExcludeBoundCalculations` | report | Calculation metrics are bound but Calculation is not in `includedDataTypes`. |
+| `DataTypesAndMetricTypesDisjoint` | report | `metricTypes` is set and shares no metric type with `includedDataTypes`. |
+| `NarrativesOutsideIntervalOrScope` | capture, report | Bound narratives no longer match `dataInterval`, the Limit to `orgNodes` or the Limit to `disciplines`. |
+
+Other error codes include `SingleOrgNodeRequired`, `SingleDefaultOrgNodeRequired`,
+`DefaultOutsideLimit`, `MetricsInColumnsRequiresGrouping`,
+`ExpandCalculationsRequiresRows`, `DuplicateNarratives` and `UnknownNarratives`
+(a bound narrative that does not exist in the tenant).
+
+After a successful `create` or `save` of a capture or report template, the CLI
+runs `lint` and prints each warning to stderr as
+`Warning: [Code] field: message`. With `--json`, the result is one document:
+`{ "success": true, "id": "...", "warnings": [...] }`. If the warning check
+itself fails, the save still succeeds and the CLI says it could not check.
 
 ### Update Existing Item
 
@@ -1149,7 +1215,7 @@ cap model inputs delete <id>
   - widget and spreadsheet bands bounded by it
   - Table widget and spreadsheet capture template narrative selections
 - Text tokens (`[metric-guid]`, `{narrative-guid}`), pie centre metrics and value selections keep the id and render as "Unavailable". The widget template editor warns about them without blocking save.
-- A metric is still blocked when a calculation formula, another metric's band, or a unit conversion factor uses it.
+- A metric is still blocked when a calculation formula, another metric's band, an org-node override's band (`Band override on: <metric> @ <org node path>`), or a unit conversion factor uses it.
 
 ### Delete Tenant
 
@@ -1233,6 +1299,8 @@ cap data input-values save --file values.json [--json]
 ```
 
 Each item may carry `"comments"`. A value saved in a band marked `requireComment` without a comment is still saved; the command prints a `Comment required: ...` warning for it (also in the JSON `warnings`). Re-save the value with `"comments"` to explain it. Omitting `comments` keeps the stored comment; `""` clears it.
+
+An input excluded at an org node cannot be captured there (rule `OrgNodeExcluded`). If any item targets such an (input, org node) pair, the save fails with 400 and nothing in the request is saved; the error reads `InputValue for metric <id> at <start>: The input is excluded at this org node and cannot be captured there.` This applies to clearing too: an item with an empty `value` at an excluded org node is rejected. The exclusion names that org node only, so its child org nodes still capture. `data input-values upload-excel` reports a row with a number at an excluded org node as a row error (`'<input>' is excluded at '<org node>' and cannot be captured there.`), and an upload with any row error saves nothing. Blank cells at an excluded org node are ignored.
 
 ### Validate Data
 
