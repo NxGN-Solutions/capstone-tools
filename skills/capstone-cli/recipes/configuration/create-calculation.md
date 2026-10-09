@@ -104,19 +104,19 @@ cap masterdata units list --json
 | Pattern | Formula | Use Case |
 |---------|---------|----------|
 | Simple ratio | `[Numerator] / [Denominator]` | Intensity metrics |
-| Safe division | `IF [Denominator] <> 0 THEN [Numerator] / [Denominator] ELSE 0` | Avoid divide-by-zero |
-| Percentage | `IF [Total] <> 0 THEN [Part] / [Total] * 100 ELSE 0` | Share calculations |
-| Conversion | `[Source] * 0.001` | Unit conversion (e.g., kWh to MWh) |
+| Safe division | `DIV([Numerator], [Denominator], null)` | Ratio that stays blank when there is no data |
+| Percentage | `DIV([Part] * 100, [Total], null)` | Share calculations |
+| Conversion | `[Source] * 0.001` | A converted metric other formulas need. For display in another unit, configure a unit conversion instead |
 | Emission factor | `[Consumption] * 2.68` | CO2e from fuel consumption |
 
 > **Tip:** Use IDs in formulas for CLI usage — they're unambiguous, rename-safe, and what the API stores internally.
 
 **Present to user:**
 ```
-Formula: IF [Headcount] <> 0 THEN [Total Electricity] / [Headcount] ELSE 0
+Formula: DIV([Total Electricity], [Headcount], null)
 
 Using IDs:
-IF [<id>] <> 0 THEN [<id>] / [<id>] ELSE 0
+DIV([<id>], [<id>], null)
 ```
 
 ---
@@ -142,9 +142,16 @@ When should this formula compute?
 ```
 
 **Decision guidance:**
-- **Ratios and intensities** → After Aggregations (you want total/total, not average of ratios)
-- **Unit conversions** → Before Aggregations (convert at each node, then roll up)
+- **Ratios, intensities, percentages, target achievement** → After Aggregations (you want total/total, not average of ratios)
+- **Period-over-period change** (`[X]|0| - [X]|-1|`) → After Aggregations, so each interval compares with its own previous period
+- **Unit conversions with a factor** → Before Aggregations (convert at each node, then roll up)
 - **Emission factors** → Before Aggregations (apply factor per site, then sum)
+- **Counts of readings against a limit** → Before Aggregations, Sum (see the Modelling Rules in the [Model Building Reference](../../reference/model-building.md#modelling-rules))
+
+**Set the data interval with the phase:**
+- **Before Aggregations:** the engine evaluates the formula only for periods of the calculation's data interval, then collapses or expands the result with its time aggregation method. Set the data interval to the cadence of the inputs the formula reads. A Month calculation over quarterly readings counts each reading three times at quarter and year.
+- **After Aggregations:** the formula is re-evaluated at every enabled interval, so the data interval is only the default display interval.
+- Set the interval right at creation. If you change it later, verify the values at every interval again (Step 9).
 
 ---
 
@@ -176,7 +183,7 @@ Name:            Energy Intensity
 Description:     Electricity consumption per person
 Discipline:      Environmental > Energy
 Unit:            kWh/person
-Formula:         IF [Headcount] <> 0 THEN [Total Electricity] / [Headcount] ELSE 0
+Formula:         DIV([Total Electricity], [Headcount], null)
 Calc Phase:      After Aggregations
 Org Aggregation: None (recomputed at each level)
 Time Aggregation: None
@@ -206,7 +213,7 @@ cat <<'EOF' | cap model calculations create --json
   "calculationPhase": { "id": 1, "name": "After Aggregations" },
   "orgStructureAggregationMethod": { "id": 3, "name": "None" },
   "timePeriodAggregationMethod": { "id": 0, "name": "None" },
-  "formula": "IF [<id>] <> 0 THEN [<id>] / [<id>] ELSE 0",
+  "formula": "DIV([<id>], [<id>], null)",
   "attributeValues": []
 }
 EOF
@@ -234,7 +241,7 @@ EOF
 cap model calculations get <new-id> --json
 
 # Validate the formula syntax
-cap model formula-validation validate --formula "IF [<id>] <> 0 THEN [<id>] / [<id>] ELSE 0" --json
+cap model formula-validation validate --formula "DIV([<id>], [<id>], null)" --json
 ```
 
 **Present confirmation:**
@@ -243,13 +250,19 @@ Calculation created successfully!
 
 ID:             <id>
 Name:           Energy Intensity
-Formula:        IF [Headcount] <> 0 THEN [Total Electricity] / [Headcount] ELSE 0
+Formula:        DIV([Total Electricity], [Headcount], null)
 Calc Phase:     After Aggregations
 
 Next steps:
 - Values will compute automatically when referenced inputs have data
 - View results: cap reporting computed-values list --template <report-template-id> --data-interval month --periods "Jan 2026" --json
 ```
+
+**Verify the numbers, not just the save:**
+1. Wait for settlement: `cap data recalculation wait <model-version> --json`.
+2. Pick one org node and one period with data. Read the calculation and its inputs at month, quarter and year with `cap reporting computed-values query`.
+3. Recompute the value by hand from the inputs. The month, quarter and year values must follow the time aggregation rules in the [Model Building Reference](../../reference/model-building.md#cross-interval-time-behavior).
+4. If a number is wrong, check the interval, phase, aggregation methods and formula against the engine evaluation order before suspecting the engine.
 
 ---
 
@@ -326,7 +339,7 @@ EOF
 
 # 2. Create dependent calculation using the new ID
 cat <<'EOF' | cap model calculations create --json
-{ "name": "Energy Intensity", "formula": "IF [Headcount] <> 0 THEN [calc-energy-id] / [Headcount] ELSE 0", ... }
+{ "name": "Energy Intensity", "formula": "DIV([calc-energy-id], [Headcount], null)", ... }
 EOF
 ```
 

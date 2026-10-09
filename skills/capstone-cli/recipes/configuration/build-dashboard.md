@@ -758,8 +758,7 @@ These shape the dashboard *shell* — the frame around the widgets. They are add
   "style": {
     "backgroundColor": "surface-muted",
     "foregroundColor": "text-primary",
-    "headerBackgroundColor": "surface",
-    "accentColor": "primary"
+    "headerBackgroundColor": "surface"
   },
   "tabBorderRadius": { "value": 4, "unit": { "id": 0, "name": "Px" } },
   "hoverBackgroundColor": "surface-muted",
@@ -774,6 +773,7 @@ Defaults already match the Capstone corporate theme, so style only with intent:
 - **Start from semantic color tokens** (`surface`, `surface-muted`, `text-primary`, `border`), not raw hex — they stay on-theme and accessible. Reserve hex for the deliberate brand/CI slots described in the dashboard design system.
 - **Lean on layout before style.** `nodeLayout.layoutMode: Grid` + `responsive.columns` gives clean alignment; `spacing.gap` tokens (XS–XL) keep rhythm consistent. Reach for colors/borders only after the layout reads well.
 - **Establish hierarchy with the dashboard `header`** (eyebrow → title → subtitle, plus an optional badge) instead of styling many section titles differently.
+- **No accents unless asked.** Leave `accentColor`, `accentSide` and `accentWidth` unset on the header, tab strip, sections, cards, text blocks and other widgets unless the user asks for accents on that kind of element. Then apply them only there, with one colour, side and width throughout.
 - **Keep contrast safe.** Any foreground/background pair you set should stay legible; the corporate accent is `primary #6172f3` — never the legacy `#787cf4`.
 - **Dashboard placement is layout-only.** `placementLayout` (width behaviour, alignment, min-height, spacing, responsive) positions a widget; the widget's frame *and* its chart/card/table internals are both owned by the widget template's own `styleConfiguration` and are not restyled from the dashboard.
 - **Use callouts sparingly** for genuine notes/warnings on a section or narrative — not as decoration.

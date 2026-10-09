@@ -4,10 +4,14 @@
 > needs KPI cards, period-comparison cards, alert/exceedance cards, tinted
 > metric cards, left-accent cards, or full-bleed showcase cards.
 >
-> **Visual standard:** the normative card variants (`KPI-Accent`, `KPI-Quiet`,
-> `KPI-Alert`, `KPI-Comparison`) and the type ramp live in the
+> **Visual standard:** the normative card variants (`KPI`, `KPI-Comparison`,
+> and the on-request `KPI-Accent` and `KPI-Alert`) and the type ramp live in the
 > [Dashboard Design System](../../reference/dashboard-design-system.md) — start
 > there; this recipe covers the mechanics and additional showcase styles.
+>
+> **Accents are opt-in.** Leave `accentColor`, `accentSide` and `accentWidth`
+> unset unless the user asks for accents on cards. The accented examples below
+> (left-accent, accent frame) are for that case only.
 
 ## When to Use
 
@@ -199,9 +203,6 @@ visual treatment.
     "borderColor": "warning",
     "borderWidth": 1,
     "borderRadius": 8,
-    "accentColor": "warning",
-    "accentSide": "Bottom",
-    "accentWidth": 6,
     "padding": 18,
     "gap": 10,
     "fontFamily": "theme"
@@ -247,9 +248,6 @@ or other cards that should stand apart without looking like an alert.
     "borderColor": "info",
     "borderWidth": 1,
     "borderRadius": 8,
-    "accentColor": "info",
-    "accentSide": "Bottom",
-    "accentWidth": 5,
     "padding": 18,
     "gap": 10,
     "fontFamily": "theme"
@@ -286,8 +284,9 @@ or other cards that should stand apart without looking like an alert.
 
 #### Left Accent Metric Card
 
-Use for pollutant or metric families where color identifies the metric type,
-such as blue NO2 and purple SO2 cards.
+Only when the user asks for accented cards. Use for pollutant or metric
+families where color identifies the metric type, such as blue NO2 and purple
+SO2 cards.
 
 ```json
 {
@@ -352,8 +351,8 @@ fragment.
 #### Full-Bleed Showcase Card
 
 Use when the card styling itself must control the full interior of the widget.
-This is the right pattern for accent frames, zero-padding cards, or dark
-showcase panels.
+This is the right pattern for zero-padding cards, dark showcase panels, or an
+accent frame when the user has asked for one.
 
 This showcase is intentionally outside the standard design-system palette and
 uses raw hex values to demonstrate custom-brand styling. For normal dashboard

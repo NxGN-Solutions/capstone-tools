@@ -278,6 +278,24 @@ files reference entities by name, so they restore into any tenant:
 cap workflows show backup-restore --json
 ```
 
+Before creating or changing inputs and calculations, read **Modelling Rules**
+and **Engine Evaluation Order** in `reference/model-building.md`. They cover:
+- the calculation data interval and phase;
+- input interval changes, which delete captured values;
+- fixed values (Average, Roll Down, at the interval the value changes; Year by default);
+- org nodes as reporting units, with measurement points as metrics and never org nodes;
+- `DIV(n, d, null)`;
+- counts and compliance;
+- targets, forecasts and unit conversions;
+- verifying at month, quarter and year.
+
+An Excel upload that changes an input's Data Interval deletes that input's values.
+
+When styling dashboards and widgets, follow `reference/dashboard-design-system.md`.
+Never add accents (`accentColor`, `accentSide`, `accentWidth`) to the header, tabs,
+sections, cards, text blocks or other widgets unless the user asks for accents on
+that kind of element.
+
 ## JSON Output — Critical Details
 
 **`--json` on `get` commands** returns the entity wrapped in a domain key:

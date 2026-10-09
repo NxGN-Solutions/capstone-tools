@@ -71,18 +71,19 @@ cap data input-values download-excel \
 ```
 Template downloaded: template.xlsx
 
-Structure:
-┌──────────────┬──────────────┬─────────────────────┬───────────┐
-│ Period       │ Org Node     │ Electricity (kWh)   │ Gas (m³)  │
-├──────────────┼──────────────┼─────────────────────┼───────────┤
-│ Jan 2025     │ Site A       │                     │           │
-│ Jan 2025     │ Site B       │                     │           │
-│ Feb 2025     │ Site A       │                     │           │
-└──────────────┴──────────────┴─────────────────────┴───────────┘
+Structure (one row per org node and input, one column per period):
+┌───────────────┬───────────┬─────────────┬─────┬───────────────┬──────────┬────────────────┐
+│ Org Node Path │ Cell Type │ Input       │ ... │ Data Interval │ Jan 2025 │ Feb 2025       │
+├───────────────┼───────────┼─────────────┼─────┼───────────────┼──────────┼────────────────┤
+│ Group->Site A │ Metric    │ Electricity │     │ Month         │ 1500     │ 1620           │
+│ Group->Site A │ Comment   │ Electricity │     │ Month         │          │ Meter replaced │
+│ Group->Site B │ Metric    │ Electricity │     │ Month         │ 900      │                │
+└───────────────┴───────────┴─────────────┴─────┴───────────────┴──────────┴────────────────┘
 
-• Period column: Use exact period names from 'cap data time-periods list'
-• Org Node column: Use exact org node names from 'cap masterdata org-nodes list'
-• Metric columns: Enter numeric values only
+• Fixed columns: Org Node Path, Cell Type, Input, Friendly Name, Unit of Measure, Data Interval
+• Period columns: one per period in the download range
+• Metric rows: numeric values only
+• Comment rows: the comment for each period of the Metric row above
 ```
 
 ---
@@ -112,8 +113,16 @@ Structure:
    ✅ 1500, 1500.5, 0
    ❌ "1,500", "N/A", blank (leave empty if no data)
 
-4. ROWS - One row per data point
-   Each row = one metric value at one location for one period
+4. ROWS - One row per input at one org node
+   Each period column holds that input's value for the period
+
+5. COMMENTS - A "Comment" row under the Metric row
+   Same Org Node Path, Input and Data Interval; Cell Type "Comment"
+   A comment is saved with the value in the same column, so keep the
+   value in the workbook. A comment without a value is ignored with a
+   warning. A blank comment cell keeps the stored comment; Excel cannot
+   clear a comment.
+   Use this to explain values in a band that requires a comment.
 ```
 
 ---

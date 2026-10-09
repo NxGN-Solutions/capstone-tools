@@ -169,11 +169,27 @@ cap reporting widgets table <widget-template-id> \
 
 ---
 
+## Before You Change the Model
+
+Read the Modelling Rules and Engine Evaluation Order in [reference/model-building.md](./reference/model-building.md#modelling-rules) before you create or change inputs and calculations. The essentials:
+
+- The engine aggregates inputs over time, then evaluates Before Aggregations calculations at each org node for their own data interval only, then rolls everything up and evaluates After Aggregations calculations at every node and interval. A formula never mixes intervals.
+- Set a Before Aggregations calculation's data interval to the cadence of its inputs. Ratios, percentages, target achievement and period-over-period changes are After Aggregations.
+- Changing an input's data interval deletes all its captured values.
+- Org nodes are reporting units: the whole model is evaluated at each one. Measurement points (stations, boreholes, meters) are metrics on their org node, never org nodes.
+- Fixed values (targets, limits, factors, rates) are inputs with Average time aggregation and Roll Down, captured at the root. Their data interval is the interval at which the value changes, Year by default.
+- Use `DIV(n, d, null)` so a period without data stays blank instead of zero.
+- After a change, wait for settlement and check one value at month, quarter and year against a manual recount. Wrong numbers almost always come from the model, not the engine.
+
+---
+
 ## Recipe-First Approach
 
 For standard tasks, use recipes. They encode best practices and reduce errors.
 
 **See:** [recipes/README.md](./recipes/README.md) for the recipe index.
+
+**Dashboard styling:** follow the [Dashboard Design System](./reference/dashboard-design-system.md). Never add accents (`accentColor`, `accentSide`, `accentWidth`) to the header, tabs, sections, cards, text blocks or other widgets unless the user asks for accents on that kind of element.
 
 ### When to Use Recipes vs Commands
 
@@ -184,7 +200,7 @@ For standard tasks, use recipes. They encode best practices and reduce errors.
 | "What's trending with..." | Recipe: find-trends |
 | "Create a metric for..." | Recipe: create-metric |
 | "Enter this month's data..." | Recipe: enter-data |
-| "Style/customize an Info Card..." | Recipe: configure-info-card-styles |
+| "Style/customize an Info Card..." | Recipe: configure-info-card-styles (no accents unless the user asks for them) |
 | "List all metrics" | Direct: `cap model metrics list` |
 | "Show org structure" | Direct: `cap masterdata org-nodes list` |
 | "What periods are available?" | Direct: `cap data time-periods list --data-interval month` |

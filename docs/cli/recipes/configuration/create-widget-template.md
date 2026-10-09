@@ -6,7 +6,8 @@
 > variant from the
 > [Dashboard Design System](../../reference/dashboard-design-system.md) (type
 > ramp, chrome, brand slots, number-format matrix) rather than composing styles
-> from scratch.
+> from scratch. Leave accent fields (`accentColor`, `accentSide`,
+> `accentWidth`) unset on every widget type unless the user asks for accents.
 >
 > **MCP alternative:** Widget templates can also be created via MCP using the `templates_widgets_create` tool. See [MCP Tool Reference — Templates CRUD](../../../mcp/reference/tools.md#templates--crud-10-tools).
 

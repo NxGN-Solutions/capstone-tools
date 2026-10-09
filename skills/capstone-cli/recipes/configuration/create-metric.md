@@ -166,6 +166,10 @@ How should values aggregate?
 - "How often will this data be captured?"
 - Default to Monthly if user is unsure
 
+**Fixed values** (targets, limits, conversion and emission factors, exchange rates, assumptions) use Average time aggregation and Roll Down org aggregation, captured at the root org node. For the data interval, use the interval at which the value changes, and default to Year because it means the fewest values to capture. A monthly exchange rate uses Month. See the Modelling Rules in the [Model Building Reference](../../reference/model-building.md#modelling-rules).
+
+> **Warning:** Changing an input's data interval later deletes all of its captured values, including locked ones. Choose the interval carefully. Before any interval change, export the values with `cap data input-values download-excel` so you can reload them.
+
 ---
 
 ### Step 6: Confirm Before Creating

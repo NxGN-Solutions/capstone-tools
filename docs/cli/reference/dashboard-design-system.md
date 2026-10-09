@@ -22,6 +22,14 @@ Mechanics (payload shapes, save commands, roundtrips) live in
 and [build-dashboard.md](../recipes/configuration/build-dashboard.md). This
 document defines *what values to put in those payloads*.
 
+> **Accents are opt-in.** Never add an accent (`accentColor`, `accentSide`,
+> `accentWidth`, or an accent underline) to a section, card, text block,
+> widget, header or tab unless the user asks for accents on that kind of
+> element. Leave the accent fields unset by default: the branded header,
+> borders and spacing carry the hierarchy. When the user asks for accents,
+> apply them only to the elements they named, and use the same colour, side
+> and width on all of them.
+
 ---
 
 ## Layer 0 — Brand tokens
@@ -47,7 +55,7 @@ corporate identity and derive the brand hue from it:
 | Role | Purpose | Derivation from the brand hue | Redux example (green CI) |
 |------|---------|-------------------------------|--------------------------|
 | `brand-deep` | Header panel background | Very dark shade of the hue (~10–15% lightness). Must carry white text at ≥ 7:1 contrast | `#0A2A1E` |
-| `brand-accent` | Card accent bars, chart series, inverted tooltips | The saturated mid-tone of the hue (~30–40% lightness). Must pass 4.5:1 against white | `#067647` |
+| `brand-accent` | Chart series, inverted tooltips, and accent bars when the user asks for them | The saturated mid-tone of the hue (~30–40% lightness). Must pass 4.5:1 against white | `#067647` |
 | `brand-deep-border` | Border on the header panel | Slightly lighter than `brand-deep` (subtle edge, not a stripe) | `#0F3A2C` |
 | `brand-tint` | Secondary text on `brand-deep` | Very light tint of the hue (~85–92% lightness) | `#D7E8DD` |
 
@@ -58,7 +66,7 @@ Check with any WCAG contrast formula before committing.
 **Where brand hexes are allowed** — these four slots and nowhere else:
 
 1. Dashboard header panel (`header.style`)
-2. Info Card accent bars (`panel.accentColor`)
+2. Accent bars (`panel.accentColor`), only when the user has asked for accents
 3. XY chart series color + inverted tooltip background
 4. Metric bands use registry tokens only (`danger-subtle`, `warning-subtle`,
    `success-subtle`, or other canonical tokens) — see Layer 5.4
@@ -182,12 +190,12 @@ four text slots; they establish hierarchy so section titles don't have to.
     "foregroundColor": "⟨brand-tint⟩",
     "titleColor": "#FFFFFF",
     "borderColor": "⟨brand-deep-border⟩",
-    "borderRadius": { "value": 8, "unit": { "id": 0, "name": "Px" } },
-    "accentColor": "⟨brand-accent⟩",
-    "accentWidth": { "value": 4, "unit": { "id": 0, "name": "Px" } }
+    "borderRadius": { "value": 8, "unit": { "id": 0, "name": "Px" } }
   }
 }
 ```
+
+The header has no accent unless the user asks for one.
 
 ### Filter region — quiet, never boxed
 
@@ -353,14 +361,14 @@ titles, and the marked brand slots.
 
 ### 5.1 Info Card
 
-**Variant `KPI-Accent`** — the standard snapshot-row card (Redux reference):
+**Variant `KPI`** — the standard snapshot-row card. It has no accent:
 
 ```json
 "styleConfiguration": {
   "panel": {
-    "backgroundColor": "surface", "accentColor": "⟨brand-accent⟩",
+    "backgroundColor": "surface",
     "fontFamily": "theme", "borderColor": "border", "borderWidth": 1,
-    "borderRadius": 8, "accentSide": "Left", "accentWidth": 4,
+    "borderRadius": 8,
     "padding": 20, "gap": 8
   },
   "title":    { "foregroundColor": "text-secondary", "fontFamily": "theme", "fontWeight": "Semibold", "fontSize": 14 },
@@ -370,13 +378,13 @@ titles, and the marked brand slots.
 }
 ```
 
-Other variants (delta from `KPI-Accent`):
+Other variants (delta from `KPI`):
 
 | Variant | Delta | When |
 |---------|-------|------|
-| `KPI-Quiet` | Remove `accentColor`/`accentSide`/`accentWidth` | Secondary metrics that shouldn't compete with the headline row |
-| `KPI-Alert` | `accentColor: "danger"` | A metric currently breaching its threshold — use sparingly, alert accents are earned by data, not chosen at design time |
 | `KPI-Comparison` | Two data items (actual + comparator role-metric, e.g. Budget/Target/Forecast) | When the decision needs "vs what?" — the comparator is a metric, never a hardcoded number |
+| `KPI-Accent` | Add `"accentColor": "⟨brand-accent⟩", "accentSide": "Left", "accentWidth": 4` to `panel` | Only when the user asks for accented cards |
+| `KPI-Alert` | Add `"accentColor": "danger"` with `accentSide`/`accentWidth` | Only when the user asks for alert accents; show a breach through metric bands otherwise |
 
 Card content contract: `title` = plain-language metric name, `footnote` = one
 sentence explaining derivation ("Net billed less payments received."). Trend

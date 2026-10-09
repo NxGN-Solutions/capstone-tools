@@ -45,7 +45,7 @@ For widget templates, set this at both the widget default and data-item override
 
 | ID | Name | Description |
 |----|------|-------------|
-| 0 | Before Aggregations | Compute at leaf nodes, then aggregate. Use for conversions, site-level rates |
+| 0 | Before Aggregations | Compute at each node for the calculation's own data interval, then aggregate. Use for conversions, emissions from activity data, per-reading counts |
 | 1 | After Aggregations | Compute after rollup. Use for ratios of aggregated totals, company-wide rates |
 
 ### Metric Types
@@ -155,8 +155,8 @@ Do not author `includedDataTypes` or `orgNodeTemplateId` for new Table widgets. 
 | **Throughput/Volume** | Sum (0) | Sum (1) | Units add up across locations and time |
 | **Cost/Revenue ($)** | Sum (0) | Sum (1) | Financial totals are additive |
 | **OEE/Rates (%)** | Average (1) | Average (2) | Rates should average, not sum |
-| **Assumptions** | Roll Down (5) | Average (2) | Set once, cascades to children |
-| **Targets** | Roll Down (5) | Average (2) | Set at parent, inherited by children |
+| **Assumptions** | Roll Down (5) | Average (2) | Interval at which the value changes (default Year), set once at the root, cascades to children |
+| **Targets** | Roll Down (5) | Average (2) | Interval at which the target changes (default Year), set at the root, inherited by children |
 | **Per-unit ratios** | None (3) | None (0) | Recomputed at each level from aggregated inputs |
 | **Headcount/Balance** | Last Value (3*) | Last Value (3) | Point-in-time snapshots |
 
@@ -198,16 +198,119 @@ once per year uses `dataInterval = Year` and
 `timePeriodAggregationMethod = Average`, making the same hourly rate available
 to monthly calculations without duplicate input capture.
 
-### Calculation Phases
+### Engine Evaluation Order
 
-Calculation phase controls when a calculation metric is evaluated relative to rollup:
+The calculation engine runs two passes over every interval enabled on the tenant:
+
+**Pass 1: Before Aggregations**
+
+1. Input values are brought to the interval being processed with each input's time period aggregation method: finer periods collapse, coarser periods expand (see the table above).
+2. Roll Down inputs are copied down the org tree. No other input is rolled up yet: each org node sees only its own captured values.
+3. Each Before Aggregations calculation is evaluated at every org node, but **only for periods of its own data interval**. A Month calculation is evaluated for months only.
+
+**Pass 2: After Aggregations**
+
+4. Inputs and Before Aggregations results are brought to each interval with their own time period aggregation method, and rolled up the org tree with their own org structure aggregation method. A Before Aggregations result is collapsed or expanded from its data interval.
+5. Each After Aggregations calculation is evaluated at every org node, for every period of every enabled interval.
+
+What this means for formulas:
+
+- A formula is evaluated at one interval at a time. Every reference in it, and every period offset such as `|-1|`, resolves at that same interval. A formula cannot compare a quarter value with a month value. At a month evaluation a quarterly input has already been expanded to months: repeated for Average, divided by three for Sum.
+- **A Before Aggregations calculation's data interval decides where it is evaluated.** Set it to the cadence of the values the formula reads. A Month calculation over quarterly readings (Average time aggregation) sees each reading repeated in all three months, so a count or Sum over it is tripled at quarter and year. Readings with Sum time aggregation are divided by three instead.
+- **An After Aggregations calculation is evaluated at every interval**, so its data interval is only the default display interval.
+- Before Aggregations calculations can reference inputs and other Before Aggregations calculations **with the same data interval**. Other calculation references are not rejected on save, but they evaluate as blank.
+- **Below its data interval, a Before Aggregations result is only an expansion.** A quarterly count (Sum) shows a third of the quarter in each month; a yearly Last Value result shows in the last month and quarter of the year only, and zero before that. Keep a Before Aggregations calculation at a coarser interval only when its cadence requires it (for example counts over quarterly readings), and put the interval in its name (`… | Quarter | Total Number`) so widget authors know it isn't interval-agnostic.
+- **Rolling windows: use `|MONTHS(-12)+1:0|`, not `|-11:0|`.** A numeric offset counts periods of the evaluated interval, so `|-11:0|` is 12 quarters at quarter. `MONTHS(n)` converts months to periods but rounds down to whole periods (`MONTHS(-11)` is 4 quarters back, giving 15 months). `MONTHS(-12)+1` starts exactly 12 months back at month (`-11`), quarter (`-3`) and year (`0`), so an After Aggregations rolling 12-month rate such as `DIV(SUM([TRI]|MONTHS(-12)+1:0|) * [Basis], SUM([Hours]|MONTHS(-12)+1:0|), null)` is right at every interval.
+- **Sums or ratios of fixed values (provisions, balances, rates) belong After Aggregations.** Average inputs captured yearly repeat at every quarter and month, so an After Aggregations `SUM()` over them is correct at every interval. As a Before Aggregations Year calculation with Last Value it would read zero for most quarters and months.
+
+### Calculation Phases
 
 | Phase | Use When |
 |-------|----------|
-| Before Aggregations | The calculation should be computed at the source org/period level first, then rolled up. Use for conversions and site-level values that can aggregate safely. |
-| After Aggregations | The calculation should use already rolled-up input values. Use for ratios of totals, company-wide rates, and metrics where summing precomputed ratios would be wrong. |
+| Before Aggregations | The value must be computed at each org node and period before roll-up, then summed or averaged: conversions with a factor, emissions from activity data, per-reading flags and counts. |
+| After Aggregations | The value is a ratio, percentage, intensity, target achievement or period-over-period change. These must be recomputed from aggregated operands at every node and interval. |
 
-For ratios such as emissions intensity or cost per unit, prefer After Aggregations with `orgStructureAggregationMethod = None` and `timePeriodAggregationMethod = None`, so the ratio is recomputed from aggregated numerator and denominator values.
+For ratios such as emissions intensity or cost per unit, prefer After Aggregations with `orgStructureAggregationMethod = None` and `timePeriodAggregationMethod = None`, so the ratio is recomputed from aggregated numerator and denominator values. A Before Aggregations ratio or change is wrong above its own interval and node: its quarter value is the sum or average of monthly ratios, not the quarter's ratio.
+
+## Modelling Rules
+
+Wrong numbers almost always come from interval, phase, aggregation or formula design, not from the engine. Work through the evaluation order above before suspecting a defect.
+
+### Org nodes are reporting units, not measurement points
+
+The engine evaluates and aggregates every metric at every org node for every enabled period. Exclusions don't change that.
+- Add an org node only where the model, or most of it, is reported, such as an operation or a site with its own reporting.
+- Monitoring stations, boreholes, sample points, meters and equipment that report only a few metrics stay **metrics on their org node**, for example `Input | Monitoring | Air Quality | Air Station A10 | PM10 | µg/m³`.
+- Roll them up with calculations: site average, maximum, exceedance counts and compliance.
+- Never propose turning such points into org nodes.
+
+To make dashboards work at any org node, name the measurement metrics consistently across org nodes, using the same parameter names and units. Put the limits on inputs valued per org node with Roll Down, so the same calculation and widget serve every node.
+
+### Intervals
+
+- An input's data interval is its capture cadence. **Changing an input's data interval deletes all of its captured values**, for every period and including locked values. Export the values first (`cap data input-values download-excel`) and reload them after the change. Never toggle an interval to inspect data.
+- Set a Before Aggregations calculation's data interval to the cadence of its inputs **when you create it**. If you change it later, wait for settlement and re-check the values at month, quarter and year. If they don't match a recount, delete the calculation and create it again with the right interval.
+
+### Fixed values: targets, limits, factors, exchange rates
+
+Model a value that holds unchanged for a period as an input with:
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| Data interval | The interval at which the value changes. Default to Year: the fewest values to capture | One value per period of change. A value that changes monthly (an exchange rate) or quarterly uses that interval |
+| Time period aggregation | Average (2) | Repeated unchanged in every finer period, and averaged over coarser ones |
+| Org structure aggregation | Roll Down (5) | Captured once at the root and inherited by every node |
+
+Capture it at the root org node. An org node that needs a different value captures its own, and Roll Down fills only the nodes without one. Do not use Sum, which would divide the value across the finer periods, or Last Value, which puts it in the last finer period and 0 in the others.
+
+### Missing data stays blank
+
+- Use `DIV(numerator, denominator, null)` for ratios and percentages so a period with no data shows nothing. `IF [D] <> 0 THEN [N] / [D] ELSE 0` and `DIV(n, d)` turn a missing or zero denominator into a real-looking zero.
+- Use `COALESCE([Optional], 0)` only where a missing value genuinely means zero, such as an optional discharge line in a water balance.
+- If the first `DIV` argument starts with a period-selected reference, wrap it in parentheses: `DIV(([A]|0| - [A]|-1|) * 100, [A]|-1|, null)`.
+
+### Counting readings against a limit
+
+- **Limits:** model them as fixed values (above) and colour each reading with a band bound to the limit metric (`lowerBoundMetric`). That needs no per-station calculation.
+- **Count of exceedances** (Before Aggregations, Sum, data interval = the readings' cadence): `SUM([R1] * 0 + (IF [R1] > [Limit] THEN 1 ELSE 0), [R2] * 0 + (IF [R2] > [Limit] THEN 1 ELSE 0), ...)`. The `[R] * 0 +` term makes a station with no reading contribute nothing rather than 0.
+- **Results tested** (same settings): `SUM([R1] * 0 + 1, [R2] * 0 + 1, ...)`.
+- **Compliance %** (After Aggregations): `(1 - DIV(SUM([Count A], [Count B]), SUM([Tested A], [Tested B]), null)) * 100`.
+
+At month, a quarterly count shows thirds (one exceedance in a quarter reads 0.33 per month). That is the expected Sum expansion.
+
+### Targets
+
+- **Target:** an input, set up as a fixed value (above) with `allowForecastedData = true`.
+- **Achievement % calculation** (After Aggregations), where 100 means on target in both directions:
+  - Higher is better: `DIV([Actual] * 100, [Target], null)`.
+  - Lower is better: `DIV([Target] * 100, [Actual], null)`.
+- **Colouring the actual:** add a band on the actual bound to the target metric (`lowerBoundMetric`).
+
+### Forecasts
+
+`FORECAST`, `HOLT` and `HOLTWINTERS` return a one-step-ahead forecast at each interval from the previous periods of that interval.
+- `HOLT` and `HOLTWINTERS` follow the trend. A partly captured latest period drives them sharply down, even below zero.
+- Use `FORECAST` (level only) until recent periods are complete.
+- `HOLTWINTERS` needs at least two full seasons of history, for example 24 months for `period = 12`.
+
+### Exclusions are for reporting only
+
+Org-node exclusions hide a metric in capture and reports. The engine still calculates and aggregates every metric for every node and enabled period, so the value space has no gaps. Never use an exclusion to change what a calculation adds up.
+
+### Unit conversions
+
+- **Both directions:** define every conversion in both directions, as two conversions on the two units.
+- **Fixed factor:** use one for physical units.
+- **Factor metric:** use one for rates that change over time, such as exchange rates.
+  - Capture the rate monthly at the root (Roll Down, Average).
+  - Reference an After Aggregations calculation such as `DIV(1, [ZAR per USD], null)` for the inverse direction.
+- **Saving in an override unit:** a value saved with `"unitOfMeasure"` set to the org-node override unit is converted to the metric unit only when a conversion exists **from the metric unit to the override unit**. Without it the save is rejected (`InvalidUnitOfMeasureConversion`).
+- **Values captured before a conversion existed:** values saved without a unit (or in the metric unit) are stored as typed. If they were really amounts in the override unit, re-save them with `"unitOfMeasure"` set to the override unit once the conversion exists, so they are stored in the metric unit.
+- **Different dimensions:** don't use a unit conversion between them (mass and volume, for example). Use a calculation with the density instead.
+
+### Verify
+
+After `cap data recalculation wait` reports `settled`, check one value at month, quarter and year against a manual recount from the inputs, for example with `cap reporting computed-values query`. Collapse and expand must match the aggregation rules above.
 
 ### Dense Matrix and Build Order
 
@@ -407,7 +510,7 @@ EOF
     "id": 0,
     "name": "None"
   },
-  "formula": "IF [Denominator] <> 0 THEN [Numerator] / [Denominator] ELSE 0",
+  "formula": "DIV([Numerator], [Denominator], null)",
   "attributeValues": []
 }
 ```
@@ -602,6 +705,34 @@ For large payloads, save the JSON to a file and pass it with `--file`:
 ```bash
 cap data input-values save --file /path/to/values.json --json
 ```
+
+### Clear a Value
+
+There is no separate delete command. To remove a captured value, save the same
+business key (`metric` + `orgNode` + `timePeriodType` + `startDate`) with
+`"value": null` — the same save the web app sends when a cell is emptied:
+
+```bash
+cat <<'EOF' | cap data input-values save --json
+{
+  "inputValues": [
+    {
+      "id": "<empty-id>",
+      "value": null,
+      "metric": { "id": "<metric-id>" },
+      "orgNode": { "id": "<org-node-id>" },
+      "timePeriodType": { "id": 4, "name": "Year" },
+      "startDate": "2026-10-01T00:00:00Z"
+    }
+  ]
+}
+EOF
+```
+
+Null rows can be mixed with value rows in one batch. Clearing follows the same
+rules as any save: a value in a locked period is rejected until the period is
+unlocked. Wait for recalculation (`cap data recalculation wait <version>`)
+before checking computed values.
 
 ### Selectable Period Validation and Diagnostics
 
@@ -834,7 +965,7 @@ Metric-referenced factor (on a `ZAR` unit — the "USD per ZAR" metric holds USD
 
 `destination` and `conversionFactorMetric` are resolved by `id` or, when the id is empty, by `name`. `cap masterdata units get --json` shows them flattened to names (`"destination": "USD"`, `"conversionFactorMetric": "USD per ZAR"`).
 
-> **Note:** Converted values are blank for periods where the factor metric has no value, and capture in the converted unit is rejected until that period's rate has been calculated.
+> **Note:** Converted values are blank for periods where the factor metric has no value. A save in the converted unit is rejected until that period's rate has been calculated. `cap data input-values upload-excel` saves the rest of the workbook instead and lists each value without a rate as a warning: wait for `cap data recalculation wait` to report settled, then upload the same file again.
 
 Removing a conversion that colour bands depend on is rejected, and the error names the dependent bands. A band depends on a conversion when it references a metric in a different unit, or when an org-node override in that unit has constant bounds.
 
@@ -868,11 +999,13 @@ HOLTWINTERSM(a, b, g, period, r)  Holt-Winters multiplicative forecast
 
 **Safe division pattern:**
 ```
-IF [Denominator] <> 0 THEN [Numerator] / [Denominator] ELSE 0
+DIV([Numerator], [Denominator], null)
 ```
 
-Use `DIV([Numerator], [Denominator], null)` instead when a missing or zero
-denominator must remain no-data rather than become a numeric zero.
+A missing or zero denominator stays no-data. Use the two-argument
+`DIV([Numerator], [Denominator])` or `IF [Denominator] <> 0 THEN ... ELSE 0`
+only when a numeric zero is the intended answer; in a reported KPI a missing or zero denominator then makes a
+period without data look like a real zero.
 
 Use `cap model formula-validation validate <calculation-name> --formula '<formula>' --json` to verify formula syntax and circular-dependency behavior before saving a named calculation. Omit `<calculation-name>` for syntax-only/dependency validation; the CLI sends an internal collision-resistant sentinel name so the validation request cannot be mistaken for a real metric.
 
@@ -956,7 +1089,7 @@ cat <<'EOF' | cap model calculations create --json
   "calculationPhase": { "id": 1, "name": "After Aggregations" },
   "orgStructureAggregationMethod": { "id": 3, "name": "None" },
   "timePeriodAggregationMethod": { "id": 0, "name": "None" },
-  "formula": "IF [<id>] <> 0 THEN [<id>] / [<id>] ELSE 0",
+  "formula": "DIV([<id>], [<id>], null)",
   "attributeValues": []
 }
 EOF

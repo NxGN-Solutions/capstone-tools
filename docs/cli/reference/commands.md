@@ -1300,6 +1300,7 @@ cap data input-values save --file values.json [--json]
 
 Each item may carry `"comments"`. A value saved in a band marked `requireComment` without a comment is still saved; the command prints a `Comment required: ...` warning for it (also in the JSON `warnings`). Re-save the value with `"comments"` to explain it. Omitting `comments` keeps the stored comment; `""` clears it.
 
+To clear a captured value, save its business key with `"value": null`; there is no separate delete command. See [Clear a Value](./model-building.md#clear-a-value).
 An input excluded at an org node cannot be captured there (rule `OrgNodeExcluded`). If any item targets such an (input, org node) pair, the save fails with 400 and nothing in the request is saved; the error reads `InputValue for metric <id> at <start>: The input is excluded at this org node and cannot be captured there.` This applies to clearing too: an item with an empty `value` at an excluded org node is rejected. The exclusion names that org node only, so its child org nodes still capture. `data input-values upload-excel` reports a row with a number at an excluded org node as a row error (`'<input>' is excluded at '<org node>' and cannot be captured there.`), and an upload with any row error saves nothing. Blank cells at an excluded org node are ignored.
 
 ### Validate Data

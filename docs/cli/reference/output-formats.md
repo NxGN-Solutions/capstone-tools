@@ -593,7 +593,7 @@ Error: Authentication required
 |------|---------|------------|
 | `AUTH_REQUIRED` | Not logged in | Run `cap auth login` |
 | `AUTH_EXPIRED` | Token expired | Re-run command (auto-refresh) or `cap auth login` |
-| `TENANT_REQUIRED` | No tenant selected | Run `cap auth switch-tenant <id>` |
+| `TENANT_REQUIRED` | No tenant selected (OAuth), or the API key's tenant could not be resolved | OAuth: run `cap auth switch-tenant <id>`. API key: check that `CAPSTONE_API_KEY` is valid and `CAPSTONE_API_URL` points at the API it was issued for |
 | `NOT_FOUND` | Entity doesn't exist | Verify ID with `list` command |
 | `VALIDATION_ERROR` | Invalid input data | Check JSON structure matches DTO |
 | `API_ERROR` | Server-side error | Check API status, retry |
