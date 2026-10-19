@@ -120,50 +120,50 @@ map when checking whether a command family exists.
 | `data bulk-validation` | `preview`, `validate` |
 | `data change-requests` | `create`, `delete`, `get`, `list`, `save`, `validate` |
 | `data data-lock` | `lock`, `unlock` |
-| `data input-values` | `create`, `download-excel`, `get`, `history`, `list`, `save`, `upload-excel`, `validate` |
+| `data input-values` | `create`, `download-excel`, `get`, `history`, `list`, `save`, `upload-excel`, `upload-status`, `validate` |
 | `data lookups` | `get` |
 | `data narrative-values` | `get`, `get-by-context`, `get-by-metric-context`, `history`, `list`, `save`, `submit`, `validate` |
 | `data recalculation` | `status`, `wait` |
 | `data time-periods` | `diagnose`, `list` |
 | `masterdata data-sources` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `masterdata discipline-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `masterdata disciplines` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `masterdata disciplines` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel`, `upload-status` |
 | `masterdata framework-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `masterdata frameworks` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `masterdata frameworks` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel`, `upload-status` |
 | `masterdata org-node-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `masterdata org-nodes` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `masterdata org-nodes` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel`, `upload-status` |
 | `masterdata units` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `meta lookups` | `get`, `list` |
 | `model calculation-overrides` | `copy`, `download-excel`, `get`, `inherited`, `list`, `save`, `upload-excel` |
-| `model calculations` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `list`, `save`, `upload-excel` |
+| `model calculations` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `list`, `save`, `upload-excel`, `upload-status` |
 | `model disciplines` | `list` |
 | `model formula-validation` | `validate` |
 | `model frameworks` | `list` |
 | `model input-overrides` | `copy`, `download-excel`, `get`, `inherited`, `list`, `save`, `upload-excel` |
-| `model inputs` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `list`, `save`, `upload-excel` |
+| `model inputs` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `list`, `save`, `upload-excel`, `upload-status` |
 | `model lookups` | `get`, `list` |
 | `model metric-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `model metric-framework-nodes` | `copy`, `download-excel`, `list`, `save`, `upload-excel` |
 | `model metric-org-node-exclusions` | `copy`, `download-excel`, `list`, `save`, `upload-excel` |
-| `model metrics` | `delete-eval`, `explain`, `get`, `graph`, `list` |
+| `model metrics` | `delete-eval`, `delete-status`, `explain`, `get`, `graph`, `list` |
 | `model narrative-attribute-types` | `create`, `delete`, `download-excel`, `get`, `get-all`, `list`, `lookup`, `save`, `upload-excel` |
 | `model narrative-overrides` | `copy`, `create`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `model narratives` | `create`, `delete`, `delete-preview`, `delete-start`, `delete-status`, `distinct-values`, `download-excel`, `get`, `list`, `lookup`, `save`, `upload-excel` |
+| `model narratives` | `create`, `delete`, `delete-preview`, `delete-start`, `delete-status`, `distinct-values`, `download-excel`, `get`, `list`, `lookup`, `save`, `upload-excel`, `upload-status` |
 | `model org-nodes` | `list` |
 | `notifications rules` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `notifications templates` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `perf` | `memory-throughput` |
 | `reporting computed-values` | `audit`, `download-excel`, `list`, `query` |
-| `reporting dashboards` | `get-data`, `get-insights` |
+| `reporting dashboards` | `get-data`, `get-insights`, `header` |
 | `reporting widgets` | `get-data`, `info-card`, `pie-chart`, `table`, `text-block`, `textblock`, `xy-chart` |
 | `root` | `concepts`, `schema`, `status`, `version` |
 | `security users` | `download-excel`, `upload-excel` |
 | `system tenants` | `bootstrap-local`, `create`, `delete`, `delete-status`, `delete-watch`, `fiscal-config update`, `get`, `list`, `sample`, `save`, `schema`, `teardown` |
-| `templates capture-templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `sample`, `save`, `schema`, `upload-excel` |
+| `templates capture-templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `resolve-content`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates dashboard-templates` | `audit`, `create`, `delete`, `download-excel`, `get`, `list`, `rename`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates lookups` | `get` |
 | `templates org-node-templates` | `create`, `delete`, `download-excel`, `get`, `list`, `sample`, `save`, `schema`, `upload-excel` |
-| `templates report-templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `sample`, `save`, `schema`, `upload-excel` |
+| `templates report-templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `resolve-content`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates widget-templates` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `list`, `sample`, `save`, `schema`, `upload-excel` |
 | `update` | `check` |
 | `workflows` | `list`, `show` |
@@ -403,6 +403,9 @@ Computed values, dashboards, and widgets. `--periods` is required for live data.
 # Computed values (via report template filter lens)
 cap reporting computed-values list --template <report-template-id> --data-interval day --periods "Jan 25" [--json]
 
+# Same report on another org structure (an org node template ID, or physical)
+cap reporting computed-values list --template <report-template-id> --org-node-template <org-node-template-id> --data-interval month --periods "Jan 25" --json
+
 # Framework-grouped report template, optionally narrowed to a framework node
 cap reporting computed-values list --template <framework-report-template-id> --framework-nodes <framework-node-id> --data-interval year --periods "FY 2026" --json
 
@@ -421,6 +424,7 @@ cap reporting computed-values audit --metrics <metric-id>[,<metric-id>] --data-i
 | `--periods "<names>"` | Comma-separated period names | Yes for `list`; optional for `query`/`audit` when `--period-count` is supplied |
 | `--period-count <n>` | Resolve the most recent N periods for `computed-values query`/`audit` | No |
 | `--org-nodes "<id>"` | Filter to specific org node | No |
+| `--org-node-template <id\|physical>` | Org structure to run on: an org node template ID or `physical`. On `list` and `download-excel`, omit it for the template's default structure; on `query` and `audit`, omit it for the physical structure | No |
 | `--discipline-nodes "<id>"` | Narrow the report template discipline scope | No |
 | `--framework-nodes "<id>"` | Narrow the report template framework scope; framework-grouped reports render metrics under framework paths | No |
 | `--metric-types "<types>"` | `input`, `calculation` (comma-separated) | No |
@@ -430,6 +434,31 @@ template's Limit to lists (`orgNodes`, `disciplines`, `frameworks`), or inside
 its default picks when the template fixes that filter. Picks outside are
 dropped, and no rows return when none remain. Omit them to use the template's default picks (`defaultOrgNodes`, else
 `orgNodes`, and so on). `data input-values list` follows the same rule.
+
+When the template places grouping levels on columns, each table row of `list`
+takes its org node, discipline and framework from the column's group, and the
+table adds a Discipline or Framework column for those levels. With Site on
+columns, a **Row Group** column keeps the row's own (innermost) grouping level,
+such as its discipline. Cells that do not apply (`isNotApplicable`, shown as
+n/a in the web grid) are layout padding and print no row. A narrative row prints
+one row per column group it applies in, with the narrative name under Metric.
+`data input-values list` prints the same way. `--json` returns the full
+response, including `columnGroups` (the column-group tuples that each column's
+`groupIndex` points into), per-period `narrativeValue` (no level on columns) or
+`narrativeColumns` (one cell per `columnGroups` entry), and `isNotApplicable`
+on cells that do not apply.
+
+`--org-node-template` on `list` and `download-excel` must name one of the
+report template's allowed org structures; anything else returns no rows. A
+template that fixes its org structure (`showOrgNodeTemplateFilter` false)
+allows only its default structure. Org node IDs belong to one structure, so
+`--org-nodes` must name nodes of the chosen structure; IDs from another
+structure are dropped, and no rows return when none remain.
+
+`templates org-node-templates delete` fails with 409 while a report template
+lists the org structure as allowed, or uses it as the default of a template
+that lets viewers switch. The error names those templates; remove the
+structure from them first.
 
 `computed-values audit --json` returns `ComputedValueAuditResult` with
 `passed`, `summary`, `modelState`, `findings`, and `missingMetricIds`. Findings
@@ -453,6 +482,9 @@ cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --peri
 cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --data-interval month --periods "FY 26" [--json]
 cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --data-interval match-selected --periods "FY 26" [--json]
 cap reporting dashboards get-insights <dashboard-template-id> <layout-node-id> --org-node <id> --periods "FY 26" [--json]
+
+# Dashboard header resolved for a selection (eyebrow, title, subtitle, badge + token warnings)
+cap reporting dashboards header <dashboard-template-id> --org-node <id> --periods "Q1 FY 26, Q2 FY 26" [--data-interval quarter] [--json]
 
 # Dashboard template static audit before live data checks
 cap templates dashboard-templates audit <dashboard-template-id> --strict --json
@@ -544,8 +576,11 @@ Use `cap reporting widgets info-card ... --json` when an agent needs resolved
 Info Card text, values, trend tokens, warnings, and returned
 `styleConfiguration` for dashboard-render parity. When `valueState` is `NoData`,
 `value`, `formattedValue`, and `rawValue` are null. `Inaccessible` still returns
-`value: "Restricted"`. Narrative tokens add two value states: `NotApplicable`
-(`5`, "Not applicable": interval mismatch or org exclusion) and
+`value: "Restricted"`. `NotApplicable` (`5`) also applies to metrics: an Info Card
+item whose metric is excluded at the org unit, or a metric token whose metric is
+excluded at every selected org unit, has value "n/a" and no warning. Narrative
+tokens add two value states: `NotApplicable`
+(`5`, "Not applicable": excluded for the selected org unit) and
 `AmbiguousOrgNode` (`6`, "Select a single org unit": zero or several
 `--org-nodes`). Pass exactly one `--org-nodes` id to resolve narrative text. Use `cap reporting widgets
 pie-chart ... --json` when an agent needs the shared pie/donut render contract
@@ -558,7 +593,9 @@ Label` columns. Use `cap reporting widgets table ... --json` when an agent
 needs the shared dashboard table contract with `timePeriodColumns`,
 `metricColumns`, `metricNumberFormats`, `gridRows`, `metadataColumns`,
 `selectionDiagnostics`, `styleConfiguration`, `warnings`, `totalCount`, and
-paging support. Use `cap reporting widgets text-block ... --json` when an agent
+paging support. In text mode, narrative rows print each period's narrative on
+one line (line breaks become spaces), cut to 80 characters; `--json` keeps the
+full text with its line breaks. Use `cap reporting widgets text-block ... --json` when an agent
 needs the shared TextBlock render contract with resolved `titleContent`,
 `subtitleContent`, `descriptionContent`, `footnoteContent`, token spans,
 `styleConfiguration`, `warnings`, and `diagnostics`. Narrative spans (in
@@ -665,8 +702,77 @@ and a metric that does not apply to the row (outside its discipline or
 framework node, or excluded at its site) comes back with
 `isNotApplicable: true` on its cell. Without Org Node in the chain, every row
 uses the one selected site. Table widget templates still need an Org Node-only
-chain for metrics as columns. Optional Then By levels go in `additionalDataGrouping`.
-`allowMultiOrgNodeSelect` is coerced false when the chain lacks Org Node.
+chain for metrics as columns. A metrics-as-columns page is limited to
+2,000,000 cells (rows on the page × metrics × periods) and 80,000 columns:
+over that, `reporting computed-values list`, the input-value grid commands
+and template previews get a 400 with `code: "WideGridCellLimit"` and the
+cell and column counts. A `take: 0` column-list request is refused only
+when the columns alone are over the cap; a request without `take` is
+counted at the 1,000-row paging maximum. Ask for fewer metrics, sites or periods, a coarser interval, or a
+smaller `take`; report requests may also send `hiddenMetricIds` to leave
+metrics out of the cells (rows and paging stay the same). Template lint warns
+above 500,000 cells (`WideGridSlow`). Save rejects a new template, or an edit
+that widens one, whose one-year, 100-row worst case is over 2,000,000 cells
+or 80,000 columns (`WideGridCellLimit` on `showMetricsInColumns`); an edit
+that does not widen an already over-limit template saves with that issue as a
+warning. `upload-excel` applies the same rule: a new or widened over-limit
+template is not saved and appears as an upload error. Optional Then By levels go in
+`additionalDataGrouping`.
+
+`showTimePeriodsInRows: true` lists time periods as rows (under the grouping
+levels) and metrics as columns in the web viewers. It requires
+`showMetricsInColumns: true` (error code
+`TimePeriodsInRowsRequiresMetricsInColumns`, "Periods as rows needs metrics as
+columns.") and is allowed with `dataGrouping` None, where the template becomes a
+period-by-metric sheet for its one site. Otherwise it only changes the web
+layout: the grid API returns the same rows as metrics as columns, one per
+grouping combination with every period's cells. On a flat template that is a
+single row for the selected site, so `reporting computed-values` returns one
+row with a column per metric instead of one row per metric.
+`allowMultiOrgNodeSelect` is coerced false when no grouping a viewer can use
+has Org Node.
+
+To let viewers regroup the grid, set `showDataGroupingFilter: true` and list
+the levels they may group by in `allowedDataGroupingLevels`. Viewers build their
+own chain from those levels, in any order (one to three levels, each once):
+
+```json
+{
+  "dataGrouping": { "id": 1, "name": "OrgNode" },
+  "additionalDataGrouping": [{ "id": 2, "name": "Discipline" }],
+  "showDataGroupingFilter": true,
+  "allowedDataGroupingLevels": [{ "id": 1, "name": "OrgNode" }, { "id": 2, "name": "Discipline" }]
+}
+```
+
+`{ "id": 0, "name": "None" }` lets viewers pick no grouping (a flat list).
+The levels need at least two entries, None included (`DataGroupingLevelsRequired`),
+and every level of the default grouping, or None for a flat default
+(`DefaultDataGroupingOutsideLevels`). While None is allowed,
+`showMetricsInColumns` needs `showTimePeriodsInRows`
+(`MetricsInColumnsRequiresGrouping`). The API stores the levels in None,
+OrgNode, Discipline, Framework order. With `showDataGroupingFilter: false` the levels are ignored and saved
+empty. CLI and MCP data reads use the default grouping.
+`columnDataGroupingLevels` places levels of the grouping chain on columns
+(same `{ "id", "name" }` values, in chain order; empty or missing means every
+level is on rows). With Site on columns the grid has a column block per site and
+rows carry no site; with Discipline on columns a metric sits under its
+discipline's block; with Framework on columns it repeats under each linked
+framework node. Save and the CLI reject a level that is not in the grouping
+(`ColumnDataGroupingLevelOutsideChain`), a level that is not Org Node,
+Discipline or Framework or repeats (`ColumnDataGroupingLevelInvalid`), and a
+layout with no rows (`LayoutRequiresRow`, for example every level on columns
+while metrics are columns and periods are columns) or no columns
+(`LayoutRequiresColumn`). `get` prints the placement as **Column Levels**.
+In the template Excel download and upload the placement is the **Column Data
+Grouping Levels** column. An upload with an invalid placement is not rejected:
+it returns a warning and saves the template with every level on rows.
+In grid reads, `inputColumns` / `metricColumns` list the leaf columns; each has
+a `key` (the column-group ids, then the metric id, joined with `_`; just the
+metric id when no level is on columns), a `groupIndex` and its `groups`. Cells
+pair with these columns by position, not by id, because a metric repeats under
+each site or framework block. With metrics as rows the columns are group-only:
+their `id` is the empty GUID and each metric row has one cell per column.
 `metricPropertyColumns` is the list of metric metadata columns next to the
 metric name (enum `{ "id", "name" }` values). Spreadsheet templates default
 to Unit of Measure; set `[]` to hide it. `metricAttributeTypeIds` adds one
@@ -675,7 +781,8 @@ metrics are shown as columns; Excel download still writes them because Excel
 is always metrics-as-rows.
 Report templates may set `expandCalculations: true` with
 `expandCalculationsMaxDepth` between 1 and 20 (default 10). Expansion is
-rejected when `showMetricsInColumns` is true.
+rejected when `showMetricsInColumns` is true or any level is on columns
+(`ExpandCalculationsRequiresRowGrouping`).
 Each of the site, discipline and framework filters has two lists.
 `orgNodes`, `disciplines` and `frameworks` (plus the matching
 `*AttributeFilters`) are the **Limit to** lists: no viewer reaches data
@@ -692,11 +799,39 @@ picks). `show*Filter: true` lets the viewer pick anything inside the Limit to
 list; picks outside it are dropped.
 
 When rows are grouped without Org Node (for example `dataGrouping` Discipline),
+or `showDataGroupingFilter` is true (a viewer can always group without Org Node),
 a fixed site filter (`showOrgNodeFilter` false) must resolve to exactly one
 org node: one `defaultOrgNodes` pick, or one `orgNodes` pick when there is no
 default (error code `SingleOrgNodeRequired`). An open site filter may have at
-most one `defaultOrgNodes` pick (error code `SingleDefaultOrgNodeRequired`).
-Flat templates (`dataGrouping` None) are exempt.
+most one `defaultOrgNodes` pick when the default grouping lacks Org Node
+(error code `SingleDefaultOrgNodeRequired`). This includes flat templates
+(`dataGrouping` None): without a Site level the grid shows one site.
+
+`orgNodeTemplate` (`{ "id": ... }`, null = the physical structure) is the
+template's org structure, and site picks in `orgNodes` and `defaultOrgNodes`
+must belong to it (error code `SiteNotInStructure`). Report templates can let
+viewers switch the org structure:
+
+- `showOrgNodeTemplateFilter`: `true` lets viewers switch; `false` (default)
+  fixes the report on `orgNodeTemplate`. Capture templates must leave it
+  false (error code `StructureSwitchReportOnly`). Capture templates have no
+  org structure: leave `orgNodeTemplate` empty (error code
+  `CaptureRequiresCanonicalStructure`).
+- `orgNodeTemplates`: the allowed org structures (`[{ "id": ... }]`). Empty
+  means every org structure the viewer can access.
+- `allowPhysicalStructure`: whether the physical structure is offered when
+  switchable (default true).
+- `orgNodeTemplate` is then the default structure and must be one of the
+  allowed ones (error code `DefaultStructureOutsideLimit`).
+
+Site picks belong to one structure, so while the structure is switchable:
+`orgNodes` must be empty (`SiteLimitRequiresFixedStructure`); a fixed site
+filter must have no `defaultOrgNodes` (`FixedSitesRequireFixedStructure`);
+rows grouped without Org Node, or a grouping viewers can change, need
+`showOrgNodeFilter: true` (`SwitchableStructureRequiresOpenSites`). An open site filter's
+`defaultOrgNodes` apply to the default structure only; other structures start
+at their root. Dashboards, notifications and data availability always use the
+default structure.
 
 #### Lint a capture or report template
 
@@ -709,7 +844,10 @@ cap templates report-templates lint --file template.json [--json]
 without saving it. **Errors** are exactly what `save` would reject; **warnings**
 never block a save. Each issue has a stable `code`, a `message`, the top-level
 `field` it belongs to (camelCase, empty when not tied to one field) and an
-editor `stage` (`display`, `structure`, `content` or `columns`). The exit code
+editor `stage` (`display`, `structure`, `content` or `columns`). An issue whose
+message carries values (a limit, a range, narrative names) also has `params`,
+by camelCase name, which `--json` passes through; the text output keeps
+printing `message`. The exit code
 is `2` when there is at least one error and `0` otherwise. `--json` prints the
 API result unchanged: `{ "errors": [...], "warnings": [...] }`.
 
@@ -721,15 +859,47 @@ API result unchanged: `{ "errors": [...], "warnings": [...] }`.
 | `NarrativesOutsideIntervalOrScope` | capture, report | Bound narratives no longer match `dataInterval`, the Limit to `orgNodes` or the Limit to `disciplines`. |
 
 Other error codes include `SingleOrgNodeRequired`, `SingleDefaultOrgNodeRequired`,
-`DefaultOutsideLimit`, `MetricsInColumnsRequiresGrouping`,
-`ExpandCalculationsRequiresRows`, `DuplicateNarratives` and `UnknownNarratives`
-(a bound narrative that does not exist in the tenant).
+`DefaultOutsideLimit`, `SiteNotInStructure`, `StructureSwitchReportOnly`,
+`DefaultStructureOutsideLimit`, `SiteLimitRequiresFixedStructure`,
+`FixedSitesRequireFixedStructure`, `SwitchableStructureRequiresOpenSites`,
+`MetricsInColumnsRequiresGrouping`, `TimePeriodsInRowsRequiresMetricsInColumns`,
+`ExpandCalculationsRequiresRows`, `DuplicateNarratives`, `UnknownNarratives`
+(a bound narrative that does not exist in the tenant), `UnknownOrgNodeTemplate`,
+`BandsInvalid` (a template band breaks the band rules) and
+`BandMetricReferenceInvalid`. Save refuses exactly what `lint` reports as an error.
+
+#### Resolve what a capture or report template contains
+
+```bash
+cap templates capture-templates resolve-content (--file template.json | --id <guid>) [--json]
+cap templates report-templates resolve-content (--file template.json | --id <guid>) [--json]
+```
+
+`resolve-content` lists the metrics and narratives a template resolves to,
+sorted by name: the same list the template editor shows behind "See list", and
+exactly as many items as the `counts` that `lint` returns. Give exactly one of
+`--file` (a template JSON file, the same payload as `lint`) or `--id` (a saved
+template, read first and sent as stored). Each template kind needs the same permission as its `lint` command (`Model.Manage` for capture templates, `Templates.Manage` for report templates). The template's own scope applies (limit picks and
+attribute filters); your data permissions and viewer filters do not. A list is
+empty when the row types exclude it.
+
+Text output is `Metrics (n)` and one name per line, a blank line, then
+`Narratives (n)` the same way. `--json` prints the API result unchanged:
+`{ "metrics": [{ "id": "...", "name": "..." }], "narratives": [...] }`.
 
 After a successful `create` or `save` of a capture or report template, the CLI
 runs `lint` and prints each warning to stderr as
 `Warning: [Code] field: message`. With `--json`, the result is one document:
 `{ "success": true, "id": "...", "warnings": [...] }`. If the warning check
 itself fails, the save still succeeds and the CLI says it could not check.
+
+`upload-excel` for capture and report templates applies the same rules before
+saving. A template that `save` would reject is skipped and reported as an upload
+error; the other templates in the file still save. Warnings are reported and the
+template saves. Both use row 0 with the template name in front, for example
+`Site Monthly: Narratives are selected, but Narratives is not one of the row
+types, so they will not show.` The workbook has no narrative columns, so the
+checks use the template's stored narratives.
 
 ### Update Existing Item
 
@@ -1208,6 +1378,27 @@ cap <domain> <entity> delete <id> [--json]
 cap model inputs delete <id>
 ```
 
+**Delete several inputs or calculations at once.** `cap model inputs delete` and `cap model calculations delete` also take `--ids` (`-i`): comma- or whitespace-separated GUIDs on one flag. A positional `<id>` is added to the list; duplicates are ignored, and an all-zero GUID counts as invalid. Repeated `--ids` flags last-win, so put every ID on one flag.
+
+```bash
+cap model calculations delete --ids <id1>,<id2>,<id3> --json
+cap model inputs delete --ids "$(cat input-ids.txt)" --json     # one ID per line works too
+```
+
+- All IDs go into one delete operation: one preview, one start, one wait, and one model change. Calculations that use each other can be deleted together; one-at-a-time deletes are blocked unless the dependent is deleted first.
+- The API takes at most 5000 IDs per delete and rejects more with `ExplicitIdsLimitExceeded`. A single `--ids` value is also limited by the shell: about 3,000 IDs on Linux and about 800 on Windows. Split longer lists into several commands.
+- An ID that is not a GUID, or is all zeros, fails with exit code `2` before anything is sent.
+- IDs that do not exist or are the wrong metric type (an input ID passed to `calculations delete`) are rejected by the preview; nothing is started for them. Calculations or inputs still used by a formula, band or unit conversion outside the set are blocked and kept.
+- Exit codes: `0` when every ID was deleted; `6` (partial result) when some were deleted and others were rejected or blocked; `2` when nothing was deleted; `4` when the operation failed; `5` on timeout. In `--json` output, `success` is `true` when at least one ID was deleted, so a partial delete has `success: true` and exit code `6`.
+- `--json` returns `entityIds` (the distinct IDs sent), `entityId` (only for a single ID), `operationId`, `status`, the `deletedCount`, `blockedCount`, `rejectedCount` and `warningCount` counts, and `resultSummary` with the first 10 reasons per group. The API reports counts and reasons, not a per-ID outcome list.
+- The operation keeps running on the server after `--timeout-seconds` (default 600). Check it with:
+
+```bash
+cap model metrics delete-status <operation-id> [--json]
+```
+
+`delete-status` reports the operation's state only: exit `4` when it failed, otherwise `0`, including while it is still running or when some IDs were blocked. Read `status` and the counts to tell a full delete from a partial one.
+
 **Metrics and narratives used by templates.** Widget and spreadsheet template use never blocks deleting a metric (input or calculation) or a narrative.
 - The delete preview lists the templates under "Used by templates (removed from them on delete)" (API: `warnings` on the preview response; UI: a warning in the delete dialog).
 - The delete then removes the item from those templates. Deleted:
@@ -1282,7 +1473,7 @@ Exit codes:
 cap system tenants bootstrap-local <name> --from-aspire [--force-new] [--json]
 ```
 
-Reuses an exact tenant name when present. `--force-new` appends `yyyyMMddHHmmss` and **creates a new Identity organisation** entitled to the current user. There is no teardown: leftover names such as `residual-h2 20260824122327` stay on the Identity picker until you `cap system tenants delete` them (switch off that tenant first). Prefer reuse for shared users such as testera. No in-repo test should pass `--force-new` against a shared human Identity user.
+Reuses an exact tenant name when present, and leaves that tenant's configuration unchanged. When the reused tenant lacks any of the Day, Week, Month, Quarter or Year periods, the command warns and names the missing ones. A new tenant gets all five. `--force-new` appends `yyyyMMddHHmmss` and **creates a new Identity organisation** entitled to the current user. There is no teardown: leftover names such as `residual-h2 20260824122327` stay on the Identity picker until you `cap system tenants delete` them (switch off that tenant first). Prefer reuse for shared users such as testera. No in-repo test should pass `--force-new` against a shared human Identity user.
 
 ### Input value history
 
@@ -1444,7 +1635,7 @@ cap <domain> <entity> download-excel -o file.xlsx
 cap <domain> <entity> upload-excel <file.xlsx> [--json]
 ```
 
-Tree-node uploads for `masterdata org-nodes`, `masterdata disciplines`, and `masterdata frameworks` use the async upload pipeline. The command sends the file, receives an upload id, and polls `MasterData/TreeNodes/Uploads/{uploadId}/Status` until `Succeeded` or `Failed`.
+Seven upload commands use the async upload pipeline: `data input-values`, `model inputs`, `model calculations`, `model narratives`, `masterdata org-nodes`, `masterdata disciplines`, and `masterdata frameworks`. The command sends the file, receives an upload id, and polls the upload's status until `Succeeded` or `Failed`.
 
 ```bash
 cap masterdata org-nodes upload-excel "artifacts/performance/excel/Org Structure.xlsx" \
@@ -1452,7 +1643,25 @@ cap masterdata org-nodes upload-excel "artifacts/performance/excel/Org Structure
   --json
 ```
 
-The default timeout is `3000` seconds (50 minutes). Use `--timeout-seconds <n>` for larger files. In JSON mode the final status payload includes `uploadId`, `status`, `fileName`, `fileSizeBytes`, `totalRows`, `processedRows`, `createdDate`, `completedDate`, and `errors`.
+The default timeout is `3000` seconds (50 minutes) for the tree-node uploads and `600` seconds (10 minutes) for the others. Use `--timeout-seconds <n>` for larger files. In JSON mode the final status payload includes `uploadId`, `status`, `fileName`, `fileSizeBytes`, `totalRows`, `processedRows`, `createdDate`, `updatedDate` (last activity, when the server reports it), `completedDate`, and `errors`.
+
+**Timeout and resume.** If the upload does not finish within the timeout, the command exits `5` and prints the upload id. The upload keeps running on the server. Check it later with the same entity's `upload-status` command, which the timeout message names:
+
+```bash
+cap model inputs upload-status <upload-id> [--json]
+```
+
+`upload-status` reads the status once and does not poll. In JSON mode it prints the same status payload as `upload-excel`.
+
+| Upload status | Exit code |
+|---|---|
+| `Succeeded` with no errors (warnings allowed) | `0` |
+| `Succeeded` with row errors | `6` |
+| `Failed` | `4` |
+| `Pending` or `Processing` (text output shows rows processed, how long ago the upload was created, and how long ago a `Processing` upload last made progress, or `not yet picked up` for a `Pending` upload) | `0` |
+| Unknown upload id, or a finished upload that has been purged (by default 30 days after it completed; uploads still `Pending` or `Processing` are never purged) | `2` |
+
+An upload that stays `Pending` because its processing message was lost is re-sent by the server about every 5 minutes, so it does not need re-uploading; a `Processing` upload that shows no progress for 30 minutes is re-sent the same way, until 2 hours after processing started, when it is marked `Failed` so it can be re-uploaded (or split into smaller files). Use the same entity that ran the upload: an input upload id is not found under `model calculations upload-status`. The three tree-node entities share one upload store, so any of them can read a tree-node upload id.
 
 Non-async Excel upload commands return `ExcelUploadResult` in JSON mode:
 `items`, row counts such as `savedRows`/`newRows`/`updatedRows`, `isValid`, and

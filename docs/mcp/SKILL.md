@@ -327,7 +327,7 @@ When analyzing retrieved data, use these techniques based on the user's question
 
 - [CLI Skill](../cli/SKILL.md) — CLI interface (for Claude Code with Bash access)
 - [Recipes](./recipes/README.md) — Step-by-step workflow guides
-- [Tool Reference](./reference/tools.md) — All 45 tools with parameters and response formats
+- [Tool Reference](./reference/tools.md) — All 46 tools with parameters and response formats
 - [Glossary](./reference/glossary.md) — Detailed term definitions with MCP tools
 - [Data Model](./reference/data-model.md) — Enums, aggregation, query patterns
 - [Setup Guide](./setup.md) — Claude Desktop configuration (human-facing)

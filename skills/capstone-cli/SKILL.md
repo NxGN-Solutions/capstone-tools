@@ -266,6 +266,7 @@ cap <domain> <entity> get <id> [--json]       # Get one by ID
 cap <domain> <entity> create --file input.json  # Create new
 cap <domain> <entity> save --file input.json    # Update existing
 cap <domain> <entity> delete <id>             # Delete by ID
+cap model inputs|calculations delete --ids <id>,<id>  # Delete several in one operation
 ```
 
 ### Excel Import/Export Pattern

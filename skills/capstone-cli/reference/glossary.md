@@ -282,7 +282,7 @@ cap model inputs get <id> --json   # Shows aggregation settings
 
 **Capstone Term:** Capture Template (Spreadsheet Template)
 
-**Definition:** Defines the structure of a data entry form—which metrics, org nodes, and time periods appear for data capture. `showRowsWithValuesFilter` lets viewers switch between all rows and rows with values (`showOnlyRowsWithValues` is the default; it always applies when the flag is false). `showPendingFilter` offers a "Show pending only" toggle on its capture and validation grids, and `showOnlyPending` opens it switched on.
+**Definition:** Defines the structure of a data entry form—which metrics, org nodes, and time periods appear for data capture. `showRowsWithValuesFilter` lets viewers switch between all rows and rows with values (`showOnlyRowsWithValues` is the default; it always applies when the flag is false). `showPendingFilter` offers a "Show pending only" toggle on its capture and validation grids, and `showOnlyPending` opens it switched on. `showDataGroupingFilter` lets viewers regroup the rows by the levels in `allowedDataGroupingLevels`, in any order, and to move levels between rows and columns. `columnDataGroupingLevels` lists the grouping levels placed on columns (for example a column block per site, with discipline rows); empty means every level is on rows.
 
 **CLI:**
 ```bash
@@ -297,7 +297,7 @@ cap templates capture-templates get <id> --json
 
 **Capstone Term:** Notification Rule
 
-**Definition:** Sends a notification template when an event happens (Event Driven) or on a schedule (Scheduled). A schedule is a cron expression or period-end offsets: signed days from the end of each month, fiscal quarter or fiscal year, at a fire time in the rule's time zone. Each scheduled fire sends a recipient one email listing the capture templates to open for their pending work.
+**Definition:** Sends a notification template when an event happens (Event Driven) or on a schedule (Scheduled). An Event Driven rule sends its template when the template's event happens; the template names that event in its `eventType` (for example Input Value Captured or Data Lock Applied). A schedule is a cron expression or period-end offsets: signed days from the end of each month, fiscal quarter or fiscal year, at a fire time in the rule's time zone. Each scheduled fire sends a recipient one email listing the capture templates to open for their pending work.
 
 **CLI:**
 ```bash
@@ -312,7 +312,7 @@ cap notifications rules get <id> --json
 
 **Capstone Term:** Report Template (Spreadsheet Template)
 
-**Definition:** Defines the structure of a report—which metrics and computed values to display in a spreadsheet format. `showRowsWithValuesFilter` lets viewers switch between all rows and rows with values; when false, `showOnlyRowsWithValues` always applies.
+**Definition:** Defines the structure of a report—which metrics and computed values to display in a spreadsheet format. `showRowsWithValuesFilter` lets viewers switch between all rows and rows with values; when false, `showOnlyRowsWithValues` always applies. `showDataGroupingFilter` lets viewers regroup the rows by the levels in `allowedDataGroupingLevels`, in any order, and to move levels between rows and columns. `columnDataGroupingLevels` lists the grouping levels placed on columns (for example a column block per site, with discipline rows); empty means every level is on rows.
 
 **CLI:**
 ```bash
@@ -346,7 +346,7 @@ cap templates report-templates get <id> --json
 - `dataInterval` - Monthly, Quarterly, Annual, etc.
 - `pieChartWidgetTemplateType` / `centerMode` / `sliceLabelMode` - PieChart-only display options for pie vs donut, donut center content, and labels rendered on slices
 - `legendValueMode` - PieChart-only stored enum behind the dashboard editor's **Show Legend Value** checkbox
-- `dataGrouping`, `orgNodeRowSelectionMode`, `showOnlyRowsWithValues` - Table-only row grouping and table-wide display controls
+- `dataGrouping`, `orgNodeRowSelectionMode`, `showOnlyRowsWithValues` - Table-only row grouping and table-wide display controls (at a leaf org node, Children and Descendants render the node itself)
 - `metricTypeFilters`, `metricDisciplineFilters`, `metricFrameworkFilters`, and metric/discipline/framework attribute filters - Table dynamic Metric Scope controls
 - `showMetricValue`, `metricPropertyColumns`, `metricAttributeTypeIds` - Table current custom-column controls. `metricPropertyColumns` is a `MetricProperty` EnumDTO list (not `metricColumns`, which means metrics rendered as columns)
 - `narrativeSelectionMode`, `narrativeScopeConfigured`, `narratives`, and narrative scope filters - Table dynamic/static narrative row controls

@@ -178,7 +178,7 @@ four text slots; they establish hierarchy so section titles don't have to.
 | `eyebrow` | Domain / portfolio descriptor | "Multifamily construction portfolio" |
 | `title` | Dashboard name in client language | "Redux Construction WIP Review" |
 | `subtitle` | Cadence + data source | "Monthly WIP close \| Source: Procore workbook extract" |
-| `badge` | Audience / purpose | "Executive finance review" |
+| `badge` | Audience / purpose, or the selected periods | "Executive finance review", `@[periods]` |
 
 ```json
 {
@@ -589,8 +589,8 @@ A dashboard that passes Layers 1–5 is *consistent*. These gates make it
    footnotes, section names) is in the audience's professional vocabulary.
    Zero modeler jargon: no "projection", "lens", "child node",
    "after-aggregation", "org node".
-2. **No hardcoded periods.** Use `@[period]` tokens in titles and footnotes;
-   the filter drives the text.
+2. **No hardcoded periods.** Use `@[period]` tokens in titles and footnotes,
+   and `@[periods]` in the header badge; the filter drives the text.
 3. **One explanation per widget.** A footnote or description explains
    derivation once — no duplicated sentences across widgets.
 4. **Exceptions, not wallpaper.** Conditional formatting thresholds tuned so

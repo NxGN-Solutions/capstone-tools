@@ -331,7 +331,7 @@ Check which time periods have data. Useful for finding periods to query before c
 
 ### `data_inputValues_list`
 
-Query raw input data (manually entered or imported values) with validation status and lock state. Returns a compact pivot table: one row per metric×org, time periods as columns. Use a capture template ID (from `templates_captures_list`) OR pass `templateJson` for ad-hoc queries. For calculated/aggregated results, use `data_computedValues_list` instead.
+Query raw input data (manually entered or imported values) with validation status and lock state. Returns a compact pivot table: one row per metric×org, time periods as columns. Use a capture template ID (from `templates_captures_list`) OR pass `templateJson` for ad-hoc queries. For calculated/aggregated results, use `data_computedValues_list` instead. When the template places grouping levels on columns, each pivot row takes its org node, discipline and framework from the column's group, with Discipline or Framework columns added for those levels.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -446,7 +446,7 @@ Save input values (batch upsert). Uses business-key matching — zero IDs resolv
 
 ### `data_computedValues_list`
 
-**Primary data analysis tool.** Returns a compact pivot table: one row per metric×org, time periods as columns. Use a report template ID (from `templates_reports_list`) OR pass `templateJson` for ad-hoc queries. Set `dataInterval` for granularity: 0=day, 1=week, 2=month, 3=quarter, 4=year. Use for monthly summaries, weekly trends, daily drill-downs, cross-site comparisons. Returns read-only calculated results.
+**Primary data analysis tool.** Returns a compact pivot table: one row per metric×org, time periods as columns. Use a report template ID (from `templates_reports_list`) OR pass `templateJson` for ad-hoc queries. Set `dataInterval` for granularity: 0=day, 1=week, 2=month, 3=quarter, 4=year. Use for monthly summaries, weekly trends, daily drill-downs, cross-site comparisons. Returns read-only calculated results. When the template places grouping levels on columns, each pivot row takes its org node, discipline and framework from the column's group, with Discipline or Framework columns added for those levels.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -457,6 +457,7 @@ Save input values (batch upsert). Uses business-key matching — zero IDs resolv
 | `periodCount` | int | No | Number of recent periods (default: 4, used with `periodType`) |
 | `dataInterval` | int | No | Day=0, Week=1, Month=2 (default), Quarter=3, Year=4 |
 | `orgNodeIds` | string | No | Comma-separated org node IDs. Held inside the template's Limit to org nodes (inside its defaults when `showOrgNodeFilter` is false); omit to use the template defaults |
+| `orgNodeTemplateKey` | string | No | Org structure: an org node template ID or `physical`; omit for the template's default structure. Only templates with `showOrgNodeTemplateFilter: true` can switch, and the key must be one of their allowed structures (see `templates_reports_get`); any other key returns no rows. An inline `templateJson` needs `showOrgNodeTemplateFilter: true` to switch. `orgNodeIds` must belong to the chosen structure |
 | `disciplineNodeIds` | string | No | Comma-separated discipline IDs, held inside the template's Limit to disciplines the same way |
 | `frameworkNodeIds` | string | No | Comma-separated framework IDs, held inside the template's Limit to frameworks the same way |
 | `metricNames` | string | No | Include only metrics matching these names (comma-separated, case-insensitive substring match) |
@@ -525,6 +526,7 @@ For template-based queries where a report template already defines the metric se
 |-----------|------|----------|-------------|
 | `metricIds` | string | Yes | Comma-separated metric IDs to query |
 | `orgNodeIds` | string | No | Comma-separated org node IDs. When multiple are provided, results are grouped by org node. |
+| `orgNodeTemplateKey` | string | No | Org structure: an org node template ID or `physical`; omit for the physical structure. Org node IDs must belong to that structure. |
 | `dataInterval` | int | No | Day=0, Week=1, Month=2 (default), Quarter=3, Year=4 |
 | `timePeriodNames` | string | No | Comma-separated period names (e.g., `Jan 2025,Feb 2025`) |
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
@@ -593,7 +595,7 @@ Get one widget's data as CSV. Use a widget template ID (from `templates_widgets_
 
 ---
 
-## Templates — Discovery (6 tools)
+## Templates — Discovery (7 tools)
 
 ### `templates_dashboards_list`
 
@@ -686,7 +688,22 @@ Get detailed configuration of a specific report template.
 |-----------|------|----------|-------------|
 | `id` | string (ID) | Yes | Report template ID |
 
-**Returns:** Template configuration including filters (discipline, framework, metric type), the Limit to lists (`Org Nodes (Limit to)`, `Disciplines (Limit to)`, `Frameworks (Limit to)`) and the Default lists (`Default Org Nodes`, `Default Disciplines`, `Default Frameworks`), included metrics, plus `showOnlyRowsWithValues` and `showRowsWithValuesFilter` (viewers can switch between all rows and rows with values).
+**Returns:** Template configuration including filters (discipline, framework, metric type), the Limit to lists (`Org Nodes (Limit to)`, `Disciplines (Limit to)`, `Frameworks (Limit to)`) and the Default lists (`Default Org Nodes`, `Default Disciplines`, `Default Frameworks`), included metrics, plus `showOnlyRowsWithValues` and `showRowsWithValuesFilter` (viewers can switch between all rows and rows with values), and the allowed grouping levels with `showDataGroupingFilter` (viewers can regroup by those levels in any order; `data_computedValues_list` always uses the default grouping), and `Column Levels`: the grouping levels placed on columns (`-` when every level is on rows). It also prints the `Org Structure` (the default structure; physical when none is set) and `showOrgNodeTemplateFilter` (Fixed, or viewers can switch). When viewers can switch, it lists the allowed structures (`Org Structures (Limit to)`; none means every structure the viewer can access) and `Allow Physical Structure`, and the call example includes `orgNodeTemplateKey`.
+
+---
+
+### `templates_reports_resolve_content`
+
+List the metrics and narratives a report template resolves to, sorted by name: the same list the template editor shows behind "See list". The template's own scope applies (limit picks and attribute filters); your data permissions and viewer filters do not. Needs the template management permission.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `templateId` | string (ID) | Conditional | Report template ID (from `templates_reports_list`). Optional if `templateJson` is provided. |
+| `templateJson` | string (JSON) | Conditional | Inline report template JSON for a draft (alternative to `templateId`). Minimum: `{"name":"Draft","dataGrouping":{"id":0}}`. Without `spreadsheetTemplateMetrics`, every metric the filters allow is listed. |
+
+Provide exactly one of `templateId` and `templateJson`.
+
+**Returns:** `Resolves to {m} metrics and {k} narratives.`, then a `Metrics:` and a `Narratives:` list of names. Each list stops at 100 names and ends with `…and {n} more` when cut; the counts in the first line are always complete. Only report templates have this tool; capture templates are listed with the CLI `resolve-content` command.
 
 ---
 
@@ -698,7 +715,7 @@ Get detailed configuration of a specific capture template.
 |-----------|------|----------|-------------|
 | `id` | string (ID) | Yes | Capture template ID |
 
-**Returns:** Template configuration including assigned metrics, the Limit to and Default lists for org nodes, disciplines and frameworks (as `templates_reports_get`), and data entry settings: `showRowsWithValuesFilter` (viewers can switch between all rows and rows with values), `showPendingFilter` (the capture and validation grids offer a "Show pending only" toggle) and `showOnlyPending` (they open showing only values still to capture, or waiting for the viewing user's validation). `data_inputValues_list` does not apply the pending filter.
+**Returns:** Template configuration including assigned metrics, the `Org Structure` (physical when none is set; capture templates can't switch it), the Limit to and Default lists for org nodes, disciplines and frameworks (as `templates_reports_get`), and data entry settings: `showRowsWithValuesFilter` (viewers can switch between all rows and rows with values), `showDataGroupingFilter` with the allowed grouping levels (viewers can regroup by those levels in any order), `Column Levels` (the grouping levels placed on columns), `showPendingFilter` (the capture and validation grids offer a "Show pending only" toggle) and `showOnlyPending` (they open showing only values still to capture, or waiting for the viewing user's validation). `data_inputValues_list` does not apply the pending filter.
 
 ---
 
@@ -718,7 +735,7 @@ Render a full dashboard as interactive HTML with Chart.js charts. Use when the u
 | `endDate` | string | Yes | End date (ISO format: yyyy-MM-dd) |
 | `timePeriodType` | string | No | `day`, `week`, `month` (default), `quarter`, `year` |
 
-**Returns:** HTML with Chart.js visualizations rendered in Claude's conversation.
+**Returns:** HTML with Chart.js visualizations rendered in Claude's conversation. The dashboard header (eyebrow, title, subtitle, badge) is resolved for the org node and period at the template's default interval, so header tokens such as `@[periods]` show their real text; a dashboard without a header shows its name. A Pie or XY chart whose metrics are all excluded at the org node renders "n/a" and is not reported as a widget error.
 
 **Example call:**
 ```
@@ -745,7 +762,7 @@ Render a KPI info card as HTML showing metric values with labels, units, and tre
 | `endDate` | string | Yes | End date (ISO format) |
 | `timePeriodType` | string | No | Period type (default: `month`) |
 
-**Returns:** HTML info card with metric values, labels, and units. Narrative tokens (`{narrative-guid}`) in the title, description, and footnote render as HTML-encoded plain text with line breaks kept; see [Widget text tokens](#widget-text-tokens).
+**Returns:** HTML info card with metric values, labels, and units. Narrative tokens (`{narrative-guid}`) in the title, description, and footnote render as HTML-encoded plain text with line breaks kept; see [Widget text tokens](#widget-text-tokens). An item whose metric is excluded at the org node reports `NotApplicable` with value "n/a" and no warning.
 
 ---
 
@@ -818,7 +835,7 @@ Render a TextBlock widget as HTML with server-resolved title, subtitle, descript
 | `endDate` | string | Yes | End date (ISO format) |
 | `timePeriodType` | string | No | Period type (default: `month`) |
 
-**Returns:** HTML with the four text slots, metric, trend, period, and narrative text resolved by the API, plus warnings. Narrative text is HTML-encoded plain text with line breaks kept, and narrative warnings carry `data-source-narrative-id`. Pass a single org node ID: narrative tokens show "Select a single org unit" when several are passed.
+**Returns:** HTML with the four text slots, metric, trend, period, and narrative text resolved by the API, plus warnings. Narrative text is HTML-encoded plain text with line breaks kept, and narrative warnings carry `data-source-narrative-id`. A metric token whose metric is excluded at every selected org node reports `NotApplicable` with value "n/a" and no warning. Pass a single org node ID: narrative tokens show "Select a single org unit" when several are passed.
 
 ---
 
@@ -833,7 +850,7 @@ InfoCard and TextBlock text is resolved by the API; MCP renders the result. Stor
 | `@[period]`, `@[period:-1]` | Period label |
 | `{narrative-guid}`, `{narrative-guid}\|-1\|` | Narrative text for the selected org unit (TextBlock title/subtitle/description/footnote and InfoCard title/description/footnote only; no `#trend`) |
 
-A narrative token resolves only when the narrative's capture interval equals the widget's data interval ("Not applicable" otherwise). Other states are "No data", "Restricted", "Unavailable", and "Select a single org unit".
+A narrative token resolves at the narrative's own capture interval, whatever the widget's data interval: a quarterly narrative shows the quarter containing a selected month, or the latest quarter with text in a selected year, and `|-1|` counts in capture periods. The span's `periodName` names the resolved period. "Not applicable" means the narrative is excluded for the selected org unit. Other states are "No data", "Restricted", "Unavailable", and "Select a single org unit".
 
 ---
 
@@ -963,7 +980,7 @@ Create a new widget template from JSON config. Checks for name collisions — if
 - **TextBlock** (`widgetType.id: 6`): Requires at least one non-blank `title`, `subtitle`, `description`, or `footnote`; omit `dataItems` (metrics and narratives are discovered from text tokens)
 - **All data items** need `metric` (with `id`) and `metricPartitioningMode` (with `id`)
 
-Text fields use stored tokens: `[metric-guid]`, `[metric-guid]|-1|`, `#trend[metric-guid]`, `@[period:n]`, `{narrative-guid}`, and `{narrative-guid}|-1|`. Narrative tokens are allowed only in TextBlock and InfoCard title, subtitle, description, and footnote, and must match the widget data interval. See [Widget text tokens](#widget-text-tokens).
+Text fields use stored tokens: `[metric-guid]`, `[metric-guid]|-1|`, `#trend[metric-guid]`, `@[period:n]`, `{narrative-guid}`, and `{narrative-guid}|-1|`. Narrative tokens are allowed only in TextBlock and InfoCard title, subtitle, description, and footnote, and resolve at the narrative's own capture interval. See [Widget text tokens](#widget-text-tokens).
 
 **Pie/Donut styling fields:**
 
@@ -1027,9 +1044,11 @@ Create a new report template from JSON config. Checks for name collisions — if
 | `name` | string | Template name |
 | `dataGrouping` | `{id: "id"}` | Data grouping to use |
 
-Optional: `expandCalculations` (bool) and `expandCalculationsMaxDepth` (1..20, default 10). Expansion is rejected when `showMetricsInColumns` is true. `showMetricsInColumns` needs at least one grouping level (`MetricsInColumnsRequiresGrouping`); each row is then one combination of the grouping values, and metrics that do not apply to a row are marked not applicable.
+Optional: `showDataGroupingFilter` (bool) and `allowedDataGroupingLevels` (list of `{id}`, 0=None (no grouping, a flat list), 1=OrgNode, 2=Discipline, 3=Framework; at least two, including the default's levels; viewers group by them in any order; ignored when the flag is false; allowing 0 needs `showTimePeriodsInRows` for `showMetricsInColumns`), `columnDataGroupingLevels` (list of `{id}`, levels of the grouping placed on columns in chain order: 1=OrgNode for a column block per site, 2=Discipline, 3=Framework; empty means every level is on rows; a level outside the grouping is rejected), `expandCalculations` (bool) and `expandCalculationsMaxDepth` (1..20, default 10). Expansion is rejected when `showMetricsInColumns` is true or any level is on columns. `showMetricsInColumns` needs at least one grouping level (`MetricsInColumnsRequiresGrouping`); each row is then one combination of the grouping values, and metrics that do not apply to a row are marked not applicable. `showTimePeriodsInRows` (bool) lists time periods as rows and metrics as columns in the web viewers; it requires `showMetricsInColumns` (`TimePeriodsInRowsRequiresMetricsInColumns`) and also works with no grouping (`dataGrouping` id 0), which makes a period-by-metric sheet for one site.
 
-`orgNodes`, `disciplines` and `frameworks` are the Limit to lists (no viewer reaches outside them); `defaultOrgNodes`, `defaultDisciplines` and `defaultFrameworks` are the starting picks and must sit inside the matching Limit to list (`DefaultOutsideLimit`). When rows are grouped without Org Node, a fixed site filter (`showOrgNodeFilter` false) must resolve to exactly one org node, the single default or else the single Limit to pick (`SingleOrgNodeRequired`); an open one may have at most one default org node (`SingleDefaultOrgNodeRequired`).
+`orgNodes`, `disciplines` and `frameworks` are the Limit to lists (no viewer reaches outside them); `defaultOrgNodes`, `defaultDisciplines` and `defaultFrameworks` are the starting picks and must sit inside the matching Limit to list (`DefaultOutsideLimit`). When rows are grouped without Org Node, or viewers can change the grouping, a fixed site filter (`showOrgNodeFilter` false) must resolve to exactly one org node, the single default or else the single Limit to pick (`SingleOrgNodeRequired`); an open one may have at most one default org node (`SingleDefaultOrgNodeRequired`).
+
+`orgNodeTemplate` (`{id}`, null = physical) is the default org structure; site picks must belong to it (`SiteNotInStructure`). Set `showOrgNodeTemplateFilter: true` to let viewers switch between `orgNodeTemplates` (`[{id}]`; empty = every structure the viewer can access) plus the physical structure when `allowPhysicalStructure` is true (default). The default must be one of them (`DefaultStructureOutsideLimit`). While switchable, `orgNodes` must be empty (`SiteLimitRequiresFixedStructure`), a fixed site filter can't have `defaultOrgNodes` (`FixedSitesRequireFixedStructure`), and rows grouped without Org Node, or a grouping viewers can change, need `showOrgNodeFilter: true` (`SwitchableStructureRequiresOpenSites`). Open-site `defaultOrgNodes` apply to the default structure only; other structures start at their root.
 
 **Returns:** Success message with the new template ID and name, followed by the template's lint warnings when there are any (see [Lint warnings](#report-template-lint-warnings)).
 

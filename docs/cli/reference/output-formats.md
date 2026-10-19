@@ -354,6 +354,11 @@ Narrative token spans (Info Card and Text Block, `tokenKind: 4`) carry
 breaks kept. They have no numeric value. Their `valueState` can also be
 `NotApplicable` (`5`) or `AmbiguousOrgNode` (`6`).
 
+Metric token spans and Info Card items can also be `NotApplicable` (`5`) when
+the metric is excluded at the org unit. The value is "n/a", with no unit, no
+bands and no warning. A metric token is `NotApplicable` only when the metric is
+excluded at every selected org unit.
+
 ### XY Chart JSON Mode
 
 `cap reporting widgets xy-chart <id> --json` returns the same server-owned XY render contract consumed by the browser renderer and MCP dashboard renderer. Use it for automation that needs to inspect how an XY chart will render, not just whether metric values exist.
@@ -593,7 +598,8 @@ Error: Authentication required
 |------|---------|------------|
 | `AUTH_REQUIRED` | Not logged in | Run `cap auth login` |
 | `AUTH_EXPIRED` | Token expired | Re-run command (auto-refresh) or `cap auth login` |
-| `TENANT_REQUIRED` | No tenant selected (OAuth), or the API key's tenant could not be resolved | OAuth: run `cap auth switch-tenant <id>`. API key: check that `CAPSTONE_API_KEY` is valid and `CAPSTONE_API_URL` points at the API it was issued for |
+| `TENANT_REQUIRED` | No tenant selected (OAuth) | Run `cap auth switch-tenant <id>` |
+| `API_KEY_TENANT_UNRESOLVED` | The API key's tenant could not be resolved | Check that `CAPSTONE_API_KEY` is valid and `CAPSTONE_API_URL` points at the API it was issued for |
 | `NOT_FOUND` | Entity doesn't exist | Verify ID with `list` command |
 | `VALIDATION_ERROR` | Invalid input data | Check JSON structure matches DTO |
 | `API_ERROR` | Server-side error | Check API status, retry |
@@ -636,8 +642,9 @@ Warning: Upload completed with errors: 40 imported, 2 error(s)
 
 Use the exit code together with stderr JSON or the v2 envelope error object.
 For example, `cap data recalculation wait ... --json` returns exit code `5`
-when the model state does not settle before the timeout, while stdout still
-contains the latest model-state payload for analysis.
+when the model state does not settle before the timeout, or when it stops
+early because computed values stopped persisting (`stalled: true`), while
+stdout still contains the latest model-state payload for analysis.
 
 ---
 

@@ -74,7 +74,7 @@ Claude uses the `/discover-structure` prompt to explore your tenant. If you see 
 
 | Mechanism | Count | Description |
 |-----------|-------|-------------|
-| **Tools** | 45 | Data queries, model inspection, template CRUD, widget rendering — called by Claude as needed |
+| **Tools** | 46 | Data queries, model inspection, template CRUD, widget rendering — called by Claude as needed |
 | **Resources** | 7 | Auto-loaded context (metrics, org structure, availability, tool guide) — Claude already knows your model |
 | **Prompts** | 8 | Guided analysis workflows invoked via slash commands |
 
@@ -150,7 +150,7 @@ Detailed step-by-step workflows are in the bundled `docs/` directory:
 | Document | Contents |
 |----------|----------|
 | `docs/SKILL.md` | Concept glossary, tool categories, query patterns |
-| `docs/reference/tools.md` | All 45 tools with parameters and response formats |
+| `docs/reference/tools.md` | All 46 tools with parameters and response formats |
 | `docs/reference/resources.md` | Auto-loaded resource details |
 | `docs/reference/prompts.md` | Prompt parameters and usage |
 | `docs/reference/glossary.md` | Term definitions |

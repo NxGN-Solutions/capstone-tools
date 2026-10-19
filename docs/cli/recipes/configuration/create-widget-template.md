@@ -97,7 +97,7 @@ cap model metrics list --json
 
 **Note metric IDs** for `dataItems[]` configuration or raw CLI text tokens. Widget Template Excel can accept metric-name tokens and transpose them to IDs during upload.
 
-**Narrative tokens (TextBlock and InfoCard text only):** find narrative IDs with `cap model narratives list --json`. Raw CLI JSON uses `{<narrative-id>}` or `{<narrative-id>}|-1|`; the editor and Excel use `{Narrative Name}`. The narrative's capture interval must equal the widget's data interval.
+**Narrative tokens (TextBlock and InfoCard text only):** find narrative IDs with `cap model narratives list --json`. Raw CLI JSON uses `{<narrative-id>}` or `{<narrative-id>}|-1|`; the editor and Excel use `{Narrative Name}`. The token resolves at the narrative's own capture interval, whatever the widget's data interval.
 
 ---
 
@@ -139,7 +139,7 @@ cap model metrics list --json
 **Required fields for Table widgets:**
 - `dataGrouping` - `None`, `OrgNode`, `Discipline`, or `Framework` (Framework anywhere in the chain requires Dynamic metric selection)
 - `additionalDataGrouping` - optional Then By levels (0–2 of OrgNode/Discipline/Framework, distinct from `dataGrouping`)
-- `orgNodeRowSelectionMode` - Required when the grouping chain contains `OrgNode`
+- `orgNodeRowSelectionMode` - Required when the grouping chain contains `OrgNode`. `Children` renders the dashboard org node's direct children and `Descendants` its whole subtree; when the dashboard org node has no children, it renders as the single row.
 - Static metric selection needs `dataItems[]` unless metric filters provide the report-template fallback
 - Dynamic metric selection uses Metric Scope filters (`metricTypeFilters`, discipline/framework filters, and attribute filters) and clears explicit `dataItems[]` on save
 
@@ -201,6 +201,7 @@ Use a subtitle for a short secondary heading below the title. It supports the sa
 |----------|---------|
 | Trend indicator | `#trend[<change-calculation-metric-name>] since @[period:-1]` in the editor/Excel; `#trend[<change-calculation-metric-id>] since @[period:-1]` in raw CLI JSON |
 | Narrative text (TextBlock/InfoCard) | `{<narrative-name>}` in the editor/Excel; `{<narrative-id>}` in raw CLI JSON. Renders the narrative's text for the selected org unit; `#trend` is not supported |
+| Selection label (TextBlock/InfoCard) | `For @[periods] at @[orgNode]` → "For Q1–Q3 FY 26 at Operation 2". `@[periods]` labels the whole selection (rolled up and collapsed into a range); `@[interval]` shows the interval, e.g. "Quarterly" |
 | Interpretive hint | `Positive = Cola earns more per unit than Orange` |
 | Data caveat | `Excludes weekends and public holidays` |
 
@@ -214,7 +215,7 @@ Controls the label shown in legends, tooltips, and next to values. The same rule
 | **Single data item** with a different metric name | `""` or omit | The metric name is already visible |
 | **Multiple data items** on the same widget | Set a short differentiating label | Viewers need to tell the values apart |
 | **Period comparison** (InfoCard, current vs previous) | `"@[period]"` / `"@[period:-1]"` | Tokens resolve to actual period names |
-| **Partitioned data item** (Children/Descendants) | `""` or omit | Org node names auto-populate the legend |
+| **Partitioned data item** (Children/Descendants) | `""` or omit | Org node names auto-populate the legend. At a leaf org node, the partition shows the selected node itself. |
 | **Table row-source item** | `""`, omit, or use a short author-facing label | Rendered row labels come from row fields such as MetricName or OrgNodeName |
 
 **InfoCard — single data item (no displayName needed):**
@@ -709,7 +710,7 @@ TextBlock widgets render metric- and narrative-aware dashboard text without char
 
 Widget-template Excel roundtrips TextBlock text through `Title`, `Subtitle`, `Description`, and `Footnote`, and style JSON through `Text Block Style`. In Excel, metric-name and narrative-name tokens (`[Metric Name]`, `{Narrative Name}`) are accepted in the text slots and transposed to IDs on upload. Unknown or ambiguous narrative names, and GUIDs, are row/column errors.
 
-The example's `{<monthly-narrative-id>}` must reference a narrative captured monthly, matching the pinned `dataInterval`; otherwise save fails with `WIDGET_TOKEN_NARRATIVE_INTERVAL_MISMATCH`. Other narrative save codes are `WIDGET_TOKEN_NARRATIVE_NOT_SUPPORTED`, `WIDGET_TOKEN_NARRATIVE_TREND_NOT_SUPPORTED`, `WIDGET_TOKEN_NARRATIVE_REFERENCE_INVALID` (braces that aren't a `{narrative-guid}` reference), and `WIDGET_TOKEN_NARRATIVE_REFERENCE_MISSING`.
+A narrative token resolves at the narrative's own capture interval, whatever the widget's `dataInterval`: a quarterly narrative on a monthly widget shows the quarter containing the selected month, and on a yearly widget the latest quarter with text. Offsets such as `|-1|` count in capture periods. Each resolved narrative span carries `periodName` (for example `"Q2 FY 26"`). Narrative save codes are `WIDGET_TOKEN_NARRATIVE_NOT_SUPPORTED`, `WIDGET_TOKEN_NARRATIVE_TREND_NOT_SUPPORTED`, `WIDGET_TOKEN_NARRATIVE_REFERENCE_INVALID` (braces that aren't a `{narrative-guid}` reference), and `WIDGET_TOKEN_NARRATIVE_REFERENCE_MISSING`.
 
 Use the typed render command to inspect resolved text, spans, style, warnings, and diagnostics:
 

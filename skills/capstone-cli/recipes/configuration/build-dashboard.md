@@ -728,6 +728,25 @@ These shape the dashboard *shell* — the frame around the widgets. They are add
 }
 ```
 
+Header text takes the widget text tokens in their stored form — `[metric-guid]`, `#trend[metric-guid]`, `@[period]`/`@[period:-1]`, `{narrative-guid}` — plus the selection tokens `@[periods]` (the selected periods as a range, e.g. "Q1–Q3 FY 26"), `@[orgNode]` and `@[interval]`. Never hard-code a period in the header; use `@[periods]` in the badge:
+
+```json
+"header": {
+  "eyebrow": "@[orgNode] · @[interval]",
+  "title": "Group ESG Overview",
+  "badge": "@[periods]"
+}
+```
+
+Metric tokens in the header show the **last selected period's** value. Check what viewers see:
+
+```bash
+cap reporting dashboards header <dashboard-template-id> --org-node <id> --periods "Q1 FY 26, Q2 FY 26, Q3 FY 26"
+# Eyebrow: Operation 2 · Quarterly
+# Title: Group ESG Overview
+# Badge: Q1–Q3 FY 26
+```
+
 **Filter region** (dashboard-level, not a tree item) styles the org-node/time-period selector container and positions it Above or Below the content:
 
 ```json

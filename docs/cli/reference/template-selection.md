@@ -21,7 +21,7 @@ cap auth whoami
 | Analyze calculated/aggregated values in spreadsheet form | **Report Template** | `templates report-templates`, `reporting computed-values` |
 | Define reusable chart/card behavior | **Widget Template** | `templates widget-templates`, `reporting widgets *` |
 | Compose sections/tabs of widgets for end users | **Dashboard Template** | `templates dashboard-templates`, `reporting dashboards *` |
-| Change reporting hierarchy lens | **Org Node Template** (used by report/dashboard templates) | `templates org-node-templates` |
+| Change reporting hierarchy lens | **Org Node Template** (used by report/dashboard templates; a report template can let viewers switch between several, see `showOrgNodeTemplateFilter`) | `templates org-node-templates` |
 
 Dashboard templates own the rendered shell: header, filter region, tab strip, layout nodes, org-node template lens, and widget placement. Widget templates own the widget internals: title/description/footnote, data-item labels, chart/table/card/TextBlock styling, number formats, and tokenized text.
 
@@ -60,6 +60,9 @@ Use these patterns when the goal is fast, low-noise manual capture.
 | Multi-location side-by-side entry | `DataGrouping=OrgNode`, `ShowOrgNodeFilter=true`, `AllowMultiOrgNodeSelect=true` | Supports consistent entry across multiple locations |
 | Focused input set (avoid dense model noise) | Constrain by `Disciplines` and/or explicit `Metrics` | Prevents large grids from unrelated metrics |
 | Stable import/export behavior | Prefer row-based layout first (`ShowMetricsInColumns=false`) | Easier to validate and troubleshoot |
+| One sheet viewed by site or by discipline | `ShowDataGroupingFilter=true` with `AllowedDataGroupingLevels` listing OrgNode and Discipline | Viewers switch the grouping instead of needing a second template |
+| Several sites side by side per discipline | `DataGrouping=Discipline`, Then By `OrgNode`, `ColumnDataGroupingLevels=[OrgNode]`, `ShowMetricsInColumns=true` | One discipline row with a column block per site; each cell saves to its column's site |
+| One row per input with a value per site | `DataGrouping=OrgNode`, `ColumnDataGroupingLevels=[OrgNode]`, `ShowMetricsInColumns=false` | Metric rows with one cell per site under each period |
 
 Minimal verification loop before adopting a capture template:
 
@@ -185,6 +188,12 @@ In `--json` output the same data is available under `selectionDiagnostics`
 (`originalAuthorizedCount`, `predicateFilteredCount`, `rankTruncatedCount`,
 `warningCodes`). Use this to assert that a "Top 5" or filtered widget selected
 the expected number of values before promoting a template.
+
+`metric_not_applicable` in `warningCodes` means every metric the chart reads is
+excluded at the selected org units, so no series or slices were drawn. The CLI
+then does not add a no-data warning (`CLI_NO_DATA` / `noData`). Series or slices
+at excluded org units are always left out, but while any metric still applies
+the code is not added, and an empty chart is reported as no data.
 
 ### 4. Dashboard Composition Flow (Dashboard Templates)
 

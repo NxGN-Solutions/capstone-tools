@@ -55,6 +55,7 @@ cap reporting widgets get-data <widget-template-id> \
 - Metric names appear in the output
 - Values are non-empty for expected periods
 - Values appear for the expected org nodes (including child nodes if the metric aggregates)
+- A metric excluded at an org node has no row for that org node. That is "not applicable", not missing data
 - When the metric or widget data item has bands, typed widget JSON echoes them:
   Info Card `dataItems[].bands` / `dataItems[].bandBounds`; Table `bands` plus
   per-cell `bandBounds`; XY `chartSeries[].bulletFillColours` and the two

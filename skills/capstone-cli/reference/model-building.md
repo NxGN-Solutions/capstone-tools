@@ -336,6 +336,8 @@ cap data recalculation wait <target-model-version> --json
 
 `settled = true` means the calculation version has reached the target model version, calculation succeeded, and results were persisted. Report reads before settlement can show stale or missing computed values.
 
+`wait` also watches `pendingMessageCount`, the number of computed-value messages still waiting to be written. When the calculation for the target has finished but that count stays unchanged for `--stall-seconds` (default `300`; `0` turns the check off), `wait` stops with exit code `5`, `stalled = true`, and a warning. All tenants share one write-back queue, so the count can also stand still while another tenant's write-back drains. The API logs an error when that count stops moving. A single batch can sit still for longer than the log threshold, so confirm the API is still writing values before restarting it; a restart discards queued write-backs. `writeBackReported` is `false` while the calculation's write-back summary is outstanding; if it stays `false` for `--stall-seconds` after the target was calculated, `wait` also stops as stalled, because the API cannot tell whether the values were written (trigger a recalculation). It is `null` when the tenant's last calculation predates write-back tracking. Servers that report neither field never report a stall; `wait` then runs until `--timeout-seconds`.
+
 ### Reporting Fetch Surfaces
 
 Use report-template surfaces to verify saved report shape and parent rollups:

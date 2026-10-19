@@ -51,6 +51,16 @@ cap meta lookups list # All known lookup names across CLI domains (then: meta lo
   (`create`/`get`/`list`/`save`/`delete`/`download-excel`/`upload-excel`) administers
   notification rules; `create` and `save` accept the output of `get --json` as is;
   see [reference/commands.md](./reference/commands.md).
+- A notification template's `eventType` makes it an event template for exactly that event, for
+  example `"eventType": {"id": 3, "name": "Input Value Captured"}` (the `id` is what is saved:
+  2 Change Request Validated, 3 Input Value Captured, 4 Validation Completed, 5 Data Lock Applied).
+  A null or omitted `eventType` makes it a scheduled reminder. An Event Driven rule needs an event
+  template, and a Scheduled or Both rule needs a scheduled reminder. An event template cannot
+  contain `{{DataCaptureTable}}`, `{{ValidationTable}}` or `{{ChangeRequestTable}}`.
+  `{{ActionLink}}` is a styled link for the email body only; a subject that contains it is
+  rejected on `save` and on `upload-excel`. On `save`, the root `name`, `subject` and `body` are
+  the text for the request language, so an edit to that language inside `translations[]` is
+  ignored; edit the root fields instead.
 - A scheduled notification rule fires on either a `cronExpression` or period-end
   offsets, never both. Period-end offsets are `timePeriodType` (Month, Quarter or
   Year; quarters and years follow the tenant's fiscal calendar),

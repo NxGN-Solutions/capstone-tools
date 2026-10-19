@@ -223,8 +223,10 @@ cap <domain> <entity> get <id> [--json]
 cap <domain> <entity> create --file input.json
 cap <domain> <entity> save --file input.json
 cap <domain> <entity> delete <id>
+cap model inputs|calculations delete --ids <id>,<id>   # several in one operation
 cap <domain> <entity> download-excel --output file.xlsx
 cap <domain> <entity> upload-excel file.xlsx
+cap <domain> <entity> upload-status <upload-id>   # async uploads, after an upload-excel timeout (exit 5)
 ```
 
 ## Machine Contracts And Workflows
