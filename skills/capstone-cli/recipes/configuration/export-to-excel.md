@@ -142,8 +142,8 @@ cap <domain> <entity> upload-excel <filename>.xlsx --json
 > ```
 
 > **Widget template text uses names.** In the Title, Subtitle, Description and
-> Footnote columns, write metric tokens as `[Metric Name]` and, for TextBlock
-> and InfoCard rows, narrative tokens as `{Narrative Name}` or
+> Footnote columns, write metric tokens as `[Metric Name]` and, for TextBlock,
+> InfoCard and Table rows, narrative tokens as `{Narrative Name}` or
 > `{Narrative Name}|-1|`. Download writes names in the request language
 > (fallback default). Upload matches narrative names case-insensitively;
 > unknown or ambiguous narrative names, and GUIDs, are reported as row/column

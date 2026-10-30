@@ -78,6 +78,7 @@ Each recipe includes:
 | [Export to Excel](./configuration/export-to-excel.md) | Bulk export/import via Excel | ✅ Available |
 | [Set Up Data Source](./configuration/set-up-data-source.md) | Configure external data integrations | ✅ Available |
 | [Manage API Keys](./configuration/manage-api-keys.md) | Create, list, rotate, and delete API keys | ✅ Available |
+| [Configure a Tenant's AI](./configuration/configure-ai.md) | AI on/off, key source, provider, model, key tests and usage | ✅ Available |
 
 ### Data Management
 

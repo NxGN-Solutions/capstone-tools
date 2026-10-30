@@ -118,10 +118,10 @@ Structure (one row per org node and input, one column per period):
 
 5. COMMENTS - A "Comment" row under the Metric row
    Same Org Node Path, Input and Data Interval; Cell Type "Comment"
-   A comment is saved with the value in the same column, so keep the
-   value in the workbook. A comment without a value is ignored with a
-   warning. A blank comment cell keeps the stored comment; Excel cannot
-   clear a comment.
+   A comment is saved with the value in the same column. A comment for a
+   period whose value cell is blank keeps the stored value, or saves the
+   comment on its own when there is none. A blank comment cell keeps the
+   stored comment; Excel cannot clear a comment.
    Use this to explain values in a band that requires a comment.
 ```
 

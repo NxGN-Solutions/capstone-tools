@@ -83,11 +83,11 @@ Claude uses the `/discover-structure` prompt to explore your tenant. If you see 
 | Category | Tools | Purpose |
 |----------|-------|---------|
 | Auth (6) | `Login`, `Logout`, `Whoami`, `ListTenants`, `SwitchTenant`, `Languages` | Authentication and tenant management |
-| Model (9) | `model_metrics_list`, `model_metrics_get`, `model_orgNodes_list`, `model_frameworks_list`, `model_disciplines_list`, `model_inputOverrides_list`, `model_inputOverrides_get`, `model_calculationOverrides_list`, `model_calculationOverrides_get` | Inspect model structure and org-node overrides |
+| Model (11) | `model_metrics_list`, `model_metrics_get`, `model_orgNodes_list`, `model_frameworks_list`, `model_disciplines_list`, `model_inputOverrides_list`, `model_inputOverrides_get`, `model_calculationOverrides_list`, `model_calculationOverrides_get`, `model_inputs_lint`, `model_calculations_lint` | Inspect model structure and org-node overrides; check an input or calculation before saving it, or audit them all |
 | Data (5) | `data_timePeriods_list`, `data_availability`, `data_inputValues_list`, `data_inputValues_save`, `data_computedValues_list` | Query and save data |
 | Reporting (2) | `reporting_dashboards_getData`, `reporting_widgets_getData` | Dashboard/widget data as CSV |
 | Templates (6) | `templates_dashboards_list`, `templates_widgets_list`, `templates_reports_list`, `templates_captures_list`, `templates_reports_get`, `templates_captures_get` | Discover templates |
-| Template CRUD (10) | `templates_widgets_create/save/delete`, `templates_reports_create/save/delete`, `templates_dashboards_get/create/save/delete` | Create, update, and delete templates |
+| Template CRUD (11) | `templates_widgets_create/save/delete/lint`, `templates_reports_create/save/delete`, `templates_dashboards_get/create/save/delete` | Create, update, delete and lint templates |
 | Apps (8) | `apps_dashboard_render`, `apps_widget_infoCard`, `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_table`, `apps_widget_textBlock`, `apps_widget_aiSummary`, `apps_chart_render` | Visual widgets in conversation |
 | Status (1) | `GetStatus` | Server health check |
 
@@ -150,7 +150,7 @@ Detailed step-by-step workflows are in the bundled `docs/` directory:
 | Document | Contents |
 |----------|----------|
 | `docs/SKILL.md` | Concept glossary, tool categories, query patterns |
-| `docs/reference/tools.md` | All 46 tools with parameters and response formats |
+| `docs/reference/tools.md` | All 47 tools with parameters and response formats |
 | `docs/reference/resources.md` | Auto-loaded resource details |
 | `docs/reference/prompts.md` | Prompt parameters and usage |
 | `docs/reference/glossary.md` | Term definitions |

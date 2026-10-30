@@ -62,14 +62,19 @@ cap auth login
 
 **Purpose:** Seed foundational reference data. Master data commands accept the file as a positional argument.
 
+Steps 2 to 6 follow the dependency order in [Back Up and Restore a Tenant](./backup-restore.md#step-2-upload-in-dependency-order). Skip any workbook you don't have.
+
 ```bash
 WORKBOOKS="./workbooks"
 
 cap masterdata units upload-excel "$WORKBOOKS/units-of-measure.xlsx" --json
 cap masterdata data-sources upload-excel "$WORKBOOKS/data-sources.xlsx" --json
+cap masterdata org-node-attribute-types upload-excel "$WORKBOOKS/org-node-attribute-types.xlsx" --json
 cap masterdata org-nodes upload-excel "$WORKBOOKS/org-structure.xlsx" --json
-cap masterdata disciplines upload-excel "$WORKBOOKS/discipline-structure.xlsx" --json
+cap masterdata framework-attribute-types upload-excel "$WORKBOOKS/framework-attribute-types.xlsx" --json
 cap masterdata frameworks upload-excel "$WORKBOOKS/framework-structure.xlsx" --json
+cap masterdata discipline-attribute-types upload-excel "$WORKBOOKS/discipline-attribute-types.xlsx" --json
+cap masterdata disciplines upload-excel "$WORKBOOKS/discipline-structure.xlsx" --json
 ```
 
 Verify:
@@ -89,15 +94,26 @@ cap masterdata org-nodes list --json
 ```bash
 cap model metric-attribute-types upload-excel "$WORKBOOKS/metric-attribute-types.xlsx" --json
 cap model inputs upload-excel "$WORKBOOKS/inputs.xlsx" --json
+cap model input-overrides upload-excel "$WORKBOOKS/input-overrides.xlsx" --json
 cap model calculations upload-excel "$WORKBOOKS/calculations.xlsx" --json
-
-# Input bands that reference calculations were skipped with a warning, because the
-# calculations did not exist yet. Re-upload inputs to fill them in.
-cap model inputs upload-excel "$WORKBOOKS/inputs.xlsx" --json
+cap model calculation-overrides upload-excel "$WORKBOOKS/calculation-overrides.xlsx" --json
+cap model metric-framework-nodes upload-excel "$WORKBOOKS/metric-framework-nodes.xlsx" --json
 
 # Conversions whose factor is a metric were skipped with a warning in Step 2,
 # because the metric did not exist yet. Re-upload units to fill them in.
 cap masterdata units upload-excel "$WORKBOOKS/units-of-measure.xlsx" --json
+
+# Bands that reference a metric that did not exist yet were skipped with the warning
+# "Bands not imported: referenced metric '...' not found". Re-upload that workbook now.
+cap model inputs upload-excel "$WORKBOOKS/inputs.xlsx" --json
+
+# Narratives come after the metrics and before the templates.
+cap model narrative-attribute-types upload-excel "$WORKBOOKS/narrative-attribute-types.xlsx" --json
+cap model narratives upload-excel "$WORKBOOKS/narratives.xlsx" --json
+cap model narrative-overrides upload-excel "$WORKBOOKS/narrative-overrides.xlsx" --json
+
+# One workbook excludes inputs, calculations and narratives, so it follows all three.
+cap model metric-org-node-exclusions upload-excel "$WORKBOOKS/metric-org-node-exclusions.xlsx" --json
 ```
 
 Warnings alone exit `0`; any row error exits `6`.
@@ -115,13 +131,14 @@ cap model calculations list --json --limit 5
 
 ### Step 4: Upload Templates
 
-**Purpose:** Seed report, capture, widget, and dashboard templates. These depend on metrics from Step 3.
+**Purpose:** Seed org node, capture, report, widget, and dashboard templates, in that order. These depend on the metrics and narratives from Step 3.
 
 Template commands require the `-f` flag for the file path.
 
 ```bash
-cap templates report-templates upload-excel -f "$WORKBOOKS/report-templates.xlsx" --json
+cap templates org-node-templates upload-excel -f "$WORKBOOKS/org-node-templates.xlsx" --json
 cap templates capture-templates upload-excel -f "$WORKBOOKS/capture-templates.xlsx" --json
+cap templates report-templates upload-excel -f "$WORKBOOKS/report-templates.xlsx" --json
 cap templates widget-templates upload-excel -f "$WORKBOOKS/widget-templates.xlsx" --json
 cap templates dashboard-templates upload-excel -f "$WORKBOOKS/dashboard-templates.xlsx" --json
 ```
@@ -163,6 +180,13 @@ Input value upload also requires the `-f` flag.
 
 ```bash
 cap data input-values upload-excel -f "$WORKBOOKS/yearly-input-values.xlsx" --json
+cap data input-values upload-excel -f "$WORKBOOKS/monthly-input-values.xlsx" --json
+```
+
+A value posted in a converted unit, for example a currency, is skipped with a warning until the conversion rate for its period has been calculated. Wait for recalculation, then upload the same workbook again:
+
+```bash
+cap data recalculation wait --current --json
 cap data input-values upload-excel -f "$WORKBOOKS/monthly-input-values.xlsx" --json
 ```
 

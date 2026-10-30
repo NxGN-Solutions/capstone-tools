@@ -347,7 +347,7 @@ cap templates report-templates get <id> --json
 - `pieChartWidgetTemplateType` / `centerMode` / `sliceLabelMode` - PieChart-only display options for pie vs donut, donut center content, and labels rendered on slices
 - `legendValueMode` - PieChart-only stored enum behind the dashboard editor's **Show Legend Value** checkbox
 - `dataGrouping`, `orgNodeRowSelectionMode`, `showOnlyRowsWithValues` - Table-only row grouping and table-wide display controls (at a leaf org node, Children and Descendants render the node itself)
-- `metricTypeFilters`, `metricDisciplineFilters`, `metricFrameworkFilters`, and metric/discipline/framework attribute filters - Table dynamic Metric Scope controls
+- `metricDisciplineFilters`, `metricFrameworkFilters`, and metric/discipline/framework attribute filters - Table dynamic Metric Scope controls (a table ignores `metricTypeFilters`; `includedDataTypes` decides its metric types)
 - `showMetricValue`, `metricPropertyColumns`, `metricAttributeTypeIds` - Table current custom-column controls. `metricPropertyColumns` is a `MetricProperty` EnumDTO list (not `metricColumns`, which means metrics rendered as columns)
 - `narrativeSelectionMode`, `narrativeScopeConfigured`, `narratives`, and narrative scope filters - Table dynamic/static narrative row controls
 - `styleConfiguration` - Table semantic-HTML style contract for slots, row/column overrides, conditional formatting, and categorical color tags

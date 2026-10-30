@@ -138,11 +138,11 @@ For widget templates, set this at both the widget default and data-item override
 | `orgNodeRowSelectionMode` | `0 Children`, `1 Descendants` | Applies when the grouping chain contains OrgNode. |
 | `narrativeSelectionMode` | `0 Dynamic`, `1 Static` | Dynamic resolves narratives from Narrative Scope; Static renders explicit `narratives[]`. |
 
-Table metric scope uses `metricTypeFilters`, `metricDisciplineFilters`, `metricFrameworkFilters`, `metricAttributeFilters`, `disciplineAttributeFilters`, and `frameworkAttributeFilters` when `metricSelectionMode` is Dynamic. The legacy/report-template-compatible `disciplineNodeAttributeFilters` and `frameworkNodeAttributeFilters` fields are also accepted by the shared DTO surface. Static Table templates use explicit `dataItems[]` unless metric filters provide the report-template fallback.
+Table metric scope uses `metricDisciplineFilters`, `metricFrameworkFilters`, `metricAttributeFilters`, `disciplineAttributeFilters`, and `frameworkAttributeFilters` when `metricSelectionMode` is Dynamic. The legacy/report-template-compatible `disciplineNodeAttributeFilters` and `frameworkNodeAttributeFilters` fields are also accepted by the shared DTO surface. Static Table templates use explicit `dataItems[]` and ignore every filter; a table takes its metric types from `includedDataTypes` and ignores `metricTypeFilters`.
 
 Table custom columns are controlled with `showMetricValue`, `metricPropertyColumns` (`MetricProperty` EnumDTO list; widget default `[]`), and `metricAttributeTypeIds`. Dynamic Narrative Scope uses `narrativeDisciplineFilters`, `narrativeFrameworkFilters`, `narrativeMetricAttributeFilters`, `narrativeDisciplineNodeAttributeFilters`, `narrativeFrameworkNodeAttributeFilters`, and `narrativeAttributeFilters`.
 
-Table `styleConfiguration` uses bounded semantic HTML table slots (`panel`, `header`, `title`, `description`, `gridHeader`, `rowLabels`, `metadataCells`, `valueCells`, `totalCells`, `missingValueCells`, `emptyState`, `errorState`, `footnote`, `paginator`) plus `rowLabelHeader`, `zebraStripeColor`, `columnOverrides[]`, `rowOverrides[]`, and `categoricalColorTags[]`. Metric colour bands live on the metric (`bands`) or a static `dataItems[].bands[]` override, not on table style.
+Table `styleConfiguration` uses bounded table style slots (`panel`, `header`, `title`, `description`, `gridHeader`, `rowLabels`, `metadataCells`, `valueCells`, `totalCells`, `missingValueCells`, `emptyState`, `errorState`, `footnote`, `paginator`) plus `rowLabelHeader`, `zebraStripeColor`, `columnOverrides[]`, `rowOverrides[]`, and `categoricalColorTags[]`. Metric colour bands live on the metric (`bands`) or a static `dataItems[].bands[]` override, not on table style.
 
 Do not author `includedDataTypes` or `orgNodeTemplateId` for new Table widgets. They are legacy compatibility/adapter fields. Arbitrary `columns[]`, expression columns, and `OrgNodeAttribute` row grouping are deferred beyond the current Table authoring contract.
 
@@ -230,7 +230,18 @@ What this means for formulas:
 | Before Aggregations | The value must be computed at each org node and period before roll-up, then summed or averaged: conversions with a factor, emissions from activity data, per-reading flags and counts. |
 | After Aggregations | The value is a ratio, percentage, intensity, target achievement or period-over-period change. These must be recomputed from aggregated operands at every node and interval. |
 
-For ratios such as emissions intensity or cost per unit, prefer After Aggregations with `orgStructureAggregationMethod = None` and `timePeriodAggregationMethod = None`, so the ratio is recomputed from aggregated numerator and denominator values. A Before Aggregations ratio or change is wrong above its own interval and node: its quarter value is the sum or average of monthly ratios, not the quarter's ratio.
+For ratios such as emissions intensity or cost per unit, use After Aggregations, so the ratio is recomputed from aggregated numerator and denominator values. A Before Aggregations ratio or change is wrong above its own interval and node: its quarter value is the sum or average of monthly ratios, not the quarter's ratio.
+
+Interval and aggregations by phase:
+
+| | Before Aggregations (adds up its results) | After Aggregations (worked out again from totals) |
+|---|---|---|
+| Data interval | Where the formula runs: the cadence of its inputs | Only the default display interval: it runs at every enabled interval |
+| Time aggregation | Required. Sum for amounts | Not used by the engine; kept as stored |
+| Org aggregation | Required. Sum for amounts. Roll Down hides it from reports | Not used to work it out, but a dashboard centre value that combines several sites uses it. Set Average for a ratio or rate, Sum for an amount; avoid None, Roll Up and Roll Down |
+| May use | Inputs, and Before Aggregations calculations with the same interval (anything else is blank) | Anything |
+
+A new calculation that adds up its results usually takes Sum and Sum. Check a calculation before saving it with `cap model calculations lint --file calculation.json` (or `--id <id>`): it reports the formula's errors with their line and column, refuses a missing phase or a missing aggregation when results add up, and warns when the phase differs from what the formula suggests (`PhaseDiffersFromSuggestion`), when an operand is blank (`BeforeOperandBlank`), when an input captured less often is split, put in the last period or blank first (`BeforeInputLongerThanInterval`; a repeated Average, Min or Max factor doesn't warn), or when Roll Down hides the results (`BeforeRollDownNotReported`). `cap model calculations lint --all` lists every calculation whose phase differs from its suggestion. See [Calculation Impact and Lint](./commands.md#calculation-impact-and-lint).
 
 ## Modelling Rules
 
@@ -248,8 +259,8 @@ To make dashboards work at any org node, name the measurement metrics consistent
 
 ### Intervals
 
-- An input's data interval is its capture cadence. **Changing an input's data interval deletes all of its captured values**, for every period and including locked values. Export the values first (`cap data input-values download-excel`) and reload them after the change. Never toggle an interval to inspect data.
-- Set a Before Aggregations calculation's data interval to the cadence of its inputs **when you create it**. If you change it later, wait for settlement and re-check the values at month, quarter and year. If they don't match a recount, delete the calculation and create it again with the right interval.
+- An input's data interval is its capture cadence. **Changing an input's data interval deletes all of its captured values**, for every period and including locked values. Run `cap model inputs impact <id>` first to see how many values and which calculations are affected (`cap model inputs lint --file` warns with the same counts), and export the values (`cap data input-values download-excel`) to reload them after the change. The save then reports what it deleted: `save` and `create` print "Data interval Month → Quarter deleted … values" (`--json`: a `notice` field), and an Excel upload lists the same line in its result. Never toggle an interval to inspect data.
+- Set a Before Aggregations calculation's data interval to the cadence of its inputs **when you create it** (`cap model calculations lint` warns with `BeforeInputLongerThanInterval` when an input with Sum, Last value or None is captured less often). If you change it later, wait for settlement and re-check the values at month, quarter and year. If they don't match a recount, delete the calculation and create it again with the right interval.
 
 ### Fixed values: targets, limits, factors, exchange rates
 
@@ -455,6 +466,14 @@ the unified `cap data change-requests` surface.
 
 On an input, a band may also set `"autoValidate": true` (default `false`). When the input requires validation and a saved value lands in that band, the value is stored `Approved` instead of `ValidationRequired`, and the change history records an Approve entry by System naming the band and its limits. If a limit cannot be resolved (for example a referenced metric has no value for that org node and period yet), the value needs validation as usual. The check runs only when a value is saved; editing bands later does not re-evaluate stored values. `autoValidate` is for input bands and input overrides: calculation saves, calculation overrides and template band overrides reject it. In the Excel Bands column, a trailing ` auto` on an entry sets it.
 
+**Org-node overrides with the input or calculation.** `cap model inputs save` and `create`, and `cap model calculations save` and `create` (and `lint --file` for both), take an optional `siteOverrides` list, saved with the metric in one transaction, as the web editor does:
+
+- Omit `siteOverrides` (or send `null`) to leave the stored overrides as they are. Change single rows with `cap model input-overrides save` (or `calculation-overrides save`) instead.
+- Send a list to replace the full set: one row per org node, in the [org-node override shape](#org-node-overrides-inputs-and-calculations). A stored override for an org node not in the list is deleted, and `[]` deletes them all. Each row is keyed by `orgNode.id`; its `id` and `metric` are ignored, so a new metric's overrides need neither. Every row needs `orgNode` and `unitOfMeasure`, and two rows for the same org node are rejected.
+- `lint` reports what `save` rejects: an empty row as `SiteOverrideEmpty`, a row without `orgNode` or `unitOfMeasure` as `SiteOverrideOrgNodeRequired` / `SiteOverrideUnitRequired`, two rows for one org node as `SiteOverrideDuplicate`, an org node or unit the tenant does not have as `SiteOverrideOrgNodeUnknown` / `SiteOverrideUnitUnknown`, and range limits typed as numbers in an override unit that has no conversion from the metric's unit as `SiteOverrideBandsUnitNotConvertible`.
+
+`cap model inputs get <id> --site-overrides --json` adds the stored set as `input.siteOverrides` (`cap model calculations get <id> --site-overrides --json` as `calculation.siteOverrides`), so the output can be edited and sent back with `save --file`. Without `--site-overrides`, `get --json` has no `siteOverrides` field and the same round trip leaves the overrides untouched. `get-bulk` never includes them.
+
 ```json
 "bands": [
   { "backgroundColor": "danger-subtle", "foregroundColor": "text-primary" },
@@ -545,7 +564,7 @@ EOF
 
 ### Org-Node Overrides (Inputs and Calculations)
 
-`model input-overrides` and `model calculation-overrides` hold one row per metric and org node. A row overrides the unit of measure, precision, colour bands and, for inputs, `requireValidation` / `requireDataCapture` for that node and the nodes below it.
+`model input-overrides` and `model calculation-overrides` hold one row per metric and org node. A row overrides the unit of measure, precision, colour bands and, for inputs, `requireValidation` / `requireDataCapture` for that node only; the org nodes below it use the metric's settings.
 
 ```json
 {
@@ -573,14 +592,14 @@ Calculation overrides use the same shape without `requireValidation` / `requireD
 
 **`bands` on an override:**
 
-- `null` (or omitted) inherits. The node uses the bands of the nearest org node at or above it whose override sets bands; rows with `null` bands are skipped. With none, the metric's `bands` apply.
-- `[]` turns formatting off for the node and its descendants, until a descendant override sets a list.
-- A list replaces the inherited bands, with the same structure rules as metric bands.
+- `null` (or omitted) uses the metric's `bands` at this node. Overrides never reach the org nodes below them.
+- `[]` turns formatting off at this node.
+- A list replaces the metric's bands at this node, with the same structure rules as metric bands.
 - Constant bounds (`lowerBoundValue` / `upperBoundValue`) are typed in the override's own `unitOfMeasure`. Values are always stored in the metric's unit, so each bound is converted to the metric unit and then shown in the node's display unit. An override with constant bounds whose unit has no conversion from the metric unit is rejected.
 - A spreadsheet-template row or widget data item that sets its own `bands` still wins for colour. Inheriting from the template ("use metric default") means the node's effective bands: the override's, else the metric's. Template rows do not change `requireComment` or `autoValidate`.
-- An input override may set `requireComment` and `autoValidate` on a band. They follow the list: `[]` turns both off, and `null` inherits. Constant bounds stay in the override unit and are converted to the metric unit before the check. Calculation overrides reject both flags.
+- An input override may set `requireComment` and `autoValidate` on a band. They follow the list: `[]` turns both off, and `null` uses the input's bands and flags. Constant bounds stay in the override unit and are converted to the metric unit before the check. Calculation overrides reject both flags.
 
-`get --json` returns `bands` (absent or `null` = inherit); the table output shows `Bands: Inherited`, `None (formatting off)` or the band count. `list` uses the same three labels in a Bands column (a discipline group row shows `-`). `inherited <metric-id> <org-node-id>` prints the unit, precision, flags (inputs) and bands that node would use before its own row. The override Excel workbook has a `Bands` column in the same compact text format as metric workbooks (`danger-subtle; 90:warning-subtle; [Target]:success/white`): blank inherits, `none` turns formatting off, and a workbook without the column leaves stored bands unchanged. An input override cell accepts ` auto` and ` !comment`; a calculation override rejects both.
+An override applies only to its own org node; org nodes below it use the metric's settings. `get --json` returns `bands` (absent or `null` = the metric's bands); the table output shows `Bands: Metric bands`, `None (formatting off)` or the band count. `list` uses the same three labels in a Bands column (a discipline group row shows `-`). The override Excel workbook has a `Bands` column in the same compact text format as metric workbooks (`danger-subtle; 90:warning-subtle; [Target]:success/white`): blank uses the metric's bands, `none` turns formatting off, and a workbook without the column leaves stored bands unchanged. An input override cell accepts ` auto` and ` !comment`; a calculation override rejects both.
 
 Capture, report and Table widget data responses carry `orgNodeBands` (metric id → org node id → bands) next to the metric-level `bands`, only for nodes whose effective bands differ; an empty list there means no formatting at that node.
 
@@ -605,7 +624,7 @@ cap data input-values create \
   --json
 ```
 
-**Units:** values are stored in the metric definition unit. `list`, `get` and the capture grid show each org node's **effective unit**: the node's unit override (or the nearest ancestor's), converted with the unit's conversion factor (a fixed factor, or the factor metric's value for that node and period).
+**Units:** values are stored in the metric definition unit. `list`, `get` and the capture grid show each org node's **effective unit**: the node's own unit override (an override never reaches the org nodes below it), converted with the unit's conversion factor (a fixed factor, or the factor metric's value for that node and period).
 
 - Send `unitOfMeasure.id` on every row to say which unit the number is in. A value in the override unit is converted to the metric unit, and a value in the metric unit is stored as sent.
 - Omitting `unitOfMeasure` means the metric unit, **except** on an org node that has a unit override. There the save is rejected with `MissingUnitOfMeasure`, because a bare number copied from the screen would be stored off by the conversion factor.
@@ -731,6 +750,12 @@ cat <<'EOF' | cap data input-values save --json
 EOF
 ```
 
+A stored comment outlives the value. If the cell has a comment, this save clears
+the value and keeps the record with its comment; a second `"value": null` save
+deletes it. To delete the value and its comment in one save, also send
+`"comments": ""`. To record a comment without a value, save `"value": null` with
+`"comments": "<text>"`.
+
 Null rows can be mixed with value rows in one batch. Clearing follows the same
 rules as any save: a value in a locked period is rejected until the period is
 unlocked. Wait for recalculation (`cap data recalculation wait <version>`)
@@ -855,7 +880,8 @@ The `data input-values list` response returns a **grid structure** matching the 
             "value": 0.6,
             "validationStatus": 2,
             "isLocked": false,
-            "userCanCapture": true
+            "userCanCapture": true,
+            "attachmentCount": 1
           }
         },
         {
@@ -878,6 +904,7 @@ The `data input-values list` response returns a **grid structure** matching the 
 - `value` field is absent (not null) when no data exists
 - `path` uses `->` separators: `MetricName->OrgPath`
 - `groupingKey` is the org node ID for that row
+- `attachmentCount` is the number of supporting files on the value (0 when none). Read the files with `data input-values get <id>`
 
 ### `--periods` Parameter Format
 

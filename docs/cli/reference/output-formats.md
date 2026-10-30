@@ -339,7 +339,7 @@ Widget commands have two output families:
 | `cap reporting widgets info-card` | Typed info-card DTO | Dashboard card render validation |
 | `cap reporting widgets pie-chart` | Typed pie-chart DTO | Slice/percentage validation |
 | `cap reporting widgets xy-chart` | Typed XY-chart render DTO, JSON-first | Browser-aligned series, axis, value, render metadata, and metric metadata validation |
-| `cap reporting widgets table` | Typed Table render DTO | Dashboard grid/table render validation |
+| `cap reporting widgets table` | Typed Table render DTO | Dashboard grid/table render validation; `titleContent`, `descriptionContent` and `footnoteContent` carry the resolved text and token spans as for Text Block |
 | `cap reporting widgets text-block` | Typed TextBlock render DTO | Resolved text slots, token spans (metric, trend, period, narrative), warnings |
 
 Typed widget render contracts keep raw numeric values numeric and expose
@@ -349,7 +349,7 @@ formatted display strings use the shared server formatter with invariant
 thousands grouping and the metric precision; unit symbols are applied according
 to the unit's configured prefix/suffix position.
 
-Narrative token spans (Info Card and Text Block, `tokenKind: 4`) carry
+Narrative token spans (Info Card, Text Block and Table, `tokenKind: 4`) carry
 `sourceNarrativeId` and return the narrative value's plain text with line
 breaks kept. They have no numeric value. Their `valueState` can also be
 `NotApplicable` (`5`) or `AmbiguousOrgNode` (`6`).

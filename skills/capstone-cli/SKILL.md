@@ -233,7 +233,7 @@ status, run `cap schema --json` or read [reference/commands.md](./reference/comm
 | `templates` | Capture/report/widget/dashboard configuration | `capture-templates *`, `report-templates *`, `widget-templates *`, `dashboard-templates *`, `lookups get` |
 | `data` | Captured values, narratives, change requests, locks | `time-periods list`, `input-values *`, `narrative-values *`, `change-requests *`, `data-lock lock|unlock` |
 | `reporting` | Computed values and dashboard/widget output | `computed-values list/query/audit`, `widgets info-card/pie-chart/xy-chart/table`, `dashboards get-data/get-insights` |
-| `security`, `system` | User Excel import/export and tenant administration | `security users download-excel/upload-excel`, `system tenants *`, `system tenants fiscal-config update` |
+| `security`, `system` | User Excel import/export and tenant administration | `security users download-excel/upload-excel`, `system tenants *`, `system tenants fiscal-config update`, `system tenants ai-config get/set/test/remove-key/models/usage` |
 | `notifications` | Notification template and rule administration | `notifications templates create/get/list/save/delete/download-excel/upload-excel`, `notifications rules create/get/list/save/delete/download-excel/upload-excel` |
 
 Most reporting commands require `--data-interval` and `--periods`. Type-specific

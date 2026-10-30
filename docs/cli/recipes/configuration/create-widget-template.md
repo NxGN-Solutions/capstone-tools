@@ -97,7 +97,7 @@ cap model metrics list --json
 
 **Note metric IDs** for `dataItems[]` configuration or raw CLI text tokens. Widget Template Excel can accept metric-name tokens and transpose them to IDs during upload.
 
-**Narrative tokens (TextBlock and InfoCard text only):** find narrative IDs with `cap model narratives list --json`. Raw CLI JSON uses `{<narrative-id>}` or `{<narrative-id>}|-1|`; the editor and Excel use `{Narrative Name}`. The token resolves at the narrative's own capture interval, whatever the widget's data interval.
+**Narrative tokens (TextBlock, InfoCard and Table text only):** find narrative IDs with `cap model narratives list --json`. Raw CLI JSON uses `{<narrative-id>}` or `{<narrative-id>}|-1|`; the editor and Excel use `{Narrative Name}`. The token resolves at the narrative's own capture interval, whatever the widget's data interval.
 
 ---
 
@@ -112,9 +112,9 @@ cap model metrics list --json
 - `dataRangeMode` - { id: 1, name: "Static" } or { id: 0, name: "Dynamic" }
 - `dataInterval` - { id: 2, name: "Month" }, { id: 3, name: "Quarter" }, etc.
 - `metricSelectionMode` - { id: 0, name: "Static" } (explicit metrics) or { id: 1, name: "Dynamic" }
-- `timePeriodAggregationMethod` - Required for Dynamic widgets that collapse multiple selected periods into one value. Use Sum for additive metrics, Average for rates/percentages, Last Value for snapshots, and None only for deliberate time-series output.
+- `timePeriodAggregationMethod` - Required for Dynamic widgets that collapse multiple selected periods into one value. Use Sum for additive metrics, Average for rates/percentages, Last Value for snapshots, and None only for deliberate time-series output. Tables don't use it for their cells (each value is the stored value at the interval, rolled up with the metric's own time period aggregation); on a table it only seeds the aggregation of a new order-and-limit selection, and the web table editor has no control for it.
 - `dataItems` - Array of metric configurations for metric-set widgets; omit or set to `[]` for TextBlock
-- `showConditionalFormatting` - Default `true`. Hard gate: when false, Table / Info Card / XY never paint band colours, even if a dashboard viewer has switched formatting on. The dashboard template owns `allowConditionalFormattingToggle` (whether viewers see the filter-row toggle). Spreadsheet/report templates still have their own Allow flag for that page.
+- `showConditionalFormatting` - Default `true`. Hard gate: when false, Table / Info Card / XY never paint band colours, even if a dashboard viewer has switched formatting on. The dashboard template's `allowConditionalFormattingToggle` decides whether viewers see the filter-row toggle. On a Table, the widget's own `allowConditionalFormattingToggle: false` fixes formatting at `showConditionalFormatting` whatever the viewer chooses; Info Card and XY ignore it. Spreadsheet/report templates still have their own Allow flag for that page.
 
 > **Dynamic metric selection:** Set `metricSelectionMode` to
 > `{ id: 1, name: "Dynamic" }` to resolve metrics at render time instead of
@@ -141,20 +141,29 @@ cap model metrics list --json
 - `additionalDataGrouping` - optional Then By levels (0–2 of OrgNode/Discipline/Framework, distinct from `dataGrouping`)
 - `orgNodeRowSelectionMode` - Required when the grouping chain contains `OrgNode`. `Children` renders the dashboard org node's direct children and `Descendants` its whole subtree; when the dashboard org node has no children, it renders as the single row.
 - Static metric selection needs `dataItems[]` unless metric filters provide the report-template fallback
-- Dynamic metric selection uses Metric Scope filters (`metricTypeFilters`, discipline/framework filters, and attribute filters) and clears explicit `dataItems[]` on save
+- Dynamic metric selection (All matching) uses Metric Scope filters (discipline/framework filters and attribute filters; a table takes its metric types from `includedDataTypes` and ignores `metricTypeFilters`). Static selection (Only these) is a picked list: it needs at least one item and ignores every filter. Its `dataItems[]` are kept as overrides of the matching metrics they name (label, `numberFormat`, `bands`): they neither limit nor order the metrics, which keep model order
+- `dataPeriodStart` / `dataPeriodEnd` when `dataRangeMode` is `Static`, in either metric selection mode: one window for the whole table, counted in `dataInterval` from the dashboard's last selected period (`-11` and `0` = the last 12 periods). Lint error `PeriodWindowRequired` when missing. Table `dataItems[]` take no window: offsets they carry are ignored and `get` returns none; save stores what it is sent without a warning, and only `lint` warns `TableItemWindowIgnored` on each item that has one. In Excel the window is on the widget row; an older workbook that has windows on a Static table's metric rows and none on its widget row gets the range of its metric rows. Otherwise windows on metric rows are ignored, with a `TableItemWindowIgnored` warning at each such cell; a widget-row window always wins
 
 **Authoring fields for Table widgets:**
 - `showOnlyRowsWithValues` - Suppress rows whose resolved values are all empty
 - `showMetricValue`, `metricPropertyColumns`, `metricAttributeTypeIds` - Current custom-column controls. `metricPropertyColumns` is an EnumDTO list of `MetricProperty` values (`0` Unit of Measure, `1` Precision, …); widget default is `[]`
-- `showTotalRow` - Engine-sourced footer for the dashboard org node's calculated values. Only rendered when the grouping chain is OrgNode-only and `showMetricsInColumns` is true; otherwise the render returns `TABLE_TOTAL_UNAVAILABLE`
+- `showMetricsInColumns` - One column per metric instead of one row per metric. Works with any grouping; a table with no grouping needs `showTimePeriodsInRows` too
+- `showTimePeriodsInRows` - One row per time period under each row, with the metrics as columns. Needs `showMetricsInColumns`
+- `columnDataGroupingLevels` - EnumDTO list of grouping-chain levels (`1` OrgNode, `2` Discipline, `3` Framework) shown as column groups instead of rows. Empty (the default) puts every level on rows. Every level must be in the chain, and the layout must keep at least one row and one column (lint codes `ColumnDataGroupingLevelOutsideChain`, `LayoutRequiresRow`, `LayoutRequiresColumn`)
+- `metricTooltipProperties`, `metricTooltipAttributeTypeIds` - Metric properties (same EnumDTO list as `metricPropertyColumns`) and metric attribute-type GUIDs shown in the tooltip on metric names
+- `showTotalRow` - Engine-sourced footer for the dashboard org node's calculated values. Only rendered when the grouping chain is OrgNode-only, on rows, with `showMetricsInColumns` and periods as columns; otherwise the render returns `TABLE_TOTAL_UNAVAILABLE` and lint warns `TotalRowNeedsSiteOnly`
+- `pageSize` - Rows per page: the page a dashboard viewer starts on (the editor offers 10, 25, 50 and 100; viewers can still pick another size on the page toolbar). Any whole number from 1 to 1000; `null` (or a blank Excel cell) is 50, stored as none (`PageSizeOutOfRange` otherwise; in Excel, text or a fraction is an upload error on that cell). Like the layout fields, an update or a workbook that leaves it out keeps the stored value. A table data response's `pageSize` says how many (a request without `take` gets every row; a preview request without `take` gets this many); `cap reporting widgets table` without `--take` and `widget-templates preview` page through every row. Excel column: `Table Rows Per Page`
+- `showDataIntervalFilter` - `true` follows the dashboard's interval, with `dataInterval` as the default when the dashboard sends none; `false` fixes `dataInterval`, and the table's footer shows "Interval fixed: Quarter" when the dashboard asks for another interval. Fixed needs a `dataInterval` (lint error `IntervalFixedNeedsInterval`). Left out on create, a table follows exactly when it has no `dataInterval`. When a following table renders at another interval, its Static window (counted in `dataInterval`) converts to the periods that cover the same months: quarters `-3`..`0` are months `-11`..`0` or year `0`..`0`, year `-1`..`0` is months `-23`..`0`, and months `-7`..`-2` are quarters `-2`..`0`. Day and Week offsets carry over unchanged
+- `valueSelectionConfig` (order and limit) - Needs OrgNode on rows: in the grouping and not in `columnDataGroupingLevels`, since with sites on columns a row has no site to rank (`ValueSelectionNeedsSiteGrouping`: an error on a new table, a warning on a table saved before this rule)
+- An update that leaves out `showTimePeriodsInRows`, `columnDataGroupingLevels`, `metricTooltipProperties`, `metricTooltipAttributeTypeIds` or `showDataIntervalFilter` keeps their saved values; a workbook without their columns does too. Leaving out `showDataIntervalFilter` while clearing `dataInterval` makes the table follow the dashboard, and while giving a table that had no `dataInterval` one fixes it, as setting and clearing the interval did before the flag
 - `orgNodeAttributeFilters` - Filter the resolved org-node scope before values are loaded; this is not the deferred `OrgNodeAttribute` grouping mode
 - `narrativeSelectionMode` - `Dynamic` for Narrative Scope, or `Static` for explicit `narratives[]`
 - `narrativeScopeConfigured` and narrative scope arrays - Use when Dynamic Narrative Scope is intentionally authored
 - `narratives` - Used when `narrativeSelectionMode` is Static
 - `styleConfiguration` - Bounded Table style slots, row/column overrides, and categorical color tags
-- `dataItems[].bands` - Optional metric-band override for Static metric selection. Omit or `null` inherits the metric default (each org node's effective bands: its input or calculation override's bands, else the metric's); `[]` disables formatting for that item. A ladder list has an unbounded first band; later bands use exactly one of `lowerBoundValue` or `lowerBoundMetric`. Interval lists may set both ends, including `upperBoundValue` / `upperBoundMetric`. Colours are registry tokens only (`success-subtle`, `warning-subtle`, `danger-subtle`, `info-subtle`, or other canonical tokens)
+- `dataItems[].bands` - Optional metric-band override for a listed metric, or, under Dynamic metric selection, for the matching metric the item names. Omit or `null` inherits the metric default (each org node's effective bands: its input or calculation override's bands, else the metric's); `[]` disables formatting for that item. A ladder list has an unbounded first band; later bands use exactly one of `lowerBoundValue` or `lowerBoundMetric`. Interval lists may set both ends, including `upperBoundValue` / `upperBoundMetric`. Colours are registry tokens only (`success-subtle`, `warning-subtle`, `danger-subtle`, `info-subtle`, or other canonical tokens)
 
-Do not author `includedDataTypes` or `orgNodeTemplateId` for new Table templates. The CLI/API may accept them for legacy compatibility, but current authoring uses Narrative Properties and the dashboard template owns the org-node-template lens.
+Do not author `includedDataTypes` or `orgNodeTemplateId` for new Table templates. The CLI/API may accept them for legacy compatibility, but current authoring uses the narrative fields (`narrativeSelectionMode`, `narratives[]`, Narrative Scope) and the dashboard template owns the org-node-template lens.
 
 **Required fields for TextBlock widgets:**
 - At least one of `title`, `subtitle`, `description`, or `footnote` - Text slots that support the same metric, trend, and period tokens as other widget text fields, plus narrative tokens
@@ -200,8 +209,8 @@ Use a subtitle for a short secondary heading below the title. It supports the sa
 | Use Case | Example |
 |----------|---------|
 | Trend indicator | `#trend[<change-calculation-metric-name>] since @[period:-1]` in the editor/Excel; `#trend[<change-calculation-metric-id>] since @[period:-1]` in raw CLI JSON |
-| Narrative text (TextBlock/InfoCard) | `{<narrative-name>}` in the editor/Excel; `{<narrative-id>}` in raw CLI JSON. Renders the narrative's text for the selected org unit; `#trend` is not supported |
-| Selection label (TextBlock/InfoCard) | `For @[periods] at @[orgNode]` → "For Q1–Q3 FY 26 at Operation 2". `@[periods]` labels the whole selection (rolled up and collapsed into a range); `@[interval]` shows the interval, e.g. "Quarterly" |
+| Narrative text (TextBlock/InfoCard/Table) | `{<narrative-name>}` in the editor/Excel; `{<narrative-id>}` in raw CLI JSON. Renders the narrative's text for the selected org unit; `#trend` is not supported |
+| Selection label (TextBlock/InfoCard/Table) | `For @[periods] at @[orgNode]` → "For Q1–Q3 FY 26 at Operation 2". `@[periods]` labels the whole selection (rolled up and collapsed into a range); `@[interval]` shows the interval, e.g. "Quarterly" |
 | Interpretive hint | `Positive = Cola earns more per unit than Orange` |
 | Data caveat | `Excludes weekends and public holidays` |
 
@@ -341,7 +350,7 @@ left-accent, and full-bleed style fragments, use
 the CLI-first guide for translating dashboard mockups into
 `styleConfiguration` JSON.
 
-Raw CLI JSON posts directly to the API, so metric tokens inside `title`, `subtitle`, `description`, `footnote`, and data item `name` should use stored metric IDs. The widget editor and Widget Template Excel accept metric names and transpose them to IDs internally. InfoCard `title`, `description`, and `footnote` also accept narrative tokens (`{<narrative-id>}`); data item `name` does not.
+Raw CLI JSON posts directly to the API, so metric tokens inside `title`, `subtitle`, `description`, `footnote`, and data item `name` should use stored metric IDs. The widget editor and Widget Template Excel accept metric names and transpose them to IDs internally. InfoCard and Table `title`, `description`, and `footnote` also accept narrative tokens (`{<narrative-id>}`); data item `name` does not.
 
 **Naming convention:** `{Metric} | Comparison | {Interval} | Card`
 
@@ -585,6 +594,8 @@ The JSON output includes `styleMetadata`, `styleDiagnostics`, `displayMetadata`,
 
 Table widgets are the dashboard table widget type. They use normal Input and Calculation metrics as row sources and can render dynamic or static narrative rows.
 
+In the web app, table templates open in the staged table editor with a live preview, and the widget type is fixed once a template is created. To change a table into another type, create a new template; to start a table from an existing one, use **Duplicate** in the widget template list (or, from the CLI, `get` the JSON, clear `id`, give it a new name and pass it to `create`; `save` only updates an existing template).
+
 ```json
 {
   "name": "Ambient Noise | Site Matrix | Quarterly | Table",
@@ -593,6 +604,8 @@ Table widgets are the dashboard table widget type. They use normal Input and Cal
   "discipline": { "id": "<discipline-id>" },
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 3, "name": "Quarter" },
+  "dataPeriodStart": -3,
+  "dataPeriodEnd": 0,
   "metricSelectionMode": { "id": 0, "name": "Static" },
   "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
   "dataGrouping": { "id": 1, "name": "OrgNode" },
@@ -645,15 +658,17 @@ Table widgets are the dashboard table widget type. They use normal Input and Cal
 ```
 
 **Key fields:**
-- `dataItems` are the static metric selections. Use dynamic metric filters instead when `metricSelectionMode` is Dynamic.
+- `dataItems` are the static metric selections. When `metricSelectionMode` is Dynamic, the metric filters select the metrics and `dataItems` only override the ones they name.
+- `dataPeriodStart` / `dataPeriodEnd` are the table's one Static window (here the last four quarters); the items carry none.
 - `dataItems[].bands` overrides the metric's colour bands for this widget. Omit to inherit; `[]` disables formatting.
 - `dataGrouping` plus optional `additionalDataGrouping` and `orgNodeRowSelectionMode` control row grouping under the dashboard-selected org node.
-- `showMetricsInColumns` is allowed only when the chain is OrgNode only; it switches from one row per metric to metric columns.
-- `showTotalRow` adds an engine-sourced total row for the dashboard org node. It requires OrgNode-only grouping with `showMetricsInColumns`. The footer is the parent engine value, not a client or filtered sum of body rows.
+- `showMetricsInColumns` switches from one row per metric to metric columns, with any grouping (a flat table needs `showTimePeriodsInRows` too). `showTimePeriodsInRows` gives each row one row per period.
+- `columnDataGroupingLevels` moves grouping levels onto columns: for example OrgNode grouping with Discipline on columns gives one row per site and one column group per discipline.
+- `showTotalRow` adds an engine-sourced total row for the dashboard org node. It requires OrgNode-only grouping on rows with `showMetricsInColumns` and periods as columns. The footer is the parent engine value, not a client or filtered sum of body rows.
 - `showMetricValue`, `metricPropertyColumns`, and `metricAttributeTypeIds` control the Columns tab (metric value plus extra metadata columns).
 - `narrativeSelectionMode: Dynamic` uses the narrative scope arrays. Empty arrays mean all permitted values when `narrativeScopeConfigured` is true.
 - `narrativeSelectionMode: Static` ignores narrative scope arrays and renders the explicit `narratives[]` list.
-- `styleConfiguration` controls the semantic HTML table renderer. Keep it sparse and use safe tokens or validated hex values.
+- `styleConfiguration` paints the table's slots (every header and cell of the dashboard grid). Keep it sparse and use safe tokens or validated hex values.
 - Arbitrary static-text columns, org-node-attribute display columns, expression columns, and `OrgNodeAttribute` row grouping are deferred; do not add a standalone `columns[]` array to current Table JSON.
 
 **Naming convention:** `{Subject} | {Qualifier} | {Interval} | Table`
@@ -815,9 +830,33 @@ for the full field/selector matrix.
 
 ---
 
-### Step 6: Create the Widget Template
+### Step 6: Lint, then Create the Widget Template
 
-**Purpose:** Execute the creation command.
+**Purpose:** Check the template, then execute the creation command.
+
+**Lint first (nothing is saved):**
+```bash
+cap templates widget-templates lint --file widget.json
+```
+
+`lint` takes the same payload as `create` and `save` (with or without the `widgetTemplate` wrapper) and runs the same local checks first. It prints one line per issue, errors first, each with a stable code, for example:
+
+```text
+Error   [MetricsRequired] dataItems: Select at least one metric, or a metric scope.
+Warning [UnknownMetrics] dataItems: 1 selected metric no longer exists.
+
+1 error(s), 1 warning(s), 0 note(s).
+```
+
+Errors are exactly what `create` and `save` would reject (exit code `2`); fix them and lint again. Warnings and notes never block a save. Use `--id <guid>` instead of `--file` to check a saved template as it is stored, and `--json` for the raw `{ "errors", "warnings", "notes" }` result. `create` and `save` run the same check first: a template with errors is not sent, and the warnings print after saving. Against an older server without lint they save without it.
+
+**Preview a draft table (nothing is saved):**
+```bash
+cap templates widget-templates resolve-content --file widget.json
+cap templates widget-templates preview --file widget.json --org-nodes <org-node-id> --periods "Jan 2026,Feb 2026"
+```
+
+`resolve-content` lists the metrics and narratives the table resolves to. `preview` renders every row for the org node and the named periods, with the same options and the same grid as `cap reporting widgets table`; add `--data-interval month` (or another interval) to set the request interval and `--json` for the full render contract. Only table templates preview or resolve.
 
 **Command (auto-wrapped JSON):**
 ```bash
@@ -850,8 +889,8 @@ echo '{"widgetTemplate": {...}}' | cap templates widget-templates create --json
 ```
 
 **What to look for:**
-- Success response with new widget template ID
-- Error handling for validation failures
+- Success response with new widget template ID, plus any lint warnings
+- On a rejected save, the error lists each field's messages (for example `name: ...`); run `lint` to see the same failures with their codes
 
 ---
 
@@ -997,6 +1036,18 @@ cap templates widget-templates save --file widget.json --json
 ```
 
 The CLI will auto-wrap this to `{"widgetTemplate": {...}}`, preserving the ID inside.
+
+### Creating or Updating Many Templates via Excel
+
+```bash
+cap templates widget-templates download-excel --output widget-templates.xlsx
+# edit rows, then
+cap templates widget-templates upload-excel -f widget-templates.xlsx --json
+```
+
+Upload runs the same lint as `lint` on each template. Templates without errors are saved; a template with an error is not saved and is reported on its first row and the column of the failing field, with the code. The result starts with the counts, for example "12 saved, 2 not saved"; warnings are reported and the template saves. Fix the reported rows and upload again: rows match existing templates by name, so the saved ones are updated in place.
+
+The table narrative settings have their own columns: `Table Narrative Selection Mode`, `Table Narrative Scope Configured` and the five narrative scope filter columns. A workbook downloaded before these columns existed can still be uploaded: on update the template keeps its stored narrative settings, and a new template takes the defaults. When the columns are there, a blank mode or scope-configured cell also keeps the stored value, while a blank filter cell clears that filter. Filter cells use the same `Attribute: Value|Value` text as the other attribute filter columns, and each value is looked up within its own attribute. Other missing columns behave as described for each column.
 
 ### Get → Modify → Save Round-Trip
 

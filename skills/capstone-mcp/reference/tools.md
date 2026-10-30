@@ -79,7 +79,7 @@ Switch to a different tenant. Changes become your default for future sessions.
 
 ---
 
-## Model Read (9 tools)
+## Model Read (10 tools)
 
 ### `model_metrics_list`
 
@@ -187,7 +187,7 @@ List input overrides. One row is an input metric at an org node.
 | `disciplineId` | string (ID) | No | Only overrides in this discipline |
 | `limit` | int | No | Maximum rows (default: 200) |
 
-**Returns:** Text rows with id, discipline, unit, precision, validation, capture, and bands (`Inherited`, `None (formatting off)`, or a count). `GET` is not used; the call is `POST Model/InputOverrides/GetTreeGridList`.
+**Returns:** Text rows with id, discipline, unit, precision, validation, capture, and bands (`Metric bands`, `None (formatting off)`, or a count). `GET` is not used; the call is `POST Model/InputOverrides/GetTreeGridList`.
 
 ### `model_inputOverrides_get`
 
@@ -217,6 +217,30 @@ List calculation overrides. Same shape as input overrides, without validation an
 | `id` | string (ID) | Yes | Calculation override ID |
 
 **Returns:** Text for one override. `GET Model/CalculationOverrides?id=`.
+
+### `model_inputs_lint`
+
+Check an input definition without saving it. Errors are exactly what saving would reject. Warnings and notes never block a save: a warning is a risk, such as `DataIntervalChangeDeletesValues` (changing the data interval deletes every stored value of the input, locked and approved ones included); a note is worth knowing but harmless, such as `NameSimilarToExisting` (a name close to an existing metric's).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `inputJson` | string (JSON) | One of the three | The input definition, as posted to save |
+| `inputId` | string (ID) | One of the three | A saved input to lint as it is |
+| `all` | bool | One of the three | Lint every saved input and return a summary |
+
+**Returns:** One line per issue, errors first, then warnings, then notes: `Error   [Code] field: message`, `Warning …`, `Note    …`, then a count line; or "No issues found in the input." With `all`, the summary described under `model_calculations_lint`. `POST Model/Inputs/Lint`.
+
+### `model_calculations_lint`
+
+Check a calculation without saving it, with the codes the web editor, CLI and Excel upload use. Errors are exactly what saving would reject: the formula's own errors (`FormulaRequired`, `FormulaSyntax`, `FormulaUnknownMetric`, `FormulaUnknownFunction`, `FormulaFuturePeriod`, `FormulaCircular`, each placed on its line and column except an empty formula's `FormulaRequired`; a circular formula sits on the reference that closes the cycle), `CalculationPhaseRequired`, both aggregations when results add up (`TimeAggregationRequired`, `OrgAggregationRequired`) and the shared metric rules. Warnings never block a save: `PhaseDiffersFromSuggestion` (the formula's shape suggests the other phase, with the reason), `BeforeOperandBlank` (an operand is blank when results add up), `BeforeInputLongerThanInterval` (an input captured less often with Sum, Last value or None is split, put in the last period or blank before the formula runs; a repeated Average, Min or Max factor doesn't warn) and `BeforeRollDownNotReported` (Roll Down hides the results from reports).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `calculationJson` | string (JSON) | One of the three | The calculation definition, as posted to save; the formula may use metric names or ids |
+| `calculationId` | string (ID) | One of the three | A saved calculation to lint as it is |
+| `all` | bool | One of the three | Lint every saved calculation and return a summary (the phase audit) |
+
+**Returns:** For one calculation, the same lines as `model_inputs_lint`. With `all`: `Linted N calculations: X with errors, Y with warnings.`, then one line per code (`Error   FormulaUnknownMetric (1): Diesel intensity`, `Warning PhaseDiffersFromSuggestion (2): …`), then `Failing: …` with the calculations saving would refuse. `GET Model/Calculations?id=` for each, then `POST Model/Calculations/Lint`.
 
 ---
 
@@ -424,7 +448,7 @@ Save input values (batch upsert). Uses business-key matching — zero IDs resolv
 
 **Business key:** `metric` + `orgNode` + `timePeriodType` + `startDate` uniquely identifies each value. The `id` field can always be the zero ID — the API resolves existing records by business key. This makes saves idempotent.
 
-**Units:** the value is read in the unit the capture grid shows for that org node — the node's unit override (or the nearest ancestor's) when one exists, otherwise the metric unit. The tool resolves that unit for you, and the API converts it to the stored metric unit with the unit conversion (a fixed factor, or the factor metric's value for that node and period).
+**Units:** the value is read in the unit the capture grid shows for that org node — the node's own unit override when one exists, otherwise the metric unit. The tool resolves that unit for you, and the API converts it to the stored metric unit with the unit conversion (a fixed factor, or the factor metric's value for that node and period).
 
 **TimePeriodType values:**
 
@@ -584,7 +608,7 @@ Get one widget's data as CSV. Use a widget template ID (from `templates_widgets_
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `widgetTemplateId` | string (ID) | Conditional | Widget template ID (from `templates_widgets_list`). Optional if `templateJson` is provided. |
-| `templateJson` | string (JSON) | Conditional | Inline widget template JSON (alternative to `widgetTemplateId`). Required fields: `name`, `discipline` (`{"id":"ID"}`), `widgetType` (`{"id":0}` InfoCard, 1 PieChart, 2 XYChart, 4 Table), `dataRangeMode` (`{"id":0}`), `metricSelectionMode` (`{"id":0}`), `dataItems` array. Table templates also require `rowFields` and `valueFields`; each Table value column is an explicit configured value field using row metric, selected metric, or selected calculation binding. Get metric/discipline IDs from `model_metrics_list` and `model_disciplines_list`. |
+| `templateJson` | string (JSON) | Conditional | Inline widget template JSON (alternative to `widgetTemplateId`). Required fields: `name`, `discipline` (`{"id":"ID"}`), `widgetType` (`{"id":0}` InfoCard, 1 PieChart, 2 XYChart, 4 Table), `dataRangeMode` (`{"id":0}`), `metricSelectionMode` (`{"id":0}`), `dataItems` array. Table templates use `dataGrouping` (`0` None, `1` OrgNode, `2` Discipline, `3` Framework), optional `additionalDataGrouping`, `dataItems` (metrics) or the metric scope filters, optional `narratives`, `showMetricValue`, `showMetricsInColumns`, `metricPropertyColumns`, `metricAttributeTypeIds` and `missingValuePlaceholder`. Get metric/discipline IDs from `model_metrics_list` and `model_disciplines_list`. An inline template is capped at 1,000 rows (org nodes × metrics) and at the report grid's cell limit (rows × periods); a larger one is refused with a 400 naming the count. |
 | `orgNodeId` | string (ID) | No | Organization node ID (from `model_orgNodes_list`) |
 | `timePeriodNames` | string | No | Comma-separated period names (e.g., `Q1 FY 25,Q2 FY 25`) |
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
@@ -592,6 +616,10 @@ Get one widget's data as CSV. Use a widget template ID (from `templates_widgets_
 | `dataInterval` | int | No | `0=day`, `1=week`, `2=month`, `3=quarter`, `4=year`; applied to widgets with no pinned interval |
 
 **Returns:** CSV data for the widget's metrics and time periods.
+
+The table render endpoint behind `apps_widget_table` (`Reporting/Widgets/GetTableData`) no longer accepts an inline template; it renders saved templates only. Draft table templates render through `POST Templates/WidgetTemplates/Preview`, which pages like a dashboard table. A `GetTableData` request without `take` returns every row (the response's `pageSize` names the table's Rows per page, else 50); `apps_dashboard_render` and `apps_widget_table` page through every row 1000 at a time (`apps_widget_table` stops at `limit` when one is given), as `cap reporting widgets table` does without `--take`.
+
+`apps_widget_table` renders a table with periods as rows one row per row and period, with a Period column before the metric columns, as the dashboard does. Column headers name their column groups first when a level is on columns.
 
 ---
 
@@ -694,7 +722,7 @@ Get detailed configuration of a specific report template.
 
 ### `templates_reports_resolve_content`
 
-List the metrics and narratives a report template resolves to, sorted by name: the same list the template editor shows behind "See list". The template's own scope applies (limit picks and attribute filters); your data permissions and viewer filters do not. Needs the template management permission.
+List the metrics and narratives a report template resolves to, sorted by name: the same list the template editor shows behind "See list". The template's own scope applies (limit picks and attribute filters); your data permissions and viewer filters do not. A metric excluded at every site a viewer can pick (the "Limit to" sites, or the Default sites when the site filter is fixed) is not listed; exclusions never cascade to child sites. Needs the template management permission.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -818,6 +846,7 @@ Render a table widget as HTML. Shows dashboard-shaped table rows, columns, forma
 | `startDate` | string | Yes | Start date (ISO format) |
 | `endDate` | string | Yes | End date (ISO format) |
 | `timePeriodType` | string | No | Period type (default: `month`) |
+| `limit` | int | No | Maximum rows to render (default: every row) |
 
 **Returns:** HTML table with row headers, value columns, warnings, and truncation state.
 
@@ -945,11 +974,11 @@ Unknown options keys are silently ignored.
 
 ---
 
-## Templates — CRUD (10 tools)
+## Templates — CRUD (11 tools)
 
 > Template CRUD tools create, update, and delete widget, report, and dashboard templates. For listing/discovery of existing templates, see the [Templates](#templates-6-tools) section above.
 
-### Widget Templates (3 tools)
+### Widget Templates (4 tools)
 
 #### `templates_widgets_create`
 
@@ -976,7 +1005,7 @@ Create a new widget template from JSON config. Checks for name collisions — if
   `dataItems[].numberFormat`. Keep visual fields separate from
   `valueSelectionConfig`, which controls filtering/ranking/diagnostics.
 - **XYChart** (`widgetType.id: 2`): Data items require `xyChartWidgetTemplateDataItemType` with `id`
-- **Table** (`widgetType.id: 4`): Also requires `rowFields` and `valueFields`; configured period or selected metric/calculation columns are represented as separate value fields
+- **Table** (`widgetType.id: 4`): Also requires `dataGrouping` (`0` None, `1` OrgNode, `2` Discipline, `3` Framework). Rows come from `dataItems` (Static metric selection) or the metric scope filters (Dynamic); optional `additionalDataGrouping` (0–2 Then By levels), `narratives`, `showMetricValue`, `showMetricsInColumns` (needs a grouping, or `showTimePeriodsInRows`), `showTimePeriodsInRows` (one row per period; needs `showMetricsInColumns`), `columnDataGroupingLevels` (grouping levels shown on columns; the layout must keep a row and a column), `metricPropertyColumns`, `metricAttributeTypeIds`, `metricTooltipProperties` and `metricTooltipAttributeTypeIds` (the metric-name tooltip), `missingValuePlaceholder`, `styleConfiguration` and `showDataIntervalFilter` (true follows the dashboard's interval with `dataInterval` as the default; false fixes `dataInterval` and needs one, `IntervalFixedNeedsInterval`; omitted on create follows exactly when `dataInterval` is null). Order and limit (`valueSelectionConfig`) needs OrgNode in the grouping. An update that leaves out the four layout and tooltip fields or `showDataIntervalFilter` keeps their stored values
 - **TextBlock** (`widgetType.id: 6`): Requires at least one non-blank `title`, `subtitle`, `description`, or `footnote`; omit `dataItems` (metrics and narratives are discovered from text tokens)
 - **All data items** need `metric` (with `id`) and `metricPartitioningMode` (with `id`)
 
@@ -996,7 +1025,7 @@ Unsupported style payloads such as raw CSS, HTML, callbacks, unsafe URLs,
 arbitrary chart config, generic `style` bags, `styleBag`, and `propertyBag` are
 rejected by API/MCP validation.
 
-**Returns:** Success message with the new template ID and name.
+**Returns:** Success message with the new template ID and name, followed by the template's lint warnings when there are any (see [`templates_widgets_lint`](#templates_widgets_lint)). Warnings never block the save.
 
 ---
 
@@ -1011,7 +1040,20 @@ Update an existing widget template by ID. Same required fields as `templates_wid
 
 If the config contains an `id` field, it must match the `id` parameter or be the empty ID.
 
-**Returns:** Success message with the updated template ID and name.
+**Returns:** Success message with the updated template ID and name, followed by the template's lint warnings when there are any. Warnings never block the save.
+
+---
+
+#### `templates_widgets_lint`
+
+Check a widget template without saving it. Errors are exactly what saving would reject; warnings and notes never block a save. Each issue carries a code, for example `NameRequired`, `NameDuplicate`, `MetricsRequired`, `NarrativesRequired`, `FrameworkGroupingNeedsMatching`, `OrgNodeAttributeFilterIncomplete` or `UnknownMetrics`. A table saved before these checks that already breaks `MetricsRequired` or `NarrativesRequired` gets a warning instead, so it still saves; a new break, and any other rule, is an error.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `config` | string (JSON) | One of the two | The widget template config, as posted to `templates_widgets_save`. Checked locally first, as save does |
+| `templateId` | string (ID) | One of the two | A saved widget template to lint as it is stored |
+
+**Returns:** One line per issue, errors first, then warnings, then notes: `Error   [Code] field: message`, `Warning …`, `Note    …`, then a count line; or "No issues found in the widget template." `POST Templates/WidgetTemplates/Lint` (with `templateId`: `GET Templates/WidgetTemplates?id=` first).
 
 ---
 
@@ -1074,7 +1116,8 @@ If the config contains an `id` field, it must match the `id` parameter or be the
 |------|---------|
 | `RowTypesExcludeBoundNarratives` | Narratives are bound but Narrative is not in `includedDataTypes` (empty means every type). |
 | `RowTypesExcludeBoundCalculations` | Calculation metrics are bound but Calculation is not in `includedDataTypes`. |
-| `DataTypesAndMetricTypesDisjoint` | `metricTypes` is set and shares no metric type with `includedDataTypes`. |
+| `SiteDefaultMissing` | The site filter is open and single-select with several sites in its Limit to and no default, so viewers start with no site. |
+| `IntervalNotSet` | `dataInterval` is empty, so the template shows days. |
 | `NarrativesOutsideIntervalOrScope` | Bound narratives no longer match `dataInterval`, the Limit to `orgNodes` or the Limit to `disciplines`. |
 
 If the warning check fails, the result says so and the save still stands. There is no capture template save tool.

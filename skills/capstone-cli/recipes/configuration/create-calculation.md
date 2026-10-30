@@ -159,13 +159,13 @@ When should this formula compute?
 
 **Purpose:** Define how the calculated result rolls up.
 
-**Org Structure Aggregation:**
-- Calculations that run **Before Aggregations** → typically `Sum` (values roll up after computing)
-- Calculations that run **After Aggregations** → typically `None` (formula recomputes at each level)
+**Before Aggregations** (adds up its results): both aggregations are required, and the engine uses them for every total.
+- Org structure: `Sum` for amounts. Avoid `Roll Down`: reports show nothing for it.
+- Time period: `Sum` for amounts (cumulative totals).
 
-**Time Period Aggregation:**
-- Rate/percentage metrics → `None` (recompute for each time window)
-- Cumulative totals → `Sum`
+**After Aggregations** (worked out again from totals): the engine recomputes the formula at every level and interval, so it uses neither aggregation to work the value out.
+- Org structure: still set one. A dashboard's centre value that combines several sites uses it: `Average` for a ratio or rate, `Sum` for an amount. Don't use `None`, `Roll Up` or `Roll Down`: the dashboard can't combine sites with them.
+- Time period: not used; `None` is fine.
 
 See [Model Building Reference](../../reference/model-building.md#common-aggregation-patterns) for the full pattern table.
 
@@ -185,7 +185,7 @@ Discipline:      Environmental > Energy
 Unit:            kWh/person
 Formula:         DIV([Total Electricity], [Headcount], null)
 Calc Phase:      After Aggregations
-Org Aggregation: None (recomputed at each level)
+Org Aggregation: Average (dashboards combine sites with it)
 Time Aggregation: None
 
 Proceed? [Yes/No]
@@ -211,7 +211,7 @@ cat <<'EOF' | cap model calculations create --json
   "dataInterval": { "id": 2, "name": "Month" },
   "precision": 2,
   "calculationPhase": { "id": 1, "name": "After Aggregations" },
-  "orgStructureAggregationMethod": { "id": 3, "name": "None" },
+  "orgStructureAggregationMethod": { "id": 1, "name": "Average" },
   "timePeriodAggregationMethod": { "id": 0, "name": "None" },
   "formula": "DIV([<id>], [<id>], null)",
   "attributeValues": []
@@ -240,9 +240,11 @@ EOF
 # Verify the calculation
 cap model calculations get <new-id> --json
 
-# Validate the formula syntax
-cap model formula-validation validate --formula "DIV([<id>], [<id>], null)" --json
+# Lint it as stored: the same errors and warnings the web editor shows
+cap model calculations lint --id <new-id>
 ```
+
+`lint` exits 2 if `save` would refuse the calculation (formula errors with their line and column, a missing phase, a missing aggregation when results add up). Read its warnings before moving on: `PhaseDiffersFromSuggestion` gives the reason the formula's shape suggests the other phase (a ratio set to add up its results is the common mistake), `BeforeOperandBlank` and `BeforeInputLongerThanInterval` name an operand that is blank, or an input captured less often that is split or put in the last period before the formula runs (a repeated Average factor doesn't warn), and `BeforeRollDownNotReported` means reports show nothing. You can also lint the JSON before Step 8: `cap model calculations lint --file calculation.json`.
 
 **Present confirmation:**
 ```
