@@ -154,8 +154,8 @@ map when checking whether a command family exists.
 | `notifications rules` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `notifications templates` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `perf` | `memory-throughput` |
-| `reporting computed-values` | `audit`, `download-excel`, `list`, `query` |
-| `reporting dashboards` | `get-data`, `get-insights`, `header` |
+| `reporting computed-values` | `audit`, `download-document`, `download-excel`, `list`, `query` |
+| `reporting dashboards` | `download-document`, `get-data`, `get-insights`, `header` |
 | `reporting widgets` | `get-data`, `info-card`, `pie-chart`, `table`, `text-block`, `textblock`, `xy-chart` |
 | `root` | `concepts`, `schema`, `status`, `version` |
 | `security users` | `download-excel`, `upload-excel` |
@@ -496,6 +496,17 @@ response, including `columnGroups` (the column-group tuples that each column's
 `narrativeColumns` (one cell per `columnGroups` entry), and `isNotApplicable`
 on cells that do not apply.
 
+Both `--json` responses also carry `orgNodes` (org node id → name for the
+sites on the page). `data input-values list --json` adds `users`
+(user id → display name), `validationLevels` (id → `name`, `rule`) and
+`lockOperations` (id → `description`, `byId`, `date`), and on each value cell
+`lastChangeById` and `lastChangeDate` (a data feed saves as the empty GUID),
+`lastValidation` (`levelId`, `byId`, `date`, `approved`, and
+`rejectionReason` on a rejection), `awaiting` (`levelId`, `approved`,
+`required`, only while In Progress), `lockOperationId` and
+`latestAttachmentDate`. Narrative cells (`narrativeValue`, `narrativeColumns`)
+carry the same fields. Each field is left out when the API does not send it.
+
 `--org-node-template` on `list` and `download-excel` must name one of the
 report template's allowed org structures; anything else returns no rows. A
 template that fixes its org structure (`showOrgNodeTemplateFilter` false)
@@ -533,6 +544,9 @@ cap reporting dashboards get-insights <dashboard-template-id> <layout-node-id> -
 
 # Dashboard header resolved for a selection (eyebrow, title, subtitle, badge + token warnings)
 cap reporting dashboards header <dashboard-template-id> --org-node <id> --periods "Q1 FY 26, Q2 FY 26" [--data-interval quarter] [--json]
+
+# Dashboard as a PDF or Word document (charts and AI Summaries print as placeholders: they are drawn in the browser)
+cap reporting dashboards download-document <dashboard-template-id> --org-node <id> --periods "Q2 FY 27" [--data-interval quarter] [--format pdf|word] [--formatting on|off] [-o dashboard.pdf] [--json]
 
 # Dashboard template static audit before live data checks
 cap templates dashboard-templates audit <dashboard-template-id> --strict --json
@@ -924,6 +938,13 @@ Report templates may set `expandCalculations: true` with
 `expandCalculationsMaxDepth` between 1 and 20 (default 10). Expansion is
 rejected when `showMetricsInColumns` is true or any level is on columns
 (`ExpandCalculationsRequiresRowGrouping`).
+Report templates may also set `showEvidence: true` (default false): the
+report's `download-excel` and `download-document` (PDF and Word) output then
+add an Evidence column after each value column (`<period> Evidence`, or
+`<metric> Evidence` when metrics are columns) with the number of files on
+the value and the date the latest was added, for example
+`2 files, 7 Oct 2026`. In Excel, values with files carry the same text as a
+cell note whatever the setting.
 Each of the site, discipline and framework filters has two lists.
 `orgNodes`, `disciplines` and `frameworks` (plus the matching
 `*AttributeFilters`) are the **Limit to** lists: no viewer reaches data
@@ -1712,7 +1733,7 @@ Copies the evidence files on input and narrative values from one tenant to anoth
 
 Exit code `0` when every file is `added` or `already-present`, `6` when some are not. `--dry-run` checks and matches everything and sends nothing. `--timeout-seconds` applies to the file uploads only. Files are added through `POST DataManagement/InputValues/Attachments` and `POST DataManagement/NarrativeValues/Attachments` (multipart: the value id and one file), which need Data Capture Manage and capture rights on the value.
 
-`data input-values list` and `data narrative-values list` show each cell's file count in an `Attachments` column (`attachmentCount` with `--json`). `data input-values get --json` leaves out attachment fields that are null; a file's content is never in the response.
+`data input-values list` and `data narrative-values list` show each cell's file count in an `Attachments` column (`attachmentCount` with `--json`). `reporting computed-values list --json` carries `attachmentCount` and `latestAttachmentDate` (UTC) on each value cell and narrative cell with files; a longer period sums the files of the captured values it contains, and cells the viewer may not see carry none. `data input-values get --json` leaves out attachment fields that are null; a file's content is never in the response.
 
 ### Validate Data
 

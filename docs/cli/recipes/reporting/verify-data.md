@@ -31,6 +31,8 @@ Before starting, Claude should know:
 | Check **all widgets on a dashboard** at once | `cap reporting dashboards get-data` | `--org-node`, `--data-interval`, `--periods` |
 | Check **computed values** via report template filter | `cap reporting computed-values list` | `--template`, `--data-interval`, `--periods` |
 | **Download** computed values as Excel | `cap reporting computed-values download-excel` | `--template`, `--data-interval`, `--periods`, `-o file.xlsx` |
+| **Download** the report view as PDF or Word | `cap reporting computed-values download-document` | `--template`, `--data-interval`, `--periods`, `--format pdf\|word`, `-o file.pdf` |
+| **Download** a dashboard as PDF or Word | `cap reporting dashboards download-document` | `<dashboard-template-id>`, `--org-node`, `--periods`, `--format pdf\|word`, `-o file.pdf` |
 
 ---
 
@@ -195,6 +197,24 @@ cap reporting computed-values download-excel \
   --data-interval day \
   --periods "2026-01-20,2026-01-21" \
   -o computed-values.xlsx
+```
+
+**Download as PDF or Word:** this gives the report view as the viewer's Download menu does, with group rows, full narratives and band colours. It takes the same filters as `download-excel`; `--format` is `pdf` (default) or `word`.
+```bash
+cap reporting computed-values download-document \
+  --template <report-template-id> \
+  --data-interval quarter \
+  --periods "Q2 FY 27" \
+  --format word \
+  -o report.docx
+```
+
+**Download a dashboard as PDF or Word:** this gives the dashboard as the viewer's Download menu does: a header with the site, interval and periods, then every section and widget in order, landscape A4. Tables print every row, Info Cards and Text Blocks print their values and text. Charts and AI Summaries are drawn in the browser, so a CLI download shows a short placeholder in their place; download from the dashboard viewer to include them. Omit `--data-interval` to use the dashboard's default interval. `--formatting off` leaves out band colours. Without `-o` the file is named as the viewer names its download: dashboard, site and periods, for example `Group ESG Overview - Mining Group - FY 26.pdf` (or `.docx`).
+```bash
+cap reporting dashboards download-document <dashboard-template-id> \
+  --org-node <org-node-id> \
+  --periods "Q2 FY 27" \
+  --format pdf
 ```
 
 ---
