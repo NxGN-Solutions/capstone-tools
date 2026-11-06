@@ -112,8 +112,11 @@ cap model narrative-attribute-types upload-excel "$WORKBOOKS/narrative-attribute
 cap model narratives upload-excel "$WORKBOOKS/narratives.xlsx" --json
 cap model narrative-overrides upload-excel "$WORKBOOKS/narrative-overrides.xlsx" --json
 
-# One workbook excludes inputs, calculations and narratives, so it follows all three.
+# The metric workbook excludes inputs and calculations, so it follows both.
 cap model metric-org-node-exclusions upload-excel "$WORKBOOKS/metric-org-node-exclusions.xlsx" --json
+
+# Narratives have their own exclusions workbook. Upload only adds exclusions.
+cap model narrative-org-node-exclusions upload-excel "$WORKBOOKS/narrative-org-node-exclusions.xlsx" --json
 ```
 
 Warnings alone exit `0`; any row error exits `6`.

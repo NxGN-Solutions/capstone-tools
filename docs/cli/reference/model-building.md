@@ -306,7 +306,7 @@ At month, a quarterly count shows thirds (one exceedance in a quarter reads 0.33
 
 ### Exclusions are for reporting only
 
-Org-node exclusions hide a metric in capture and reports. The engine still calculates and aggregates every metric for every node and enabled period, so the value space has no gaps. Never use an exclusion to change what a calculation adds up.
+Org-node exclusions hide a metric in capture and reports. Narrative exclusions (`model narrative-org-node-exclusions`) work the same way: they hide the narrative at that one org node and never delete its values. The engine still calculates and aggregates every metric for every node and enabled period, so the value space has no gaps. Never use an exclusion to change what a calculation adds up.
 
 ### Unit conversions
 
@@ -406,6 +406,36 @@ cat <<'EOF' | cap model narratives create --json
 { ... payload ... }
 EOF
 ```
+
+#### Narrative data feeds
+
+To import narrative text from a database, add `narrativeDataFeeds` to the
+payload. Each feed needs a SQL Server or PostgreSQL data source and a query
+that returns `OrgNodeId`, `TimePeriod` and `Text`, one row per site and period:
+
+```json
+"narrativeDataFeeds": [
+  {
+    "name": "Incident notes",
+    "description": "Monthly incident summary",
+    "dataSource": { "id": "<postgres-datasource-id>" },
+    "dataSourceInstruction": "SELECT c.OrgNodeId, c.TimePeriod, string_agg(i.notes, E'\\n') AS Text FROM context c LEFT JOIN incident_summary i ON i.site_code = c.OrgNodeName AND i.reported_at >= c.StartInclusive AND i.reported_at < c.EndExclusive GROUP BY c.OrgNodeId, c.TimePeriod",
+    "orgNodeOverrides": [{ "id": "<site-id>" }]
+  }
+]
+```
+
+- `orgNodeOverrides` lists the sites the feed writes; leave it empty for every
+  site.
+- A narrative has at most one feed per data source, feeds' sites must not
+  overlap, and a feed for every site must be the only feed. A save that breaks
+  a rule is refused with an error on `narrativeDataFeeds`.
+- Leave `narrativeDataFeeds` out of a save to keep the stored feeds; send `[]`
+  to remove them all.
+- Imported text is written in the default language. A `NULL` `Text` leaves a
+  value alone, an empty `Text` clears it, and two rows for one cell are both
+  skipped.
+- Capture templates hide a fed narrative unless they include integrated items.
 
 Use `cap model narratives lookup --capture-interval quarter --org-nodes <id>
 --discipline-nodes <id> --json` before capture workflows. Lock and governed edit

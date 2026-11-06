@@ -148,6 +148,7 @@ map when checking whether a command family exists.
 | `model metric-org-node-exclusions` | `copy`, `download-excel`, `list`, `save`, `upload-excel` |
 | `model metrics` | `delete-eval`, `delete-status`, `explain`, `get`, `graph`, `list` |
 | `model narrative-attribute-types` | `create`, `delete`, `download-excel`, `get`, `get-all`, `list`, `lookup`, `save`, `upload-excel` |
+| `model narrative-org-node-exclusions` | `copy`, `download-excel`, `list`, `save`, `upload-excel` |
 | `model narrative-overrides` | `copy`, `create`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `model narratives` | `create`, `delete`, `delete-preview`, `delete-start`, `delete-status`, `distinct-values`, `download-excel`, `get`, `list`, `lookup`, `save`, `upload-excel`, `upload-status` |
 | `model org-nodes` | `list` |
@@ -189,6 +190,7 @@ cap <domain> <entity> list [--json]
 | Narrative Definitions | `cap model narratives list` | Text narrative definitions |
 | Narrative Attribute Types | `cap model narrative-attribute-types list` | Custom narrative attributes |
 | Narrative Overrides | `cap model narrative-overrides list` | Org-node narrative customizations |
+| Narrative Exclusions | `cap model narrative-org-node-exclusions list --org-nodes <id>` | Narratives included or excluded at one org node |
 | Metric Attribute Types | `cap model metric-attribute-types list` | Custom metric attributes |
 | Metric Framework Nodes | `cap model metric-framework-nodes list` | Metric-to-framework associations |
 | Model Org Nodes | `cap model org-nodes list` | Model exploration alias for org structure |
@@ -1791,6 +1793,10 @@ cap data bulk-validation validate \
 
 ### Narrative Workflow
 
+`cap model narratives get <id> --json` includes the narrative's data feeds
+(`narrativeDataFeeds`). Imported narrative text shows "Data feed" as the author
+in `history`.
+
 ```bash
 cap model narratives lookup --capture-interval quarter --org-nodes <id> --discipline-nodes <id> --json
 cap data narrative-values save --file narrative-value.json --json
@@ -1828,6 +1834,19 @@ every other interval, locked and approved values included.
 Narrative JSON input uses the Capstone narrative request
 contracts. Use `--file <path>` or pipe JSON on stdin; use `--json` so automation
 receives full IDs and contract-shaped response envelopes.
+
+**Narrative exclusions.** `model narrative-org-node-exclusions` hides a
+narrative at one org node. It never deletes values: they stay stored and
+return if the exclusion is removed. An exclusion applies to its own node only,
+not to child sites.
+
+| Command | Options |
+|---------|---------|
+| `list` | `--org-nodes` (exactly one, required), `--discipline-nodes`, `--grouping none\|discipline`, `--limit`, `--offset`, `--json`. Columns: ID, Name, Discipline, Included, Excluded |
+| `save` | `--file` or stdin: `{"narrativeOrgNodeExclusions":[{"narrativeId","orgNodeId","isSelected"}]}`. `isSelected: true` means the narrative applies at the node (no exclusion) |
+| `copy <source> <destinations>` | Gives each destination exactly the source node's exclusions: exclusions the source lacks are removed there |
+| `download-excel` | `--output` |
+| `upload-excel <file>` | Prints rejected rows |
 
 ### Data Locks
 
@@ -1870,7 +1889,7 @@ cap <domain> <entity> download-excel -o file.xlsx
 **Entities supporting Excel download:**
 - `model inputs`, `model calculations`
 - `model metric-attribute-types`, `model metric-framework-nodes`
-- `model metric-org-node-exclusions`
+- `model metric-org-node-exclusions`, `model narrative-org-node-exclusions`
 - `masterdata units`, `masterdata data-sources`
 - `masterdata disciplines`, `masterdata frameworks`, `masterdata org-nodes`
 - `masterdata discipline-attribute-types`, `masterdata framework-attribute-types`, `masterdata org-node-attribute-types`
@@ -1924,7 +1943,7 @@ use `create --file` or `save --file`.
 **Entities supporting Excel upload:**
 - `model inputs`, `model calculations`
 - `model metric-attribute-types`, `model metric-framework-nodes`
-- `model metric-org-node-exclusions`
+- `model metric-org-node-exclusions`, `model narrative-org-node-exclusions`
 - `masterdata units`, `masterdata data-sources`
 - `masterdata disciplines`, `masterdata frameworks`, `masterdata org-nodes`
 - `masterdata discipline-attribute-types`, `masterdata framework-attribute-types`, `masterdata org-node-attribute-types`
@@ -1937,6 +1956,12 @@ use `create --file` or `save --file`.
 resolved org-node path. Upload is upsert-only: rows present in the workbook
 create or keep exclusions, and rows omitted from the workbook do not delete or
 include existing exclusions.
+
+`model narrative-org-node-exclusions` workbooks have one sheet, "Narrative Org
+Node Exclusions", with only `Org Node Path` and `Narrative` columns. Each row
+excludes the named narrative at that one org node. Upload is upsert-only, the
+same as metrics. Unknown or ambiguous paths, GUID-like values and unknown
+narratives are rejected per row; valid rows still save.
 
 ---
 

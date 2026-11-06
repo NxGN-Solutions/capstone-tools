@@ -38,7 +38,7 @@ Skip entities you did not download.
 | Order | Entities | Why here |
 |---|---|---|
 | 1 | `masterdata units` | Everything with a unit needs it. |
-| 2 | `masterdata data-sources` | Inputs name their data source. |
+| 2 | `masterdata data-sources` | Inputs and narrative data feeds name their data source. |
 | 3 | `masterdata org-node-attribute-types`, `masterdata org-nodes` | Org nodes carry attribute values. |
 | 4 | `masterdata framework-attribute-types`, `masterdata frameworks` | Frameworks carry attribute values. |
 | 5 | `masterdata discipline-attribute-types`, `masterdata disciplines` | Disciplines carry attribute values. |
@@ -48,10 +48,11 @@ Skip entities you did not download.
 | 9 | `model metric-framework-nodes` | Assigns metrics to frameworks. |
 | 10 | `masterdata units` **again** | Conversions whose factor is a metric are skipped on the first pass, because the metric did not exist yet. |
 | 11 | `model narrative-attribute-types`, `model narratives`, `model narrative-overrides` | Narratives come after the metrics and before the templates. |
-| 12 | `model metric-org-node-exclusions` | One workbook excludes inputs, calculations and narratives, so it follows all three. |
-| 13 | `templates org-node-templates`, `templates capture-templates`, `templates report-templates`, `templates widget-templates`, `templates dashboard-templates` | In that order: dashboards place widgets, and spreadsheet templates can use org node templates. |
-| 14 | `data input-values` (captured data, optional) | Values need their metrics, periods and exclusions. A value at an excluded org node fails the whole upload. |
-| 15 | `data input-values attachments` (evidence files, optional) | Files are added to values, so the values must exist first. Excel cannot carry files; see below. |
+| 12 | `model metric-org-node-exclusions` | Excludes inputs and calculations, so it follows both. It does not cover narratives. |
+| 13 | `model narrative-org-node-exclusions` | Sheet "Narrative Org Node Exclusions", columns `Org Node Path` and `Narrative`. Upload only adds exclusions; it removes none. |
+| 14 | `templates org-node-templates`, `templates capture-templates`, `templates report-templates`, `templates widget-templates`, `templates dashboard-templates` | In that order: dashboards place widgets, and spreadsheet templates can use org node templates. |
+| 15 | `data input-values` (captured data, optional) | Values need their metrics, periods and exclusions. A value at an excluded org node fails the whole upload. |
+| 16 | `data input-values attachments` (evidence files, optional) | Files are added to values, so the values must exist first. Excel cannot carry files; see below. |
 
 Second passes:
 
@@ -71,7 +72,7 @@ cap templates widget-templates upload-excel -f backup/widget-templates.xlsx --js
 
 `cap workflows show backup-restore --json` returns the same order.
 
-### Evidence files (step 15)
+### Evidence files (step 16)
 
 The values workbook carries numbers, narrative text and comments, not the files attached to them. Copy those with the attachments commands, once per capture template and data interval you copied values for. Between environments (for example PROD to QA), point the CLI at the other API and log in between the two commands:
 
@@ -98,5 +99,5 @@ Then check a few dashboards with the [Verify Data](../reporting/verify-data.md) 
 ## Notes
 
 - Uploads match existing rows by exact name or path, so re-running an upload updates rather than duplicates.
-- Captured data (input values) is downloaded through a capture template; see [Bulk Import Data](./bulk-import.md). Upload it after the templates (step 14), then its files (step 15).
+- Captured data (input values) is downloaded through a capture template; see [Bulk Import Data](./bulk-import.md). Upload it after the templates (step 14), then its files (step 16).
 - Seeding a new tenant from prepared workbooks follows the same order; see [Seed Tenant](./seed-tenant.md).

@@ -135,7 +135,13 @@ EOF
 **Key fields:**
 - `dataSource.id` — The data source created in Step 4
 - `dataSourceInstruction` — Source-specific configuration (MQTT topic, SQL query, REST endpoint)
-- `orgNodeOverrides` — Optional per-location customization of the data feed
+- `orgNodeOverrides` — The sites the feed writes; leave it empty for every site
+
+A SQL Server or PostgreSQL source can also feed narrative text: set
+`narrativeDataFeeds` on the narrative with `cap model narratives save`. The query
+returns `OrgNodeId`, `TimePeriod` and `Text`, one row per site and period, and a
+narrative can have only one feed per data source (see the narrative definition
+payload in the model building reference).
 
 ---
 

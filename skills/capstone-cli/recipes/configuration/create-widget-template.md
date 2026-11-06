@@ -159,7 +159,7 @@ cap model metrics list --json
 - `orgNodeAttributeFilters` - Filter the resolved org-node scope before values are loaded; this is not the deferred `OrgNodeAttribute` grouping mode
 - `narrativeSelectionMode` - `Dynamic` for Narrative Scope, or `Static` for explicit `narratives[]`
 - `narrativeScopeConfigured` and narrative scope arrays - Use when Dynamic Narrative Scope is intentionally authored
-- `narratives` - Used when `narrativeSelectionMode` is Static
+- `narratives` - Used when `narrativeSelectionMode` is Static. Each entry wraps the narrative: `"narratives": [{ "narrative": { "id": "<narrative-id>" }, "sortOrder": 0 }]`; a flat `{ "id": ..., "name": ... }` entry is refused with `NarrativeItemNarrativeRequired`
 - `styleConfiguration` - Bounded Table style slots, row/column overrides, and categorical color tags
 - `dataItems[].bands` - Optional metric-band override for a listed metric, or, under Dynamic metric selection, for the matching metric the item names. Omit or `null` inherits the metric default (each org node's effective bands: its input or calculation override's bands, else the metric's); `[]` disables formatting for that item. A ladder list has an unbounded first band; later bands use exactly one of `lowerBoundValue` or `lowerBoundMetric`. Interval lists may set both ends, including `upperBoundValue` / `upperBoundMetric`. Colours are registry tokens only (`success-subtle`, `warning-subtle`, `danger-subtle`, `info-subtle`, or other canonical tokens)
 
