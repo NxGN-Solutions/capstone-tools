@@ -123,7 +123,7 @@ Each recipe includes:
 | "Make a warning/tinted/accent KPI card..." | Configure Info Card Styles |
 | "Build a dashboard for..." | Build Dashboard |
 | "Export metrics to Excel..." | Export to Excel |
-| "Connect to our database/MQTT..." | Set Up Data Source |
+| "Connect to our database or ERP..." | Set Up Data Source |
 | "Record/enter [value] for..." | Enter Data |
 | "Import this Excel file..." | Bulk Import Data |
 | "Seed/set up a fresh <id>" | Seed Tenant |

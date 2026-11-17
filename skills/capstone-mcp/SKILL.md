@@ -7,7 +7,7 @@
 Capstone is a **data management platform** for organizations that need to consolidate, curate, and report on data from multiple sources. While commonly used for ESG (Environmental, Social, Governance) reporting, Capstone is domain-agnostic and supports any integrated reporting use case including operational KPIs, financial planning, and compliance monitoring.
 
 **Key capabilities:**
-- **Data consolidation** from SQL databases, MQTT brokers, REST APIs, and manual entry
+- **Data consolidation** from SQL databases, accounting systems, REST pushes, Excel and manual entry
 - **Data curation** with multi-level validation workflows for assurance
 - **Audit assurance** via data locking and change request tracking
 - **Flexible modeling** with user-defined KPIs, formulas, targets, budgets, actuals, and scorecards
@@ -36,7 +36,7 @@ Capstone is a **data management platform** for organizations that need to consol
 | Report layout, spreadsheet template | Report Template | `templates_reports_list` | Defines report structure |
 | Edit request, correction request | Change Request | Not in MCP v1 | Use CLI for change requests |
 | Period freeze, lock, close period | Data Lock | Not in MCP v1 | Use CLI for data locks |
-| Organization, company, client | Tenant | `ListTenants`, `SwitchTenant` | Isolated data environment |
+| Organization, company, client | Tenant | `auth_tenants_list`, `auth_switchTenant` | Isolated data environment |
 
 > **Full glossary:** [reference/glossary.md](reference/glossary.md)
 
@@ -62,7 +62,7 @@ MCP provides three integration mechanisms:
 
 ### 1. Verify Authentication
 
-Call `Whoami` to confirm the user is authenticated and see their tenant context.
+Call `auth_whoami` to confirm the user is authenticated and see their tenant context.
 
 ### 2. Check Resources
 
@@ -140,14 +140,16 @@ When the user's request matches a prompt, use it. Prompts encode best-practice w
 
 | Category | Tools | Purpose |
 |----------|-------|---------|
-| **Auth** (6) | `auth_login`, `auth_logout`, `auth_whoami`, `auth_tenants_list`, `auth_switchTenant`, `auth_languages` | Identity OIDC (PKCE) + API key + tenant switching |
-| **Model** (9) | `model_metrics_list`, `model_metrics_get`, `model_orgNodes_list`, `model_frameworks_list`, `model_disciplines_list`, `model_inputOverrides_list`, `model_inputOverrides_get`, `model_calculationOverrides_list`, `model_calculationOverrides_get` | Read model structure and org-node overrides |
-| **Data** (5) | `data_timePeriods_list`, `data_availability`, `data_inputValues_list`, `data_inputValues_save`, `data_computedValues_list` | Query and save data |
+| **Auth** (6) | `auth_login`, `auth_logout`, `auth_whoami`, `auth_tenants_list`, `auth_switchTenant`, `auth_languages_list` | Identity OIDC (PKCE) + API key + tenant switching |
+| **Model** (11) | `model_metrics_list`, `model_metrics_get`, `model_orgNodes_list`, `model_frameworks_list`, `model_disciplines_list`, `model_inputOverrides_list`, `model_inputOverrides_get`, `model_calculationOverrides_list`, `model_calculationOverrides_get`, `model_inputs_lint`, `model_calculations_lint` | Read model structure and org-node overrides; check an input or calculation before saving it |
+| **Data** (6) | `data_timePeriods_list`, `data_availability`, `data_inputValues_list`, `data_inputValues_save`, `data_computedValues_list`, `data_computedValues_query` | Query and save data |
 | **Reporting** (2) | `reporting_dashboards_getData`, `reporting_widgets_getData` | Dashboard/widget data as CSV |
-| **Templates** (6) | `templates_dashboards_list`, `templates_widgets_list`, `templates_reports_list`, `templates_captures_list`, `templates_reports_get`, `templates_captures_get` | Discover and inspect templates |
-| **Template CRUD** (10) | `templates_widgets_create/save/delete`, `templates_reports_create/save/delete`, `templates_dashboards_get/create/save/delete` | Create, update, and delete widget/report/dashboard templates |
-| **Apps** (8) | `apps_dashboard_render`, `apps_widget_infoCard`, `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_table`, `apps_widget_textBlock`, `apps_widget_aiSummary`, `apps_chart_render` | Visual widgets rendered in conversation |
-| **Status** (1) | `GetStatus` | Server status and auth check |
+| **Templates** (7) | `templates_dashboards_list`, `templates_widgets_list`, `templates_reports_list`, `templates_captures_list`, `templates_reports_get`, `templates_reports_resolve_content`, `templates_captures_get` | Discover and inspect templates |
+| **Template CRUD** (13) | `templates_widgets_get/create/save/delete/lint/preview`, `templates_reports_create/save/delete`, `templates_dashboards_get/create/save/delete` | Create, update, and delete widget/report/dashboard templates |
+| **Apps** (7) | `apps_dashboard_render`, `apps_widget_infoCard`, `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_table`, `apps_widget_aiSummary`, `apps_chart_render` | Visual widgets rendered in conversation |
+| **Status** (2) | `status`, `version` | Server status, auth check and version |
+| **System** (3) | `system_tenantAiConfig_get`, `system_tenantAiConfig_set`, `system_tenantAiUsage_get` | Tenant AI settings and usage |
+| **Workflow** (1) | `analysis_workflow` | Recommended analysis workflow |
 
 > **Full tool reference:** [reference/tools.md](reference/tools.md)
 
@@ -166,14 +168,14 @@ When deciding which tool to use, follow this decision tree:
 | **Daily detail / anomaly detection** | `data_computedValues_list` (dataInterval=0) | Flexible aggregation control |
 | **Cross-site comparison** | `data_computedValues_list` (per-site orgNodeIds) | Flexible aggregation control |
 | **SEE a dashboard** | `apps_dashboard_render` | Visual HTML rendering |
-| **SEE a single widget** | `apps_widget_pieChart` / `apps_widget_xyChart` / `apps_widget_infoCard` / `apps_widget_table` / `apps_widget_textBlock` | Visual HTML rendering |
-| **Full dashboard CSV export** | `reporting_dashboards_getData` | Pinned widgets stay at their interval; pass `dataInterval` for unpinned widgets |
-| **Check one widget's values** | `reporting_widgets_getData` | Pinned widgets stay at their interval; pass `dataInterval` for unpinned widgets |
+| **SEE a single widget** | `apps_widget_pieChart` / `apps_widget_xyChart` / `apps_widget_infoCard` / `apps_widget_table` | Visual HTML rendering |
+| **Full dashboard CSV export** | `reporting_dashboards_getData` | Fixed widgets stay at their interval; `dataInterval` sets following widgets' interval |
+| **Check one widget's values** | `reporting_widgets_getData` | Fixed widgets stay at their interval; `dataInterval` sets following widgets' interval |
 | **Data quality / validation** | `data_inputValues_list` | Shows validation status + lock state |
 | **Edit/enter data** | `data_inputValues_save` | Upsert by business key |
 | **AI insights** | `apps_widget_aiSummary` | Pre-generated server insights |
 
-**Key difference:** `reporting_dashboards_getData` and `reporting_widgets_getData` honour a pinned widget-template interval. Pass `dataInterval` (0=day … 4=year) to set the interval for widgets whose template leaves it to the dashboard; omit it to match the selected periods. For ad-hoc metric analysis that is not bound to a widget template, use `data_computedValues_list` with `dataInterval`.
+**Key difference:** `reporting_dashboards_getData` and `reporting_widgets_getData` honour the widget's interval choice: a widget that fixes its interval ignores the request interval; a following widget's interval is only the default. Pass `dataInterval` (0=day … 4=year) to set the interval for following widgets; omit it to use their default, else to match the selected periods. For ad-hoc metric analysis that is not bound to a widget template, use `data_computedValues_list` with `dataInterval`.
 
 **~80% of data questions** should route to `data_computedValues_list` — it's the primary analysis tool.
 
@@ -187,10 +189,9 @@ MCP Apps render interactive visualizations directly in the conversation. Use the
 |------|---------|-------------|
 | `apps_dashboard_render` | Full dashboard with all widgets | "Show me the ESG dashboard" |
 | `apps_widget_infoCard` | Single KPI card | "What's our emissions number?" |
-| `apps_widget_pieChart` | Pie/donut chart with styled render metadata | "Show the energy breakdown" |
+| `apps_widget_pieChart` | Pie/donut chart with styled render metadata, shares and Other | "Show the energy breakdown" |
 | `apps_widget_xyChart` | Bar/line/column chart | "Show the emissions trend" |
 | `apps_widget_table` | Table widget | "Show the metric table" |
-| `apps_widget_textBlock` | TextBlock text with metric and narrative tokens resolved | "Show the quarterly commentary" |
 | `apps_widget_aiSummary` | AI-generated summary card | "Summarize the dashboard insights" |
 
 **When to use Apps vs raw data:**
@@ -200,6 +201,8 @@ MCP Apps render interactive visualizations directly in the conversation. Use the
 - Styled Pie/Donut widgets expose server-resolved style, source, presentation,
   number-format, legend/slice-label, warning, and selection-diagnostics
   metadata in the rendered HTML; see `reference/tools.md#apps_widget_piechart`.
+  A pie can also show each slice's share, group small slices into one Other
+  slice (its tooltip lists the members), and draw a half circle.
 
 ---
 
@@ -327,7 +330,7 @@ When analyzing retrieved data, use these techniques based on the user's question
 
 - [CLI Skill](../capstone-cli/SKILL.md) — CLI interface (for Claude Code with Bash access)
 - [Recipes](./recipes/README.md) — Step-by-step workflow guides
-- [Tool Reference](./reference/tools.md) — All 46 tools with parameters and response formats
+- [Tool Reference](./reference/tools.md) — All 58 tools with parameters and response formats
 - [Glossary](./reference/glossary.md) — Detailed term definitions with MCP tools
 - [Data Model](./reference/data-model.md) — Enums, aggregation, query patterns
 - [Setup Guide](./setup.md) — Claude Desktop configuration (human-facing)

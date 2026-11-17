@@ -62,7 +62,7 @@ The schema lists `styleConfiguration` fields and constraints. Key fields are:
 |-------|-----|
 | `panel` | The card surface and internal layout |
 | `title`, `value`, `unit`, `label`, `description`, `footnote` | Text slots |
-| `separators` | Lines between values or sections |
+| `separators` | Lines between values: `borderColor` and `borderWidth` only |
 | `trend` | Style for resolved `#trend[...]` text |
 | `stateMessages` | No-data, unavailable, or warning messages |
 | `panel.padding` | Internal spacing inside the card boundary, `0..64` |
@@ -71,8 +71,68 @@ The schema lists `styleConfiguration` fields and constraints. Key fields are:
 
 `padding`, `gap`, `accentSide`, and `accentWidth` are panel-only fields.
 Borders render only when `borderColor` and positive `borderWidth` are both set.
+
+Some parts draw less than the shared settings offer, and the web editor's Style
+stage offers only what draws:
+
+- `separators` is a line, so it takes only `borderColor` and `borderWidth`.
+  Text, background, weight, alignment, font, radius and opacity on `separators`
+  are a `StyleSlotPropertyUnsupported` issue.
+- `unit` sits in line with its value, so it takes no `textAlign`; align the
+  value (`value.textAlign`) instead.
+
+A card saved with one of these before the rule still saves: the server's lint
+reports each one it already had as a warning, and a new one as an error.
+Remove the setting to clear the warning. The CLI's local check before lint
+does not report them; the server's lint does.
+
+`fontSize`, `borderWidth`, `borderRadius`, `padding`, `gap` and `accentWidth`
+are whole numbers. A fraction such as `15.5` is refused with HTTP 400 (the
+value has the wrong type); the web editor rounds one as it is typed. `opacity`
+is a fraction from `0` to `1`.
 Panel accents render only when `accentColor`, `accentSide`, and positive
 `accentWidth` are all set.
+
+`trend` has its own text settings (`fontWeight`, `fontSize`, `fontFamily`)
+beside the per-direction `color` and `icon` and `showLabel`; the web editor's
+Style stage edits all of them.
+
+`trend.colorBy` chooses what colours a `#trend` arrow (the editor's **Colour
+by**):
+
+- `"Reading"`, the default when `colorBy` is absent: where the trend metric's
+  ranges say good, watch or bad about the value, the arrow takes that colour
+  (the theme's success, amber or danger shade; on a dark panel, their light
+  tint). Ranges read good, watch or bad from their colour (green, amber or
+  red), or, on an uncoloured range, from Require comment (bad) and
+  Auto-validate (good). The site's own ranges are read first, then the
+  metric's. Where the ranges give no verdict, the direction's own `color`
+  applies, as before.
+- `"Direction"`: the direction's `color` always applies, whatever the ranges
+  say.
+
+`reporting widgets get-data … --json` shows the reading on each trend span as
+`displaySeverity` (`Positive` = good, `Watch`, `Negative` = bad, `Neutral` =
+no verdict, `Unknown` = no value), and in `accessibleLabel` ("Trend up, bad").
+With `showLabel: true` the card also writes the reading after the direction
+word ("Up Bad"). A viewer who turns conditional formatting off sees direction
+colours only.
+
+Style values are checked by `lint`, `create`, `save` and the Excel upload, with
+the same code and words on every channel. Each issue's `field` is
+`styleConfiguration` and its `params` carry `path` and `allowed`:
+
+| Code | When | Message |
+|------|------|---------|
+| `StyleSlotValueInvalid` (error) | A value outside its rules, such as a font size of 120 | `A style value is not valid: styleConfiguration.value.fontSize (8 to 96).` |
+| `StyleSlotPropertyUnsupported` (error) | A setting the part doesn't have: `padding`, `gap` or an accent field off `panel`, or a table-only setting such as `lineHeight` | `This style setting is not supported: styleConfiguration.title.padding. Use one of: …` (the settings that part has) |
+| `StyleSlotPropertyUnsupported` (error; a warning when the saved card already has that setting) | A setting the part doesn't draw: anything but `borderColor` and `borderWidth` on `separators`, or `unit.textAlign` | `This style setting is not supported: styleConfiguration.separators.fontSize. Use one of: borderColor, borderWidth.` |
+| `TrendIconWithoutLabel` (warning) | A trend direction with `icon: "none"` while `showLabel` is not `true`: only its colour shows the direction | `The unknown trend has no icon and no label, so only its colour shows it. Pick an icon or turn on Show direction label.` |
+| `TrendRangesGiveNoVerdict` (note; `field` is the text field, such as `footnote`, and `params` carry `metric`) | Colour by is Reading and a `#trend` token's metric has no range of its own that reads good, watch or bad, so its arrow shows its direction colour | `#trend on Energy intensity is coloured by direction, not by its ranges: none of its ranges reads good, watch or bad.` |
+
+A style the server can't read at all (a part that is not an object, an
+unknown part or setting, a value of the wrong JSON type) is refused with HTTP
+400 naming the setting, before lint runs.
 
 ### Step 2: Create or Export the Template JSON
 
@@ -400,10 +460,13 @@ work, prefer registry tokens from `cap meta lookups get color-tokens`.
     "up": { "color": "#f87171", "icon": "arrow-up" },
     "down": { "color": "#4ade80", "icon": "arrow-down" },
     "flat": { "color": "#e2e8f0", "icon": "equals" },
-    "unknown": { "color": "#cbd5e1", "icon": "none" }
+    "unknown": { "color": "#cbd5e1", "icon": "circle" }
   }
 }
 ```
+
+With `showLabel: false` every direction needs an icon; a direction with
+`icon: "none"` gets the `TrendIconWithoutLabel` warning.
 
 `panel.padding: 0` means no internal Info Card padding. Any space outside the
 card surface is dashboard layout padding or dashboard card chrome, not
@@ -417,6 +480,7 @@ For current vs previous cards, use static period offsets and period tokens:
 {
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 3, "name": "Quarter" },
+  "showDataIntervalFilter": false,
   "footnote": "#trend[<change-calculation-metric-id>] since @[period:-1]",
   "dataItems": [
     {
@@ -448,7 +512,36 @@ For current vs previous cards, use static period offsets and period tokens:
 Raw CLI/API JSON uses stored metric IDs in formula-like tokens. The widget
 editor and Widget Template Excel accept metric names and translate them to IDs.
 
-### Step 5: Save and Verify
+- `showDataIntervalFilter: false` fixes the card at `dataInterval`. Offsets in
+  rows and tokens count in the interval the card reads at, unconverted: a card
+  that follows the dashboard (`true`, with `dataInterval` only the default)
+  reads `-1` as the previous month on a Month dashboard. Fix the interval on
+  comparison cards.
+- A card reads one period per row: set `dataPeriodStart` and `dataPeriodEnd`
+  to the same offset. A wider window reads only its start and gets the
+  `DataItemWindowSinglePeriod` warning.
+- Two rows of the same metric need different offsets (or a different site
+  breakdown or combining); the same metric twice at the same offset is the
+  `DataItemDuplicate` error. Give each row its own label: two rows with the
+  same label get the `DataItemLabelDuplicate` warning.
+
+### Step 5: Lint, Preview, Save and Verify
+
+Check the draft and see it on real data before saving (nothing is saved):
+
+```bash
+cap templates widget-templates lint --file info-card.json
+cap templates widget-templates preview --file info-card.json \
+  --org-nodes "<org-node-id>" \
+  --periods "Q3 FY 25"
+```
+
+`preview` renders the draft card exactly as `cap reporting widgets info-card`
+renders it once saved, with your data permissions, in one request: text mode
+prints each item's label, value and unit, and `--json` prints the info card
+render contract. Add `--data-interval quarter` to send a dashboard interval
+(a card that fixes its interval ignores it). A draft with an error that stops
+it rendering, such as no name, is refused with HTTP 400.
 
 Create a new widget:
 
@@ -479,7 +572,7 @@ style configuration returned to the dashboard renderer.
 
 | Problem | Check |
 |---------|-------|
-| Style fields are rejected | Run `cap templates widget-templates schema --widget-type info --json` and use only listed fields |
+| Style fields are rejected | Run `cap templates widget-templates lint --file info-card.json`; a `StyleSlotValueInvalid` or `StyleSlotPropertyUnsupported` issue names the setting (`path`) and what it may be (`allowed`). For an HTTP 400, run `cap templates widget-templates schema --widget-type info --json` and use only listed fields |
 | Border is missing | Set both `borderColor` and `borderWidth` greater than `0` |
 | Accent edge is missing | Set `panel.accentColor`, `panel.accentSide`, and `panel.accentWidth` greater than `0` |
 | Padding `0` still leaves outside spacing | That spacing is dashboard layout padding or dashboard chrome, not Info Card internal padding |

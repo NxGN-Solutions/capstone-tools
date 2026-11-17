@@ -79,7 +79,7 @@ For widget templates, set this at both the widget default and data-item override
 |----|------|-------------|
 | 0 | Info Card | Single KPI value with optional comparison |
 | 1 | Pie Chart | Part-to-whole breakdown (Pie or Donut) |
-| 2 | XY Chart | Time series, comparisons (Column/Bar/Line/Area) |
+| 2 | XY Chart | Time series, comparisons (Column/Line/Area, vertical or horizontal) |
 | 3 | AI Summary | AI-generated insights from sibling/descendant widgets |
 | 4 | Table | Metric-backed dashboard table/grid |
 | 6 | TextBlock | Metric-aware dashboard text with title, subtitle, description, and footnote |
@@ -116,9 +116,11 @@ For widget templates, set this at both the widget default and data-item override
 | ID | Name |
 |----|------|
 | 0 | Column |
-| 1 | Bar |
 | 2 | Line |
 | 3 | Area |
+
+Bar (1) is still accepted on input, but Save stores it as Column and sets the chart's `invertAxes` (drawn horizontally),
+so the lookup doesn't list it. For a horizontal chart set `invertAxes: true` with Column series.
 
 **Best practice:** Always set `rotateCategoryAxisLabels: true` on XY Charts with daily intervals to prevent date label overlap. Monthly/quarterly charts can leave it `false`.
 
@@ -437,6 +439,34 @@ that returns `OrgNodeId`, `TimePeriod` and `Text`, one row per site and period:
   skipped.
 - Capture templates hide a fed narrative unless they include integrated items.
 
+#### Friendly name and site overrides
+
+`friendlyName` is what readers see in capture, validation and report grids,
+change requests and notification emails; `name` stays the unique key (widget
+text and the workbook use it). A blank friendly name falls back to the name.
+`get --json` returns it, so piping that output back into `save --file` keeps it; a
+save file without `friendlyName` clears it.
+
+`siteOverrides` changes capture or validation at single sites. Each override
+applies only to its own site, never to the sites below it:
+
+```json
+"siteOverrides": [
+  { "orgNode": { "id": "<site-id>" }, "requireDataCapture": false, "requireValidation": true }
+]
+```
+
+- One override per site; a second one for the same site is refused with an
+  error on `siteOverrides`.
+- The list is the whole set: a stored override whose site is not listed is
+  removed. Send `[]` to remove them all.
+- Leave `siteOverrides` out of a save (or send `null`) to keep the stored
+  overrides. For bulk edits use `cap model narrative-overrides`.
+- `cap model narratives get <id> --json` includes the stored set as
+  `narrative.siteOverrides`, so piping it to `save --file` keeps them.
+- `orgNodeExclusions` follows the same rule: left out (or `null`) keeps the
+  stored exclusions, a list is the whole set, and `[]` removes them all.
+
 Use `cap model narratives lookup --capture-interval quarter --org-nodes <id>
 --discipline-nodes <id> --json` before capture workflows. Lock and governed edit
 workflows use `cap data data-lock lock|unlock` and
@@ -502,7 +532,7 @@ On an input, a band may also set `"autoValidate": true` (default `false`). When 
 - Send a list to replace the full set: one row per org node, in the [org-node override shape](#org-node-overrides-inputs-and-calculations). A stored override for an org node not in the list is deleted, and `[]` deletes them all. Each row is keyed by `orgNode.id`; its `id` and `metric` are ignored, so a new metric's overrides need neither. Every row needs `orgNode` and `unitOfMeasure`, and two rows for the same org node are rejected.
 - `lint` reports what `save` rejects: an empty row as `SiteOverrideEmpty`, a row without `orgNode` or `unitOfMeasure` as `SiteOverrideOrgNodeRequired` / `SiteOverrideUnitRequired`, two rows for one org node as `SiteOverrideDuplicate`, an org node or unit the tenant does not have as `SiteOverrideOrgNodeUnknown` / `SiteOverrideUnitUnknown`, and range limits typed as numbers in an override unit that has no conversion from the metric's unit as `SiteOverrideBandsUnitNotConvertible`.
 
-`cap model inputs get <id> --site-overrides --json` adds the stored set as `input.siteOverrides` (`cap model calculations get <id> --site-overrides --json` as `calculation.siteOverrides`), so the output can be edited and sent back with `save --file`. Without `--site-overrides`, `get --json` has no `siteOverrides` field and the same round trip leaves the overrides untouched. `get-bulk` never includes them.
+`cap model inputs get <id> --json` always includes the stored set as `input.siteOverrides` (`cap model calculations get <id> --json` as `calculation.siteOverrides`; `get-bulk` too), so piping the output to `save --file` keeps the overrides, and an edited list is saved as the full set. To save the metric without touching its overrides, remove the `siteOverrides` field (or set it to `null`).
 
 ```json
 "bands": [

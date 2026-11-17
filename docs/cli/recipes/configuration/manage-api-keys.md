@@ -55,6 +55,8 @@ cap auth apikey create \
 }
 ```
 
+A key cannot hold the Data Owner data permission (`"permissionType": "DataOwner"`) or the All Data (Owner) scope permission: both mark who receives mail, and a key receives none. Create refuses them, and a role carrying All Data (Owner) gives the key nothing.
+
 Non-JSON create prints the one-time secret on stdout. JSON redacts it.
 
 ### Step 2: List

@@ -40,11 +40,11 @@ Use these roots when scripting:
 | `cap templates widget-templates schema --widget-type pie --json` | `.fieldLookups[]` contains enum values and `.optionalFields[]` contains style/format constraints. |
 | `cap templates widget-templates get <id> --json` | `.widgetTemplate` contains the editable full DTO. |
 | `cap templates widget-templates save --file pie-widget.json --json` | Top-level acknowledgement with `success`, `id`, child data-item counts, and `warnings`; run `get` for the full updated DTO. |
-| `cap reporting widgets pie-chart <id> ... --json` | Top-level render contract with `id`, `title`, `pieChartWidgetType`, `styleConfiguration`, `center`, `legend`, `labelDisplay`, and `dataItems[]`. |
+| `cap reporting widgets pie-chart <id> ... --json` | Top-level render contract with `id`, `title`, `pieChartWidgetType`, `pieShape`, `styleConfiguration`, `center`, `legend`, `labelDisplay`, and `dataItems[]`. |
 
 Pie-specific modes that are not exposed as standalone lookup endpoints are still
 discoverable in `schema.fieldLookups`: `widgetTemplate.centerMode`,
-`widgetTemplate.legendValueMode`, and `widgetTemplate.sliceLabelMode`.
+`widgetTemplate.legendValueMode`, `widgetTemplate.sliceLabelMode`, `widgetTemplate.pieShape`, and `widgetTemplate.otherSliceMode`.
 
 ## Step 2: Keep Styling Separate From Value Selection
 
@@ -52,8 +52,8 @@ Pie styling fields are visual:
 
 | Field | Purpose |
 |-------|---------|
-| `styleConfiguration` | Chart-wide ("all slices") base for every element category: panel, title, chart area, slices, slice borders, slice labels, ticks, tooltip, legend, legend markers/labels/values, donut center, and state messages |
-| `centerNumberFormat` | Donut Metric Value center formatting |
+| `styleConfiguration` | Chart-wide ("all slices") base for every element category: panel, title, chart area, slices, slice borders, slice labels, ticks, tooltip, legend, legend markers/labels/values, donut center, the Other slice (`otherSlice`, fill only: `backgroundColor`, default `#8E96A8`), and state messages |
+| `centerNumberFormat` | Donut Metric Value and Total center formatting |
 | `dataItems[].presentation` | Per-slice (per-metric) overrides of the chart-wide base, keyed by the same element categories (`slice`, `sliceBorders`, `sliceLabels`, `tooltip`, `legendMarker`, `legendLabel`, `legendValue`). Slice fill lives at `presentation.slice.backgroundColor`. |
 | `dataItems[].numberFormat` | Source data-item value formatting |
 
@@ -222,8 +222,13 @@ template. Use `get` after saving when automation needs to inspect the persisted
 The render output uses server-resolved metadata. Automation consumers should read
 `styleConfiguration`, `centerNumberFormat`, `center`, `labelDisplay`, `legend`,
 `dataItems[].presentation`, `dataItems[].numberFormat`,
-`dataItems[].legendValue`, `dataItems[].sliceLabel`, and
-`selectionDiagnostics` when value selection is configured.
+`dataItems[].legendValue`, `dataItems[].sliceLabel`, `dataItems[].formattedShare`,
+`dataItems[].isOther` (with `otherMembers` and `otherMemberCount`), `pieShape`, and
+`selectionDiagnostics` when value selection is configured. The server builds every
+display string, so a configured percent already sits inside `sliceLabel`,
+`legendValue` and `tooltipValue`. Behaviour (shares, Other, centre Total and
+Percentage, Half circle) is described in
+[Create Widget Template](./create-widget-template.md).
 
 ## Unsupported Payloads
 

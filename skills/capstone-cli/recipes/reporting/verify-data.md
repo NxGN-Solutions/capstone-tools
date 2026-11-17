@@ -32,7 +32,7 @@ Before starting, Claude should know:
 | Check **computed values** via report template filter | `cap reporting computed-values list` | `--template`, `--data-interval`, `--periods` |
 | **Download** computed values as Excel | `cap reporting computed-values download-excel` | `--template`, `--data-interval`, `--periods`, `-o file.xlsx` |
 | **Download** the report view as PDF or Word | `cap reporting computed-values download-document` | `--template`, `--data-interval`, `--periods`, `--format pdf\|word`, `-o file.pdf` |
-| **Download** a dashboard as PDF or Word | `cap reporting dashboards download-document` | `<dashboard-template-id>`, `--org-node`, `--periods`, `--format pdf\|word`, `-o file.pdf` |
+| **Download** a dashboard as PDF, Word or PowerPoint | `cap reporting dashboards download-document` | `<dashboard-template-id>`, `--org-node`, `--periods`, `--format pdf\|word\|pptx`, `-o file.pdf` |
 
 ---
 
@@ -209,7 +209,7 @@ cap reporting computed-values download-document \
   -o report.docx
 ```
 
-**Download a dashboard as PDF or Word:** this gives the dashboard as the viewer's Download menu does: a header with the site, interval and periods, then every section and widget in order, landscape A4. Tables print every row, Info Cards and Text Blocks print their values and text. Charts and AI Summaries are drawn in the browser, so a CLI download shows a short placeholder in their place; download from the dashboard viewer to include them. Omit `--data-interval` to use the dashboard's default interval. `--formatting off` leaves out band colours. Without `-o` the file is named as the viewer names its download: dashboard, site and periods, for example `Group ESG Overview - Mining Group - FY 26.pdf` (or `.docx`).
+**Download a dashboard as PDF, Word or PowerPoint:** this gives the dashboard as the viewer's Download menu does: a header with the site, interval and periods, then every section and widget in order. PDF and Word are landscape A4. PowerPoint (`--format pptx`) is a 16:9 deck: a title slide, then one slide per section that holds widgets, continued on further slides when its rows do not fit; wide tables split into column groups. Tables print every row, Info Cards and Text Blocks print their values and text. Charts and AI Summaries are drawn in the browser, so a CLI download shows a short placeholder in their place, in every format; download from the dashboard viewer to include them. Omit `--data-interval` to use the dashboard's default interval. `--formatting off` leaves out band colours. Without `-o` the file is named as the viewer names its download: dashboard, site and periods, for example `Group ESG Overview - Mining Group - FY 26.pdf` (or `.docx`, `.pptx`).
 ```bash
 cap reporting dashboards download-document <dashboard-template-id> \
   --org-node <org-node-id> \

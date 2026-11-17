@@ -12,7 +12,7 @@ Resources are **read-only data** that Claude can access automatically. They're l
 |----------|---------|
 | **Loaded by** | Claude Desktop (automatic, not user-triggered) |
 | **Cache** | Model data: 5 min TTL; Data availability: 1 min TTL |
-| **Invalidation** | On tenant switch (`SwitchTenant`), all caches clear |
+| **Invalidation** | On tenant switch (`auth_switchTenant`), all caches clear |
 | **Format** | JSON |
 
 ---
@@ -150,7 +150,7 @@ If a resource returns an error (e.g., not authenticated), fall back to the corre
 
 | Resource | Fallback Tool |
 |----------|--------------|
-| `capstone://user/context` | `Whoami` |
+| `capstone://user/context` | `auth_whoami` |
 | `capstone://model/metrics` | `model_metrics_list` |
 | `capstone://model/organization` | `model_orgNodes_list` |
 | `capstone://model/disciplines` | `model_disciplines_list` |

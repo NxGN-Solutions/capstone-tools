@@ -50,7 +50,7 @@ Skip entities you did not download.
 | 11 | `model narrative-attribute-types`, `model narratives`, `model narrative-overrides` | Narratives come after the metrics and before the templates. |
 | 12 | `model metric-org-node-exclusions` | Excludes inputs and calculations, so it follows both. It does not cover narratives. |
 | 13 | `model narrative-org-node-exclusions` | Sheet "Narrative Org Node Exclusions", columns `Org Node Path` and `Narrative`. Upload only adds exclusions; it removes none. |
-| 14 | `templates org-node-templates`, `templates capture-templates`, `templates report-templates`, `templates widget-templates`, `templates dashboard-templates` | In that order: dashboards place widgets, and spreadsheet templates can use org node templates. |
+| 14 | `templates org-node-templates`, `templates capture-templates`, `templates report-templates`, `templates widget-templates`, `templates dashboard-templates` | In that order: dashboards place widgets, and spreadsheet templates can use org node templates. Capture and report template workbooks name their narratives, so step 11 must be done first. |
 | 15 | `data input-values` (captured data, optional) | Values need their metrics, periods and exclusions. A value at an excluded org node fails the whole upload. |
 | 16 | `data input-values attachments` (evidence files, optional) | Files are added to values, so the values must exist first. Excel cannot carry files; see below. |
 

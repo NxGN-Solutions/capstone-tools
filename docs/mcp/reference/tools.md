@@ -1,10 +1,10 @@
 # MCP Tool Reference
 
-> Complete reference for all Capstone MCP tools with parameters, response formats, and usage examples.
+> Complete reference for all 58 Capstone MCP tools with parameters, response formats, and usage examples.
 
 ---
 
-## Authentication (5 tools)
+## Authentication (6 tools)
 
 ### `auth_login`
 
@@ -26,60 +26,49 @@ No parameters.
 
 ---
 
-### `Whoami`
+### `auth_whoami`
 
 Get current user identity, tenant context, roles, and accessible templates.
 
 No parameters.
 
-**Returns:** User identity, tenant name, roles, and configured templates.
-
-**Response example:**
-```json
-{
-  "userName": "user@example.com",
-  "tenantName": "Example Organization",
-  "tenantId": "<id>",
-  "roles": ["Admin", "DataManager"],
-  "language": "en"
-}
-```
+**Returns:** Text with the user's email, name and current tenant (from `GET Security/UserPreferences`). With an API key it adds that the key is scoped to one tenant and cannot switch.
 
 ---
 
-### `ListTenants`
+### `auth_tenants_list`
 
 List available tenants accessible to the current user.
 
 No parameters.
 
-**Returns:** List of tenant names and IDs, with current tenant marked.
-
-**Response example:**
-```json
-{
-  "tenants": [
-    { "id": "<id>", "name": "Example Organization", "isCurrent": true },
-    { "id": "<id>", "name": "Example Test Tenant", "isCurrent": false }
-  ]
-}
-```
+**Returns:** Tenant names and IDs, with the current tenant marked (`POST System/Tenants/GetLookupList`).
 
 ---
 
-### `SwitchTenant`
+### `auth_switchTenant`
 
 Switch to a different tenant. Changes become your default for future sessions.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `tenantId` | string (ID) | Yes | Tenant ID to switch to |
+| `tenantId` | string (ID) | Yes | Tenant ID to switch to (from `auth_tenants_list`) |
 
-**Returns:** Confirmation with new tenant name. Invalidates cached resources.
+**Returns:** Confirmation with new tenant name. Invalidates cached resources. An API key cannot switch: keys are scoped to a tenant when they are created.
 
 ---
 
-## Model Read (10 tools)
+### `auth_languages_list`
+
+List the languages configured in the Capstone platform, with their codes and the platform language IDs used by localisation and preference APIs.
+
+No parameters.
+
+**Returns:** One line per language: name, code and platform ID (`POST System/Localisation/Languages/GetLookupList`).
+
+---
+
+## Model Read (11 tools)
 
 ### `model_metrics_list`
 
@@ -536,6 +525,8 @@ Save input values (batch upsert). Uses business-key matching — zero IDs resolv
 - Values are numeric (not formatted strings)
 - Use the `precision` field to format decimal places for display
 
+**Capture and validation progress.** On a report template whose `measure` is Capture (1) or Validation (2) completion, the output starts with the measure, "Counted over the data you may view." when the caller's data access is restricted, the total (for example `Captured: 46%, 6 of 13`) and the whole-period figure of each group in the first two levels. Each cell shows the state of a single value (`Captured`, `Not captured`, `Awaiting validation`, `In validation`, `Validated`, `Rejected`), or the share done of several (`46%`), `Not due` when nothing in it is due yet and `·` when nothing is expected; a Total column gives each row's whole-period figure. Counts cover expected values that are due: a value counts in the column that holds its period's end, and a period is due once its last day is before today's UTC date.
+
 > **Note:** Computed values are read-only calculated results. Use `data_inputValues_save` to modify source data.
 
 ---
@@ -585,7 +576,7 @@ This bypasses the template discovery workflow — no need to list templates, gue
 
 ### `reporting_dashboards_getData`
 
-Get all widget data from a dashboard as CSV. Each widget with a pinned template interval returns at that interval. Pass `dataInterval` to set the interval for widgets whose template leaves it to the dashboard. Best for: full dashboard export, cross-widget correlation.
+Get all widget data from a dashboard as CSV. A widget that fixes its interval ignores the request interval; a following widget's interval is only the default. Pass `dataInterval` to set the interval for following widgets. Best for: full dashboard export, cross-widget correlation.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -595,7 +586,8 @@ Get all widget data from a dashboard as CSV. Each widget with a pinned template 
 | `periodType` | string | No | `month`, `quarter` (default), or `year` |
 | `periodCount` | int | No | Number of recent periods (default: 4) |
 | `scope` | string | No | `peers` or `descendants` (default) |
-| `dataInterval` | int | No | `0=day`, `1=week`, `2=month`, `3=quarter`, `4=year`; applied to widgets with no pinned interval |
+| `dataInterval` | int | No | `0=day`, `1=week`, `2=month`, `3=quarter`, `4=year`; ignored by widgets that fix their interval; a following widget's interval is only the default |
+| `orgNodeTemplateKey` | string | No | Org structure for a dashboard that lets viewers switch it (`showOrgNodeTemplateFilter: true`): an org node template ID or `physical`; omit for the dashboard default. A key outside the dashboard's allowed structures is refused (403). `orgNodeId` must belong to that structure |
 
 **Returns:** CSV data for all widgets on the dashboard. Use for cross-widget correlation analysis.
 
@@ -603,7 +595,7 @@ Get all widget data from a dashboard as CSV. Each widget with a pinned template 
 
 ### `reporting_widgets_getData`
 
-Get one widget's data as CSV. Use a widget template ID (from `templates_widgets_list`) OR pass `templateJson` for ad-hoc queries. Widgets with a pinned template interval return at that interval. Pass `dataInterval` to set the interval for widgets whose template leaves it to the dashboard.
+Get one widget's data as CSV. Use a widget template ID (from `templates_widgets_list`) OR pass `templateJson` for ad-hoc queries. A widget that fixes its interval ignores the request interval; a following widget's interval is only the default. Pass `dataInterval` to set the interval for following widgets.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -613,11 +605,11 @@ Get one widget's data as CSV. Use a widget template ID (from `templates_widgets_
 | `timePeriodNames` | string | No | Comma-separated period names (e.g., `Q1 FY 25,Q2 FY 25`) |
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
 | `periodCount` | int | No | Number of recent periods (default: 4, used with `periodType`) |
-| `dataInterval` | int | No | `0=day`, `1=week`, `2=month`, `3=quarter`, `4=year`; applied to widgets with no pinned interval |
+| `dataInterval` | int | No | `0=day`, `1=week`, `2=month`, `3=quarter`, `4=year`; ignored by widgets that fix their interval; a following widget's interval is only the default |
 
 **Returns:** CSV data for the widget's metrics and time periods.
 
-The table render endpoint behind `apps_widget_table` (`Reporting/Widgets/GetTableData`) no longer accepts an inline template; it renders saved templates only. Draft table templates render through `POST Templates/WidgetTemplates/Preview`, which pages like a dashboard table. A `GetTableData` request without `take` returns every row (the response's `pageSize` names the table's Rows per page, else 50); `apps_dashboard_render` and `apps_widget_table` page through every row 1000 at a time (`apps_widget_table` stops at `limit` when one is given), as `cap reporting widgets table` does without `--take`.
+The table render endpoint behind `apps_widget_table` (`Reporting/Widgets/GetTableData`) no longer accepts an inline template; it renders saved templates only. Draft table templates render through `POST Templates/WidgetTemplates/Preview`, which pages like a dashboard table. A `GetTableData` request without `take` returns every row (the response's `pageSize` names the table's Rows per page, else 50, and its `maxHeightPx` the grid's on-screen maximum height, `null` when the table fits its rows); `apps_dashboard_render` and `apps_widget_table` page through every row 1000 at a time (`apps_widget_table` stops at `limit` when one is given), as `cap reporting widgets table` does without `--take`.
 
 `apps_widget_table` renders a table with periods as rows one row per row and period, with a Period column before the metric columns, as the dashboard does. Column headers name their column groups first when a level is on columns.
 
@@ -716,7 +708,7 @@ Get detailed configuration of a specific report template.
 |-----------|------|----------|-------------|
 | `id` | string (ID) | Yes | Report template ID |
 
-**Returns:** Template configuration including filters (discipline, framework, metric type), the Limit to lists (`Org Nodes (Limit to)`, `Disciplines (Limit to)`, `Frameworks (Limit to)`) and the Default lists (`Default Org Nodes`, `Default Disciplines`, `Default Frameworks`), included metrics, plus `showOnlyRowsWithValues` and `showRowsWithValuesFilter` (viewers can switch between all rows and rows with values), and the allowed grouping levels with `showDataGroupingFilter` (viewers can regroup by those levels in any order; `data_computedValues_list` always uses the default grouping), and `Column Levels`: the grouping levels placed on columns (`-` when every level is on rows). It also prints the `Org Structure` (the default structure; physical when none is set) and `showOrgNodeTemplateFilter` (Fixed, or viewers can switch). When viewers can switch, it lists the allowed structures (`Org Structures (Limit to)`; none means every structure the viewer can access) and `Allow Physical Structure`, and the call example includes `orgNodeTemplateKey`.
+**Returns:** Template configuration including filters (discipline, framework, metric type), the Limit to lists (`Org Nodes (Limit to)`, `Disciplines (Limit to)`, `Frameworks (Limit to)`) and the Default lists (`Default Org Nodes`, `Default Disciplines`, `Default Frameworks`), included metrics, plus `showOnlyRowsWithValues` and `showRowsWithValuesFilter` (viewers can switch between all rows and rows with values), and the allowed grouping levels with `showDataGroupingFilter` (viewers can regroup by those levels in any order; `data_computedValues_list` always uses the default grouping), and `Column Levels`: the grouping levels placed on columns (`-` when every level is on rows). It also prints the `Org Structure` (the default structure; physical when none is set) and `showOrgNodeTemplateFilter` (Fixed, or viewers can switch). When viewers can switch, it lists the allowed structures (`Org Structures (Limit to)`; none means every structure the viewer can access) and `Allow Physical Structure`, and the call example includes `orgNodeTemplateKey`. `Measure` gives what the cells show: Value, Capture or Validation completion (see `data_computedValues_list`); on a completion template it also gives its completion bands (for example "below 40%: danger-subtle; 40% to 90%: warning-subtle; 90% and up: success-subtle"), with "(defaults)" when the template stores none. `Show Change Requests` (the report grid marks cells with a pending change request) and `Allow Change Requests Toggle` (viewers get a Change Requests switch); both default to false.
 
 ---
 
@@ -743,11 +735,11 @@ Get detailed configuration of a specific capture template.
 |-----------|------|----------|-------------|
 | `id` | string (ID) | Yes | Capture template ID |
 
-**Returns:** Template configuration including assigned metrics, the `Org Structure` (physical when none is set; capture templates can't switch it), the Limit to and Default lists for org nodes, disciplines and frameworks (as `templates_reports_get`), and data entry settings: `showRowsWithValuesFilter` (viewers can switch between all rows and rows with values), `showDataGroupingFilter` with the allowed grouping levels (viewers can regroup by those levels in any order), `Column Levels` (the grouping levels placed on columns), `showPendingFilter` (the capture and validation grids offer a "Show pending only" toggle) and `showOnlyPending` (they open showing only values still to capture, or waiting for the viewing user's validation). `data_inputValues_list` does not apply the pending filter.
+**Returns:** Template configuration including assigned metrics, the `Org Structure` (physical when none is set; capture templates can't switch it), the Limit to and Default lists for org nodes, disciplines and frameworks (as `templates_reports_get`), and data entry settings: `showRowsWithValuesFilter` (viewers can switch between all rows and rows with values), `showDataGroupingFilter` with the allowed grouping levels (viewers can regroup by those levels in any order), `Column Levels` (the grouping levels placed on columns), `showPendingFilter` (the capture and validation grids offer a "Show pending only" toggle) and `showOnlyPending` (they open showing only values still to capture, or waiting for the viewing user's validation). `data_inputValues_list` does not apply the pending filter. `Show Change Requests` (the grids mark values with a pending change request) and `Allow Change Requests Toggle` (viewers get a Change Requests switch); both default to false.
 
 ---
 
-## MCP Apps — Visualization (7 tools)
+## MCP Apps — Visualization (6 tools)
 
 > **Date parameter note:** App tools use `startDate`/`endDate` (ISO format dates), unlike data tools which use `timePeriodNames` or `periodType+periodCount`. This is because Apps render visual time ranges, while data tools operate on discrete named periods. **Exceptions:** `apps_chart_render` (ad-hoc visualization) uses neither — data is provided inline. `apps_widget_aiSummary` also uses neither — it takes dashboard and org node IDs only.
 
@@ -762,6 +754,7 @@ Render a full dashboard as interactive HTML with Chart.js charts. Use when the u
 | `startDate` | string | Yes | Start date (ISO format: yyyy-MM-dd) |
 | `endDate` | string | Yes | End date (ISO format: yyyy-MM-dd) |
 | `timePeriodType` | string | No | `day`, `week`, `month` (default), `quarter`, `year` |
+| `orgNodeTemplateKey` | string | No | Org structure for a dashboard that lets viewers switch it: an org node template ID or `physical`; omit for the dashboard default. Every widget, tables included, the header and AI summaries run on it; a caller without a grant on the default gets 403 and must name a structure. `orgNodeId` must belong to that structure |
 
 **Returns:** HTML with Chart.js visualizations rendered in Claude's conversation. The dashboard header (eyebrow, title, subtitle, badge) is resolved for the org node and period at the template's default interval, so header tokens such as `@[periods]` show their real text; a dashboard without a header shows its name. A Pie or XY chart whose metrics are all excluded at the org node renders "n/a" and is not reported as a widget error.
 
@@ -814,8 +807,11 @@ For styled templates, the metadata includes the same contract used by browser
 dashboards and CLI JSON: `styleConfiguration`, `centerNumberFormat`, `center`,
 `labelDisplay`, `legend`, `dataItems[].sourceDataItemKey`,
 `dataItems[].presentation`, `dataItems[].numberFormat`,
-`dataItems[].legendValue`, `dataItems[].sliceLabel`, style warnings, and
-`selectionDiagnostics` when value selection is configured.
+`dataItems[].legendValue`, `dataItems[].sliceLabel`, `pieShape`, `dataItems[].formattedShare`, style warnings, and
+`selectionDiagnostics` when value selection is configured. A Half Circle shape draws the top half of the chart. Small slices
+grouped into Other draw as one slice in the `otherSlice` colour (default grey `#8E96A8`); its tooltip lists the members and
+"and N more", and the metadata lists the shares where it lists values. As elsewhere in the MCP chart, slice labels are not drawn on
+the canvas and a donut centre (including Total and Percentage) is a line under the chart.
 
 ---
 
@@ -852,32 +848,16 @@ Render a table widget as HTML. Shows dashboard-shaped table rows, columns, forma
 
 ---
 
-### `apps_widget_textBlock`
-
-Render a TextBlock widget as HTML with server-resolved title, subtitle, description, footnote, token spans, warnings, diagnostics, and style metadata. Use when the user wants to SEE dashboard text or inspect metric- and narrative-aware text tokens. For raw numeric analysis, use `data_computedValues_list` instead. Uses `startDate`/`endDate` (ISO yyyy-MM-dd).
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `widgetTemplateId` | string (ID) | Yes | Widget template ID (TextBlock type) |
-| `orgNodeIds` | string | Yes | Comma-separated org node IDs |
-| `startDate` | string | Yes | Start date (ISO format) |
-| `endDate` | string | Yes | End date (ISO format) |
-| `timePeriodType` | string | No | Period type (default: `month`) |
-
-**Returns:** HTML with the four text slots, metric, trend, period, and narrative text resolved by the API, plus warnings. Narrative text is HTML-encoded plain text with line breaks kept, and narrative warnings carry `data-source-narrative-id`. A metric token whose metric is excluded at every selected org node reports `NotApplicable` with value "n/a" and no warning. Pass a single org node ID: narrative tokens show "Select a single org unit" when several are passed.
-
----
-
 ### Widget text tokens
 
-InfoCard and TextBlock text is resolved by the API; MCP renders the result. Stored token syntax in widget template JSON:
+InfoCard, TextBlock and Table text is resolved by the API; MCP renders the result (`apps_widget_infoCard`, `apps_widget_textBlock`, `apps_dashboard_render`, and `templates_widgets_preview` for drafts). Stored token syntax in widget template JSON (a config may also name a metric, `[Metric Name]`: lint, save and preview resolve it, and save stores the id). Each resolved value span carries the `periodName` it was read at:
 
 | Token | Meaning |
 |-------|---------|
 | `[metric-guid]`, `[metric-guid]\|-1\|` | Metric value, optionally offset by widget periods |
 | `#trend[metric-guid]` | Metric value with trend direction |
 | `@[period]`, `@[period:-1]` | Period label |
-| `{narrative-guid}`, `{narrative-guid}\|-1\|` | Narrative text for the selected org unit (TextBlock title/subtitle/description/footnote and InfoCard title/description/footnote only; no `#trend`) |
+| `{narrative-guid}`, `{narrative-guid}\|-1\|` | Narrative text for the selected org unit (TextBlock title/subtitle/description/footnote, and InfoCard and Table title/description/footnote only; no `#trend`) |
 
 A narrative token resolves at the narrative's own capture interval, whatever the widget's data interval: a quarterly narrative shows the quarter containing a selected month, or the latest quarter with text in a selected year, and `|-1|` counts in capture periods. The span's `periodName` names the resolved period. "Not applicable" means the narrative is excluded for the selected org unit. Other states are "No data", "Restricted", "Unavailable", and "Select a single org unit".
 
@@ -901,7 +881,7 @@ Render pre-generated AI insights (trends, anomalies, correlations) as HTML cards
 
 ### `apps_chart_render`
 
-Render a chart from **raw data** as interactive HTML. No template needed — provide data inline. Use this for ad-hoc visualizations after querying data with `data_computedValues_list` or `data_inputValues_list`. For template-based rendering, use `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_infoCard`, `apps_widget_textBlock`, or `apps_widget_table` instead.
+Render a chart from **raw data** as interactive HTML. No template needed — provide data inline. Use this for ad-hoc visualizations after querying data with `data_computedValues_list` or `data_inputValues_list`. For template-based rendering, use `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_infoCard`, or `apps_widget_table` instead.
 
 > **Convention exception:** Unlike other `apps_` tools, `apps_chart_render` does **not** use `startDate`/`endDate` parameters. Data is provided inline via the `data` parameter.
 
@@ -974,11 +954,25 @@ Unknown options keys are silently ignored.
 
 ---
 
-## Templates — CRUD (11 tools)
+## Templates — CRUD (13 tools)
 
-> Template CRUD tools create, update, and delete widget, report, and dashboard templates. For listing/discovery of existing templates, see the [Templates](#templates-6-tools) section above.
+> Template CRUD tools create, update, and delete widget, report, and dashboard templates. For listing/discovery of existing templates, see the [Templates](#templates--discovery-7-tools) section above.
+>
+> A refused create or save (invalid JSON or ID, a missing name, a name already taken, a failed local check, a template that is not there, or the server rejecting it) comes back as a tool error (`isError: true`), its text prefixed `An error occurred invoking '<tool>':`. `templates_widgets_lint` does the same when it cannot run the lint (invalid input or a failed local check); the issues a lint finds are its normal result, not an error.
 
-### Widget Templates (4 tools)
+### Widget Templates (6 tools)
+
+#### `templates_widgets_get`
+
+Get a widget template by ID as its full JSON config, for inspection or to change it before `templates_widgets_save`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string (ID) | Yes | Widget template ID (from `templates_widgets_list`) |
+
+**Returns:** The widget template JSON (`GET Templates/WidgetTemplates?id=`), or "Widget template not found".
+
+---
 
 #### `templates_widgets_create`
 
@@ -1002,21 +996,25 @@ Create a new widget template from JSON config. Checks for name collisions — if
 - **PieChart** (`widgetType.id: 1`): Also requires `pieChartWidgetTemplateType` with `id`.
   Pie and Donut templates may also use bounded styling fields:
   `styleConfiguration`, `centerNumberFormat`, `dataItems[].presentation`, and
-  `dataItems[].numberFormat`. Keep visual fields separate from
+  `dataItems[].numberFormat`. Display fields: `centerMode` (`0` None, `1` Static Text, `2` Metric Value, `3` Total, `5` Percentage),
+  `legendValueMode` (`0` Hidden, `1` Value, `2` Percent, `3` Value and Percent), `sliceLabelMode` (`0` Hidden, `1` Label, `2` Value,
+  `3` Label and Value, `4` Percent, `5` Label and Percent), `pieShape` (`0` Full Circle, `1` Half Circle), `otherSliceMode`
+  (`0` None, `1` Top N, `2` Below Percent) with `otherSliceThreshold` (Top N 2 to 20, Below Percent 1 to 25). Keep visual fields separate from
   `valueSelectionConfig`, which controls filtering/ranking/diagnostics.
 - **XYChart** (`widgetType.id: 2`): Data items require `xyChartWidgetTemplateDataItemType` with `id`
+- **InfoCard** (`widgetType.id: 0`): Optional `showDataIntervalFilter`, as on a Table: `true` follows the dashboard's interval with `dataInterval` as the default, `false` fixes `dataInterval` (lint error `IntervalFixedNeedsInterval` without one); omitted on create, the card follows exactly when it has no `dataInterval`. Row `dataPeriodStart` and text-token offsets count in the interval the card reads at, unconverted
 - **Table** (`widgetType.id: 4`): Also requires `dataGrouping` (`0` None, `1` OrgNode, `2` Discipline, `3` Framework). Rows come from `dataItems` (Static metric selection) or the metric scope filters (Dynamic); optional `additionalDataGrouping` (0–2 Then By levels), `narratives`, `showMetricValue`, `showMetricsInColumns` (needs a grouping, or `showTimePeriodsInRows`), `showTimePeriodsInRows` (one row per period; needs `showMetricsInColumns`), `columnDataGroupingLevels` (grouping levels shown on columns; the layout must keep a row and a column), `metricPropertyColumns`, `metricAttributeTypeIds`, `metricTooltipProperties` and `metricTooltipAttributeTypeIds` (the metric-name tooltip), `missingValuePlaceholder`, `styleConfiguration` and `showDataIntervalFilter` (true follows the dashboard's interval with `dataInterval` as the default; false fixes `dataInterval` and needs one, `IntervalFixedNeedsInterval`; omitted on create follows exactly when `dataInterval` is null). Order and limit (`valueSelectionConfig`) needs OrgNode in the grouping. An update that leaves out the four layout and tooltip fields or `showDataIntervalFilter` keeps their stored values
-- **TextBlock** (`widgetType.id: 6`): Requires at least one non-blank `title`, `subtitle`, `description`, or `footnote`; omit `dataItems` (metrics and narratives are discovered from text tokens)
+- **TextBlock** (`widgetType.id: 6`): Requires at least one non-blank `title`, `subtitle`, `description`, or `footnote` (`TextBlockTextRequired`); omit `dataItems` (metrics and narratives are discovered from text tokens). Optional `showDataIntervalFilter`, as on an InfoCard: `true` follows the dashboard's interval with `dataInterval` as the default, `false` fixes `dataInterval`; omitted on create, the text block follows exactly when it has no `dataInterval`. Token errors use the `WIDGET_TOKEN_*` codes, with the slot as `field` and the token as `params.key`
 - **All data items** need `metric` (with `id`) and `metricPartitioningMode` (with `id`)
 
-Text fields use stored tokens: `[metric-guid]`, `[metric-guid]|-1|`, `#trend[metric-guid]`, `@[period:n]`, `{narrative-guid}`, and `{narrative-guid}|-1|`. Narrative tokens are allowed only in TextBlock and InfoCard title, subtitle, description, and footnote, and resolve at the narrative's own capture interval. See [Widget text tokens](#widget-text-tokens).
+Text fields use stored tokens: `[metric-guid]`, `[metric-guid]|-1|`, `#trend[metric-guid]`, `@[period:n]`, `{narrative-guid}`, and `{narrative-guid}|-1|`; a metric may also be named, `[Metric Name]`, and save stores its id. Narrative tokens are allowed only in TextBlock, InfoCard and Table title, description and footnote (and a TextBlock's subtitle), and resolve at the narrative's own capture interval. See [Widget text tokens](#widget-text-tokens).
 
 **Pie/Donut styling fields:**
 
 | Field | Notes |
 |-------|-------|
-| `styleConfiguration` | Template-level slots: `panel`, `title`, `description`, `footnote`, `chartArea`, `slices`, `sliceBorders`, `sliceLabels`, `ticks`, `tooltip`, `legend`, `legendMarkers`, `legendLabels`, `legendValues`, `donutCenter`, `stateMessages` |
-| `centerNumberFormat` | `{ "precision": 0..6, "magnitude": "None\|Thousands\|Millions\|Billions\|Auto" }`; valid for Metric Value donut centers |
+| `styleConfiguration` | Template-level slots: `panel`, `title`, `description`, `footnote`, `chartArea`, `slices`, `sliceBorders`, `sliceLabels`, `ticks`, `tooltip`, `legend`, `legendMarkers`, `legendLabels`, `legendValues`, `donutCenter`, `otherSlice`, `stateMessages` |
+| `centerNumberFormat` | `{ "precision": 0..6, "magnitude": "None\|Thousands\|Millions\|Billions\|Auto" }`; valid for Metric Value and Total donut centers |
 | `dataItems[].presentation` | Source data-item non-fill styling slots: `slice`, `sliceBorders`, `sliceLabels`, `tooltip`, `legendMarker`, `legendLabel`, `legendValue`; `dataItems[].colour` remains slice/legend-marker fill authority |
 | `dataItems[].numberFormat` | Same number-format shape as `centerNumberFormat`; applies to slice values, legend values, tooltips, MCP metadata, CLI JSON, and accessible text |
 | `valueSelectionConfig` | Filtering, ordering, Top/Bottom ranking, and diagnostics only. Style payloads inside `valueSelectionConfig` are rejected. |
@@ -1046,7 +1044,7 @@ If the config contains an `id` field, it must match the `id` parameter or be the
 
 #### `templates_widgets_lint`
 
-Check a widget template without saving it. Errors are exactly what saving would reject; warnings and notes never block a save. Each issue carries a code, for example `NameRequired`, `NameDuplicate`, `MetricsRequired`, `NarrativesRequired`, `FrameworkGroupingNeedsMatching`, `OrgNodeAttributeFilterIncomplete` or `UnknownMetrics`. A table saved before these checks that already breaks `MetricsRequired` or `NarrativesRequired` gets a warning instead, so it still saves; a new break, and any other rule, is an error.
+Check a widget template without saving it. Errors are exactly what saving would reject; warnings and notes never block a save. Each issue carries a code, for example `NameRequired`, `NameDuplicate`, `MetricsRequired`, `NarrativesRequired`, `FrameworkGroupingNeedsMatching`, `OrgNodeAttributeFilterIncomplete` or `UnknownMetrics`. A table saved before these checks that already breaks `MetricsRequired` or `NarrativesRequired` gets a warning instead, so it still saves; a new break, and any other rule, is an error. An info card reports `DataItemDuplicate` (the same metric twice with the same period, sites and combining; a warning when the saved card already repeats it), `UnknownMetrics` and `MetricNotViewable` on a row, `StyleSlotValueInvalid` and `StyleSlotPropertyUnsupported` (with `path` and `allowed`), the warnings `DataItemLabelDuplicate`, `DataItemWindowSinglePeriod` and `TrendIconWithoutLabel`, and the notes `OverrideFieldsCleared` (a filtered card's row keeps only its label, number format and bands) and `TrendRangesGiveNoVerdict` (a `#trend` coloured by direction because its metric's ranges give no verdict; an info card or text block). A pie reports `PieChartTypeRequired`, the centre codes (`PieCenterNeedsDonut`, `PieCenterModeReserved`, `PieCenterFieldsNeedMode`, `PieCenterTextRequired`, `PieCenterFieldNotForMode`, `PieCenterMetricRequired`, `PieCenterMetricNotInPie`, `PieCenterShareAlwaysFull`), `PieOtherThresholdInvalid`, `EnumValueInvalid`, `TimePeriodAggregationRequired` (a warning on a pie already saved without a method), `UnknownMetrics` and `MetricNotViewable` on a slice or `centerMetricId`, and the notes `PieCenterNumberFormatFolded` and `PieSliceBandsFolded` (what save removes). Each code has one English message, the same on every channel.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -1054,6 +1052,23 @@ Check a widget template without saving it. Errors are exactly what saving would 
 | `templateId` | string (ID) | One of the two | A saved widget template to lint as it is stored |
 
 **Returns:** One line per issue, errors first, then warnings, then notes: `Error   [Code] field: message`, `Warning …`, `Note    …`, then a count line; or "No issues found in the widget template." `POST Templates/WidgetTemplates/Lint` (with `templateId`: `GET Templates/WidgetTemplates?id=` first).
+
+---
+
+#### `templates_widgets_preview`
+
+Render an info card, text block, pie chart or XY chart widget template without saving it, as HTML, the way the dashboard would show it at the given sites and period, with your data permissions: the same figures, units, labels and band colours as `apps_widget_infoCard` shows once it is saved. A draft row that is not on the saved card yet renders too, and a draft's own bands colour the value. A text block renders its resolved title, subtitle, description and footnote as `apps_widget_textBlock` shows them once saved, so you can check commentary before saving; metric names in its text resolve as save stores them. A pie renders as `apps_widget_pieChart` shows it once saved: its slices (a negative slice is left out of the chart, as the dashboard leaves it out of the ring) and its data warnings (`PieNegativeValuesLeftOut`, `PieManySlices`, `PieNoValues`, `PieMixedUnits`), with its Other slice and half-circle shape. An XY chart renders as `apps_widget_xyChart` shows it once saved: its series on their axes, including axes and series the config adds before they have ids, and the render's notes (`XyNoValues` when no series has a value, `LowContrast` for a series colour that is hard to read on white, `ExcessiveSeriesExpansion` over 40 series). Only info cards, text blocks, pies and XY charts preview here; a table config is refused before the server is asked.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `config` | string (JSON) | Yes | The info card, pie chart, XY chart or text block config, as posted to `templates_widgets_save` (`widgetType` `{"id":0}`, `{"id":1}`, `{"id":2}` or `{"id":6}`) |
+| `orgNodeIds` | string | Yes | Comma-separated org node IDs (from `model_orgNodes_list`) |
+| `startDate` | string | Yes | Start of the period (ISO `yyyy-MM-dd`) |
+| `endDate` | string | Yes | End of the period (ISO `yyyy-MM-dd`) |
+| `timePeriodType` | string | No | `day`, `week`, `month`, `quarter` or `year` (default `month`), the period's type |
+| `dataInterval` | string | No | `day`, `week`, `month`, `quarter` or `year`: the dashboard interval. Left out (as `apps_widget_infoCard` sends none), the widget reads at its own interval; a widget that fixes its interval ignores it |
+
+**Returns:** The card, text block, pie or XY chart as HTML, or the server's refusal: a 403 without Templates.Manage and Reporting.View, a 400 naming each field when the config has an error that stops it rendering (a missing name or period window, or a text block with no text, for example), or a filtered pie whose filters match no metric ("No metrics match this widget's filters."). `POST Templates/WidgetTemplates/Preview`.
 
 ---
 
@@ -1087,6 +1102,8 @@ Create a new report template from JSON config. Checks for name collisions — if
 | `dataGrouping` | `{id: "id"}` | Data grouping to use |
 
 Optional: `showDataGroupingFilter` (bool) and `allowedDataGroupingLevels` (list of `{id}`, 0=None (no grouping, a flat list), 1=OrgNode, 2=Discipline, 3=Framework; at least two, including the default's levels; viewers group by them in any order; ignored when the flag is false; allowing 0 needs `showTimePeriodsInRows` for `showMetricsInColumns`), `columnDataGroupingLevels` (list of `{id}`, levels of the grouping placed on columns in chain order: 1=OrgNode for a column block per site, 2=Discipline, 3=Framework; empty means every level is on rows; a level outside the grouping is rejected), `expandCalculations` (bool) and `expandCalculationsMaxDepth` (1..20, default 10). Expansion is rejected when `showMetricsInColumns` is true or any level is on columns. `showMetricsInColumns` needs at least one grouping level (`MetricsInColumnsRequiresGrouping`); each row is then one combination of the grouping values, and metrics that do not apply to a row are marked not applicable. `showTimePeriodsInRows` (bool) lists time periods as rows and metrics as columns in the web viewers; it requires `showMetricsInColumns` (`TimePeriodsInRowsRequiresMetricsInColumns`) and also works with no grouping (`dataGrouping` id 0), which makes a period-by-metric sheet for one site.
+
+`measure` (`{id}`: 0 = Value, the default; 1 = Capture completion; 2 = Validation completion) makes the report count expected values that are captured or validated instead of showing values. A completion template needs inputs and narratives only in `includedDataTypes` (not empty, no calculations), no `metricTypes` filter, periods as columns, every grouping level on rows, the physical org structure, and none of `showMetricsInColumns`, `showTimePeriodsInRows`, `expandCalculations`, `showOnlyRowsWithValues`, `showRowsWithValuesFilter`, `showEvidence`, `showChangeRequests`, `allowChangeRequestsToggle` or an org node template setting; `templates_reports_create` refuses a breach with the rule's message (for example "Capture and validation progress show metrics as rows, not columns."). `completionBands` (optional) colours the cells by share done, 0 to 100: bands as a metric's `bands`, with number ends only (no `lowerBoundMetric`/`upperBoundMetric`, `requireComment` or `autoValidate`), for example `[{"backgroundColor":"danger-subtle"},{"lowerBoundValue":50,"backgroundColor":"success-subtle"}]`. None uses the defaults (red below 40, amber from 40, green from 90); `[]` colours nothing. A breach is refused with the rule's message.
 
 `orgNodes`, `disciplines` and `frameworks` are the Limit to lists (no viewer reaches outside them); `defaultOrgNodes`, `defaultDisciplines` and `defaultFrameworks` are the starting picks and must sit inside the matching Limit to list (`DefaultOutsideLimit`). When rows are grouped without Org Node, or viewers can change the grouping, a fixed site filter (`showOrgNodeFilter` false) must resolve to exactly one org node, the single default or else the single Limit to pick (`SingleOrgNodeRequired`); an open one may have at most one default org node (`SingleDefaultOrgNodeRequired`).
 
@@ -1264,15 +1281,74 @@ Delete a dashboard template by ID. Permanently removes the dashboard template an
 
 ---
 
-## Status (1 tool)
+## Status (2 tools)
 
-### `GetStatus`
+### `status`
 
 Check Capstone MCP server status including authentication state and configuration.
 
 No parameters.
 
-**Returns:** Server status including API URL and authentication state.
+**Returns:** Server version, API URL and authentication state (signed-in user, or API key mode).
+
+---
+
+### `version`
+
+Return the Capstone MCP server version.
+
+No parameters.
+
+**Returns:** The version string.
+
+---
+
+## System (3 tools)
+
+> Tenant AI settings. Changing them needs the System.Manage permission. These tools never show or set an API key, and never acknowledge DeepSeek's data location; use the tenant's AI settings page or the CLI for those.
+
+### `system_tenantAiConfig_get`
+
+Show a tenant's AI settings: on or off, whose key calls use (the NxGN default, which is the provider, model and key this deployment sets, or the client's own key), provider, model and key status. The key itself is never shown, only its last four characters.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `tenantId` | string (ID) | No | Tenant ID. Defaults to the current tenant |
+
+**Returns:** The AI settings as text (`GET System/Tenants?Id=`, the tenant's `ai`).
+
+---
+
+### `system_tenantAiConfig_set`
+
+Change a tenant's AI settings: turn AI on or off, choose whose key calls use, the client's provider and the model. Settings you leave out keep their current values. The NxGN default always uses the provider this deployment sets, so `provider` is ignored for it. When a change needs a client key or the DeepSeek acknowledgement, the tool returns guidance to use the tenant's AI settings page or the CLI.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `tenantId` | string (ID) | No | Tenant ID. Defaults to the current tenant |
+| `enabled` | boolean | No | Turn AI on (`true`) or off (`false`) |
+| `keySource` | string | No | `nxgn` (the NxGN default) or `client` |
+| `provider` | string | No | The client's provider: `anthropic` or `deepseek`. Changing it removes the stored key |
+| `model` | string | No | Model ID of the provider in use, or `default` to follow the default |
+
+Pass at least one of `enabled`, `keySource`, `provider` or `model`.
+
+**Returns:** The saved settings (`POST System/Tenants`, the tenant as read with its `aiSettings`), or the guidance above.
+
+---
+
+### `system_tenantAiUsage_get`
+
+Show a tenant's AI usage: requests, tokens and failures, grouped by day, feature or model.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `tenantId` | string (ID) | No | Tenant ID. Defaults to the current tenant |
+| `from` | string | No | First day (ISO `yyyy-MM-dd`) |
+| `to` | string | No | Last day (ISO `yyyy-MM-dd`), included |
+| `groupBy` | string | No | `day` (default), `feature` or `model` |
+
+**Returns:** Totals, then one line per group (`POST System/Tenants/AiConfiguration/Usage`).
 
 ---
 

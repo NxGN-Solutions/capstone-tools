@@ -24,7 +24,7 @@ No arguments — explores the complete tenant structure.
 
 | What's Needed | Source | If Missing |
 |--------------|--------|------------|
-| Authentication | `Whoami` tool | Call `Login` first |
+| Authentication | `auth_whoami` tool | Call `auth_login` first |
 | Focus area | User request | Default: explore everything |
 
 ---
@@ -127,7 +127,7 @@ Based on the structure, recommend which prompts would be most valuable:
 
 **Claude:**
 ```
-Whoami()
+auth_whoami()
 → Tenant: Example Organization, User: user@example.com
 
 model_orgNodes_list()

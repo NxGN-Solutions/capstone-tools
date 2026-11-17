@@ -71,7 +71,7 @@ In a Claude Desktop conversation, type:
 
 > "Log in to Capstone"
 
-Claude will call the `Login` tool, which opens your browser for Microsoft or Google SSO authentication. After completing the sign-in flow in your browser, Claude confirms authentication.
+Claude will call the `auth_login` tool, which opens your browser for Microsoft or Google SSO authentication. After completing the sign-in flow in your browser, Claude confirms authentication.
 
 Credentials are stored locally at `~/.capstone-mcp/credentials.json` with restricted file permissions (owner-only on macOS/Linux).
 
@@ -129,7 +129,7 @@ If your account has access to multiple tenants, ask Claude:
 > "List my available tenants"
 > "Switch to [tenant name]"
 
-Claude uses the `ListTenants` and `SwitchTenant` tools to change your active tenant.
+Claude uses the `auth_tenants_list` and `auth_switchTenant` tools to change your active tenant.
 
 ---
 

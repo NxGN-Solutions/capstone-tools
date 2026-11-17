@@ -5,7 +5,7 @@
 ## When to Use
 
 - "Connect to our SQL database for automated data"
-- "Set up an MQTT feed from our sensors"
+- "Import readings from our plant database"
 - "Create a REST API integration"
 - "How do I automate data collection?"
 - "Configure a data source for [system name]"
@@ -13,7 +13,7 @@
 ## Required Context
 
 Before starting, Claude should know:
-- [ ] What type of data source (MQTT, SQL, REST)
+- [ ] What type of data source (SQL Server, PostgreSQL, Xero, Sage Payroll, REST)
 - [ ] Connection details (host, port, credentials)
 - [ ] Which metrics will receive data from this source
 
@@ -31,14 +31,15 @@ Before starting, Claude should know:
 
 | Type | Best For | Example |
 |------|----------|---------|
-| **MQTT** | Real-time sensor data, IoT devices | Factory floor sensors, building management systems |
 | **SQL** | Scheduled database queries | ERP data, financial systems, HR databases |
 | **REST** | HTTP API integrations | Third-party services, cloud platforms |
 | **Manual Capture** | Human data entry (default) | Form-based data collection |
 
+MQTT is not an import source. Capstone only publishes to MQTT, as a data export target.
+
 **Ask if not provided:**
 - "What system are you connecting to?"
-- "How does it expose data? (database, API, message broker)"
+- "How does it expose data? (database, accounting system, API)"
 
 ---
 
@@ -55,7 +56,7 @@ cap masterdata data-sources list --json
 ```
 Existing data sources:
 1. Manual Capture (default — used for human data entry)
-2. Factory MQTT (MQTT — sensor data)
+2. Plant Historian (SQL — meter readings)
 3. ERP Database (SQL — financial data)
 
 Does your new source overlap with any of these?
@@ -66,12 +67,6 @@ Does your new source overlap with any of these?
 ### Step 3: Gather Connection Details
 
 **Purpose:** Collect the information needed for the data source configuration.
-
-**For MQTT:**
-- Broker host and port (e.g., `mqtt://broker.example.com:1883`)
-- Topic pattern (e.g., `factory/+/sensors/#`)
-- Authentication (username/password or certificate)
-- QoS level (0, 1, or 2)
 
 **For SQL:**
 - Connection string (e.g., `Host=db.example.com;Database=erp;Username=reader`)
@@ -94,8 +89,8 @@ Does your new source overlap with any of these?
 cat <<'EOF' | cap masterdata data-sources create --json
 {
   "id": "<empty-id>",
-  "name": "Factory MQTT Sensors",
-  "description": "Real-time sensor data from factory floor"
+  "name": "Plant Historian",
+  "description": "Daily meter readings from the plant historian database"
 }
 EOF
 ```
@@ -122,9 +117,9 @@ cat <<'EOF' | cap model inputs save --json
   "inputDataFeeds": [
     {
       "id": "<empty-id>",
-      "name": "Factory MQTT Feed",
+      "name": "Plant Historian Feed",
       "dataSource": { "id": "<data-source-id>" },
-      "dataSourceInstruction": "topic: factory/site-a/electricity",
+      "dataSourceInstruction": "<SQL query returning OrgNodeId, TimePeriod, Value>",
       "orgNodeOverrides": []
     }
   ]
@@ -134,7 +129,7 @@ EOF
 
 **Key fields:**
 - `dataSource.id` — The data source created in Step 4
-- `dataSourceInstruction` — Source-specific configuration (MQTT topic, SQL query, REST endpoint)
+- `dataSourceInstruction` — Source-specific configuration (for SQL Server and PostgreSQL, the query)
 - `orgNodeOverrides` — The sites the feed writes; leave it empty for every site
 
 A SQL Server or PostgreSQL source can also feed narrative text: set
@@ -163,10 +158,10 @@ cap model inputs get <metric-id> --json
 ```
 Data source configured!
 
-Data Source: Factory MQTT Sensors (<id>)
+Data Source: Plant Historian (<id>)
 Linked Metrics:
-- Electricity Consumption → topic: factory/site-a/electricity
-- Gas Consumption → topic: factory/site-a/gas
+- Electricity Consumption → kWh readings query
+- Gas Consumption → gas readings query
 
 Next steps:
 - Configure the Integration Service with connection credentials
@@ -223,8 +218,8 @@ A metric can receive data from multiple sources (e.g., automated + manual overri
 "inputDataFeeds": [
   {
     "name": "Automated Feed",
-    "dataSource": { "id": "<mqtt-source-id>" },
-    "dataSourceInstruction": "topic: sensors/electricity"
+    "dataSource": { "id": "<sql-source-id>" },
+    "dataSourceInstruction": "<SQL query>"
   },
   {
     "name": "Manual Override",
@@ -253,11 +248,11 @@ Different locations can have different source instructions:
 "orgNodeOverrides": [
   {
     "orgNode": { "id": "<site-a-id>" },
-    "dataSourceInstruction": "topic: factory-a/electricity"
+    "dataSourceInstruction": "<SQL query for site A>"
   },
   {
     "orgNode": { "id": "<site-b-id>" },
-    "dataSourceInstruction": "topic: factory-b/electricity"
+    "dataSourceInstruction": "<SQL query for site B>"
   }
 ]
 ```

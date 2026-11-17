@@ -358,8 +358,8 @@ SUM([A], [B], [C])                Sum of values
 **Definition:** An isolated data environment for a single organization. All data is partitioned by tenant.
 
 **MCP Tools:**
-- `ListTenants` — List accessible tenants
-- `SwitchTenant` — Change active tenant
+- `auth_tenants_list` — List accessible tenants
+- `auth_switchTenant` — Change active tenant
 
 **Resource:** `capstone://user/context` — Current tenant context.
 
@@ -372,7 +372,7 @@ SUM([A], [B], [C])                Sum of values
 **Definition:** A system user with authentication credentials and assigned roles/permissions.
 
 **MCP Tools:**
-- `Whoami` — Current user identity and permissions
+- `auth_whoami` — Current user identity and permissions
 
 ---
 
@@ -382,7 +382,7 @@ SUM([A], [B], [C])                Sum of values
 
 **Definition:** A named set of feature permissions. Users are assigned roles that control what actions they can perform.
 
-**MCP Tools:** Not available in MCP v1 — use `Whoami` to see current user's roles.
+**MCP Tools:** Not available in MCP v1 — use `auth_whoami` to see current user's roles.
 
 ---
 
@@ -392,13 +392,15 @@ SUM([A], [B], [C])                Sum of values
 
 **Definition:** Controls which Org Nodes and Disciplines a user can view/edit. Combines with Roles for complete access control.
 
+The kinds are View, Edit, Data Validation, Change Request Approval and **Data Owner**. Data Owner grants no access: it marks who receives Data Feed Changes notifications (a scheduled mail of the values data feeds changed or cleared), and the user still needs View or higher. The scope permission **All Data (Owner)** marks a user as Data Owner everywhere; Data Scope Unrestricted does not include it.
+
 ---
 
 ### External Connection / Integration
 
 **Capstone Term:** Data Source
 
-**Definition:** Configuration for ingesting data from external systems (MQTT brokers, SQL databases, REST APIs).
+**Definition:** Configuration for ingesting data from external systems (SQL databases, accounting and payroll systems, REST pushes).
 
 **MCP Tools:** Not available in MCP v1 — use the CLI for data source operations.
 

@@ -7,7 +7,7 @@
 Capstone is a **data management platform** for organizations that need to consolidate, curate, and report on data from multiple sources. While commonly used for ESG (Environmental, Social, Governance) reporting, Capstone is domain-agnostic and supports any integrated reporting use case including operational KPIs, financial planning, and compliance monitoring.
 
 **Key capabilities:**
-- **Data consolidation** from SQL databases, MQTT brokers, REST APIs, and manual entry
+- **Data consolidation** from SQL databases, accounting systems, REST pushes, Excel and manual entry
 - **Data curation** with multi-level validation workflows for assurance
 - **Audit assurance** via data locking and change request tracking
 - **Flexible modeling** with user-defined KPIs, formulas, targets, budgets, actuals, and scorecards
@@ -39,7 +39,7 @@ Capstone is a **data management platform** for organizations that need to consol
 | Data entry form, capture sheet | Capture Template | `templates capture-templates` | Defines data entry structure |
 | Report layout, spreadsheet template | Report Template | `templates report-templates` | Defines report structure |
 | Alternate org view, virtual structure | Org Node Template | `templates org-node-templates` | Projects org structure differently |
-| External connection, integration | Data Source | `masterdata data-sources` | MQTT, SQL, REST integrations |
+| External connection, integration | Data Source | `masterdata data-sources` | SQL, Xero, Sage Payroll, REST integrations |
 | Edit request, correction request | Change Request | `data change-requests` | Audit-tracked data modifications |
 | Locked text correction request | Change Request | `data change-requests` | Governed edits for locked input or narrative values |
 | Period freeze, lock, close period | Data Lock | `data data-lock` | Prevents changes to locked periods |
@@ -233,8 +233,8 @@ status, run `cap schema --json` or read [reference/commands.md](./reference/comm
 | `templates` | Capture/report/widget/dashboard configuration | `capture-templates *`, `report-templates *`, `widget-templates *`, `dashboard-templates *`, `lookups get` |
 | `data` | Captured values, narratives, change requests, locks | `time-periods list`, `input-values *`, `narrative-values *`, `change-requests *`, `data-lock lock|unlock` |
 | `reporting` | Computed values and dashboard/widget output | `computed-values list/query/audit`, `widgets info-card/pie-chart/xy-chart/table`, `dashboards get-data/get-insights` |
-| `security`, `system` | User Excel import/export and tenant administration | `security users download-excel/upload-excel`, `system tenants *`, `system tenants fiscal-config update`, `system tenants ai-config get/set/test/remove-key/models/usage` |
-| `notifications` | Notification template and rule administration | `notifications templates create/get/list/save/delete/download-excel/upload-excel`, `notifications rules create/get/list/save/delete/download-excel/upload-excel` |
+| `security`, `system` | User Excel import/export and tenant administration | `security users get/download-excel/upload-excel`, `system tenants *`, `system tenants fiscal-config update`, `system tenants ai-config get/set/test/remove-key/models/usage` |
+| `notifications` | Notification template and rule administration, and what a rule sent | `notifications templates create/get/list/save/delete/download-excel/upload-excel/tokens/lint`, `notifications rules create/get/list/save/delete/download-excel/upload-excel/lint/runs/recipients`, `notifications delivery-log list` |
 
 Most reporting commands require `--data-interval` and `--periods`. Type-specific
 widget commands use `--org-nodes` (plural). `widgets get-data` is the legacy CSV
@@ -246,11 +246,11 @@ For widget styling work, start with
 and `cap templates widget-templates sample --widget-type <type> --json`. Widget
 samples put the editable body under `.payload.widgetTemplate`; `get` responses
 put it under `.widgetTemplate`; `save` returns an acknowledgement object, not the
-full updated template. Pie/Donut enum values for center, legend-value, and
-slice-label modes are in `schema.fieldLookups`, and
+full updated template. Pie/Donut enum values for center, legend-value,
+slice-label, shape and Other-slice modes are in `schema.fieldLookups`, and
 `cap reporting widgets pie-chart ... --json` returns a top-level render contract
-with `styleConfiguration`, `center`, `legend`, `labelDisplay`, and
-`dataItems[]`.
+with `styleConfiguration`, `pieShape`, `center`, `legend`, `labelDisplay`, and
+`dataItems[]` (each with its `formattedShare`; `isOther` marks the Other slice).
 
 ---
 

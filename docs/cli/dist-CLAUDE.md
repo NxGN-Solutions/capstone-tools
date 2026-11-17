@@ -183,7 +183,7 @@ Last updated: 2026-02-13
 ## Observations
 - Weekly periods start on Mondays, format: "(W6) Feb 2 2026"
 - GM% calculation uses AfterAgg phase — don't set orgAgg/timeAgg
-- Example Site 3 has no data for January (MQTT feed started Feb 1)
+- Example Site 3 has no data for January (SQL feed started Feb 1)
 
 ## Session Log
 - 2026-02-13: Initial setup, cached model. User explored D1 dashboard data.

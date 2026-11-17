@@ -58,7 +58,8 @@ Set it on a data item to override the widget default for that metric:
 
 ## Common Mistakes
 
-- Do not leave Dynamic InfoCards or Pie/Donut widgets with a null aggregation method. The render path warns and may return no values.
+- Do not leave Dynamic InfoCards with a null aggregation method. The render path warns and may return no values.
+- A Pie/Donut needs a widget aggregation method, or one on every data item (a Dynamic pie needs the widget method). Without one, `lint`, `create` and `save` report `TimePeriodAggregationRequired`; a pie already saved without one gets a warning instead.
 - Do not sum rates or percentages. Use Average unless the metric has a stronger domain-specific rule.
 - Do not use None for single-value summaries that span multiple periods. It is only correct when periods must remain separate or the value field targets exactly one period.
 - Keep widget-level and data-item-level methods aligned unless the widget intentionally mixes metric roles.

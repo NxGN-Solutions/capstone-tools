@@ -226,6 +226,28 @@ cap reporting computed-values download-excel \
 
 ---
 
+### Completion / Progress / Outstanding Data
+
+**Capstone Term:** Capture or Validation completion (report template `measure`)
+
+**Definition:** A report template with `measure` 1 (Capture completion) or 2 (Validation completion) counts values instead of showing them:
+
+- **Expected:** one value per input or narrative, site and period where the site is on the physical structure, the item is not excluded there, capture is required there, the period is of the item's own interval and the tenant has that interval enabled, and the period starts in or after the tenant's first year. Calculations are never expected.
+- **Captured:** an input holds a number (zero counts; a comment alone does not), or a narrative has text.
+- **Validated:** captured and approved, or captured where no validation applies (the tenant has no validation levels, or validation is not required at that site). A rejected value is never validated.
+- **Not due:** a period whose last day is not before today's UTC date. It is shown but not counted.
+
+Counts cover only the data the caller may view; nothing is stored. Cells are coloured by `completionBands`, bands over the share done like a metric's bands; the defaults are red below 40%, amber from 40% and green from 90%.
+
+**CLI:**
+```bash
+cap reporting computed-values list --template <completion-template-id> --data-interval month --periods "Jan 2026" --json
+```
+
+
+
+---
+
 ### Chart / Visualization
 
 **Capstone Term:** Widget
@@ -282,7 +304,7 @@ cap model inputs get <id> --json   # Shows aggregation settings
 
 **Capstone Term:** Capture Template (Spreadsheet Template)
 
-**Definition:** Defines the structure of a data entry form—which metrics, org nodes, and time periods appear for data capture. `showRowsWithValuesFilter` lets viewers switch between all rows and rows with values (`showOnlyRowsWithValues` is the default; it always applies when the flag is false). `showPendingFilter` offers a "Show pending only" toggle on its capture and validation grids, and `showOnlyPending` opens it switched on. `showDataGroupingFilter` lets viewers regroup the rows by the levels in `allowedDataGroupingLevels`, in any order, and to move levels between rows and columns. `columnDataGroupingLevels` lists the grouping levels placed on columns (for example a column block per site, with discipline rows); empty means every level is on rows.
+**Definition:** Defines the structure of a data entry form—which metrics, org nodes, and time periods appear for data capture. `showRowsWithValuesFilter` lets viewers switch between all rows and rows with values (`showOnlyRowsWithValues` is the default; it always applies when the flag is false). `showPendingFilter` offers a "Show pending only" toggle on its capture and validation grids, and `showOnlyPending` opens it switched on. `showChangeRequests` marks cells whose value has a pending change request, and `allowChangeRequestsToggle` gives viewers a Change Requests switch (both default false). `showDataGroupingFilter` lets viewers regroup the rows by the levels in `allowedDataGroupingLevels`, in any order, and to move levels between rows and columns. `columnDataGroupingLevels` lists the grouping levels placed on columns (for example a column block per site, with discipline rows); empty means every level is on rows.
 
 **CLI:**
 ```bash
@@ -297,12 +319,17 @@ cap templates capture-templates get <id> --json
 
 **Capstone Term:** Notification Rule
 
-**Definition:** Sends a notification template when an event happens (Event Driven) or on a schedule (Scheduled). An Event Driven rule sends its template when the template's event happens; the template names that event in its `eventType` (for example Input Value Captured or Data Lock Applied). A schedule is a cron expression or period-end offsets: signed days from the end of each month, fiscal quarter or fiscal year, at a fire time in the rule's time zone. Each scheduled fire sends a recipient one email listing the capture templates to open for their pending work.
+**Definition:** Sends a notification template when an event happens (Event Driven) or on a schedule (Scheduled). Each template is **Written for** one event or its type's digest. An Event Driven rule needs a template written for an event, and sends it when that event happens; the template names the event in its `eventType` (for example Input Value Captured or Data Lock Applied). A Scheduled rule needs a digest (null `eventType`): Pending capture digest, Pending validation digest, Pending change requests digest or Data feed changes digest. While a rule uses a template, what the template is written for cannot change. The rule picker offers only templates marked **Available to rules** (`isActive`); turning that off does not stop rules that already use the template. A schedule is a cron expression or period-end offsets: signed days from the end of each month, fiscal quarter or fiscal year, at a fire time in the rule's time zone. Each scheduled fire sends a recipient one email listing the capture templates to open for their pending work.
+
+A rule whose template has the notification type **Data Feed Changes** must be Scheduled. Each send lists the input values and narratives a data feed changed or cleared in the rule's scope since the previous send. It goes to the Data Owners in scope (see Data Permission) and, when `notifyReplacedValueSavers` is true (the default), once to the person whose value the feed replaced. `* * * * *` sends every minute. A schedule with more than 120 days between sends is refused, because changes are kept for 120 days.
 
 **CLI:**
 ```bash
 cap notifications rules list --json
 cap notifications rules get <id> --json
+cap notifications rules runs <id> --json
+cap notifications rules recipients <id> --json
+cap notifications delivery-log list --rule <id> --json
 ```
 
 
@@ -312,7 +339,7 @@ cap notifications rules get <id> --json
 
 **Capstone Term:** Report Template (Spreadsheet Template)
 
-**Definition:** Defines the structure of a report—which metrics and computed values to display in a spreadsheet format. `showRowsWithValuesFilter` lets viewers switch between all rows and rows with values; when false, `showOnlyRowsWithValues` always applies. `showDataGroupingFilter` lets viewers regroup the rows by the levels in `allowedDataGroupingLevels`, in any order, and to move levels between rows and columns. `columnDataGroupingLevels` lists the grouping levels placed on columns (for example a column block per site, with discipline rows); empty means every level is on rows.
+**Definition:** Defines the structure of a report—which metrics and computed values to display in a spreadsheet format. `showRowsWithValuesFilter` lets viewers switch between all rows and rows with values; when false, `showOnlyRowsWithValues` always applies. `showChangeRequests` marks cells with a pending change request, and `allowChangeRequestsToggle` gives viewers a Change Requests switch (both default false; completion reports refuse them). `showDataGroupingFilter` lets viewers regroup the rows by the levels in `allowedDataGroupingLevels`, in any order, and to move levels between rows and columns. `columnDataGroupingLevels` lists the grouping levels placed on columns (for example a column block per site, with discipline rows); empty means every level is on rows.
 
 **CLI:**
 ```bash
@@ -342,10 +369,12 @@ cap templates report-templates get <id> --json
 - `widgetType` - Visualization type (InfoCard, PieChart, XYChart, Table, TextBlock)
 - `discipline` - Categorization for organization and permissions
 - `dataItems` - Array of metrics to display for metric-set widgets; TextBlock does not support data items and discovers metrics and narratives from text tokens (`[metric-guid]`, `{narrative-guid}`)
-- `dataRangeMode` - Static (fixed) or Dynamic (relative) date range
+- `dataRangeMode` - Static (a fixed window of period offsets), Dynamic (the viewer's periods), SelectedYear (the viewer's year up to their period; XY charts and tables) or SelectedYearToLatestData (the same, ending at the latest period with data; XY charts)
 - `dataInterval` - Monthly, Quarterly, Annual, etc.
-- `pieChartWidgetTemplateType` / `centerMode` / `sliceLabelMode` - PieChart-only display options for pie vs donut, donut center content, and labels rendered on slices
-- `legendValueMode` - PieChart-only stored enum behind the dashboard editor's **Show Legend Value** checkbox
+- `pieChartWidgetTemplateType` / `centerMode` / `sliceLabelMode` - PieChart-only display options for pie vs donut, donut center content (None, Static Text, Metric Value, Total, Percentage), and labels rendered on slices (label, value, percent)
+- `legendValueMode` - PieChart-only stored enum behind the dashboard editor's **Legend values** dropdown: Hidden, Value, Percent, Value and Percent
+- `pieShape` - PieChart-only: Full Circle (default) or Half Circle, the top half
+- `otherSliceMode` / `otherSliceThreshold` - PieChart-only: group small slices into one Other slice, by keeping the largest N (Top N, 2 to 20) or grouping slices below N% of the total (Below Percent, 1 to 25)
 - `dataGrouping`, `orgNodeRowSelectionMode`, `showOnlyRowsWithValues` - Table-only row grouping and table-wide display controls (at a leaf org node, Children and Descendants render the node itself)
 - `metricDisciplineFilters`, `metricFrameworkFilters`, and metric/discipline/framework attribute filters - Table dynamic Metric Scope controls (a table ignores `metricTypeFilters`; `includedDataTypes` decides its metric types)
 - `showMetricValue`, `metricPropertyColumns`, `metricAttributeTypeIds` - Table current custom-column controls. `metricPropertyColumns` is a `MetricProperty` EnumDTO list (not `metricColumns`, which means metrics rendered as columns)
@@ -387,6 +416,8 @@ cap templates dashboard-templates get <id> --json
 **Capstone Term:** Org Node Template
 
 **Definition:** A template that projects the org hierarchy differently for specific reporting needs without duplicating data.
+
+**Roll Down on top-level groups:** A top-level group that is not anchored on a canonical org node of the same name (for example Coal in a template grouped only by Commodity Type) has no parent, so Roll Down inputs (targets, factors, limits) are blank on it, and so are the ratios and bands that use them. Additive metrics still add up. To give the groups those values, add an attribute with one value named after the canonical root (for example *Reporting Group* = `Mining Group`) set on the root, group by it first and by the pivot attribute second, and use the `HierarchyBelowGroupings` visibility mode: the groups then sit below the anchored root and inherit from it.
 
 **CLI:**
 ```bash
@@ -453,6 +484,7 @@ cap auth switch-tenant <id>          # Change active tenant
 
 **CLI:**
 ```bash
+cap security users get <id-or-email> --json
 cap security users download-excel -o users.xlsx
 cap security users upload-excel users.xlsx --json
 ```
@@ -480,6 +512,8 @@ cap security roles list --json
 
 **Definition:** Controls which Org Nodes and Disciplines a user can view/edit. Combines with Roles for complete access control.
 
+The kinds are View, Edit, Data Validation, Change Request Approval and **Data Owner**. Data Owner grants no access: it marks who receives Data Feed Changes notifications, and the user still needs View or higher. The scope permission **All Data (Owner)** (`nxgn.capstone.data.owner.unrestricted`) marks a user as Data Owner everywhere; Data Scope Unrestricted does not include it. API keys cannot hold either. In the user workbook (`cap security users download-excel` / `upload-excel`), marks go in the **Data Owner Permissions** column; a workbook without that column keeps existing marks.
+
 
 ---
 
@@ -487,7 +521,7 @@ cap security roles list --json
 
 **Capstone Term:** Data Source
 
-**Definition:** Configuration for ingesting data from external systems (MQTT brokers, SQL databases, REST APIs).
+**Definition:** Configuration for ingesting data from external systems (SQL databases, accounting and payroll systems, REST pushes). MQTT is not an import source; Capstone only publishes to MQTT as a data export target.
 
 **CLI:**
 ```bash

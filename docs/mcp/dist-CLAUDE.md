@@ -51,7 +51,7 @@ In a Claude Desktop conversation, say:
 
 > "Log in to Capstone"
 
-Claude calls the `Login` tool, which opens your browser for Microsoft or Google SSO. After completing sign-in, Claude confirms authentication.
+Claude calls the `auth_login` tool, which opens your browser for Microsoft or Google SSO. After completing sign-in, Claude confirms authentication.
 
 Credentials are stored locally at `~/.capstone-mcp/credentials.json` with restricted file permissions.
 
@@ -82,14 +82,16 @@ Claude uses the `/discover-structure` prompt to explore your tenant. If you see 
 
 | Category | Tools | Purpose |
 |----------|-------|---------|
-| Auth (6) | `Login`, `Logout`, `Whoami`, `ListTenants`, `SwitchTenant`, `Languages` | Authentication and tenant management |
+| Auth (6) | `auth_login`, `auth_logout`, `auth_whoami`, `auth_tenants_list`, `auth_switchTenant`, `auth_languages_list` | Authentication and tenant management |
 | Model (11) | `model_metrics_list`, `model_metrics_get`, `model_orgNodes_list`, `model_frameworks_list`, `model_disciplines_list`, `model_inputOverrides_list`, `model_inputOverrides_get`, `model_calculationOverrides_list`, `model_calculationOverrides_get`, `model_inputs_lint`, `model_calculations_lint` | Inspect model structure and org-node overrides; check an input or calculation before saving it, or audit them all |
-| Data (5) | `data_timePeriods_list`, `data_availability`, `data_inputValues_list`, `data_inputValues_save`, `data_computedValues_list` | Query and save data |
+| Data (6) | `data_timePeriods_list`, `data_availability`, `data_inputValues_list`, `data_inputValues_save`, `data_computedValues_list`, `data_computedValues_query` | Query and save data |
 | Reporting (2) | `reporting_dashboards_getData`, `reporting_widgets_getData` | Dashboard/widget data as CSV |
-| Templates (6) | `templates_dashboards_list`, `templates_widgets_list`, `templates_reports_list`, `templates_captures_list`, `templates_reports_get`, `templates_captures_get` | Discover templates |
-| Template CRUD (11) | `templates_widgets_create/save/delete/lint`, `templates_reports_create/save/delete`, `templates_dashboards_get/create/save/delete` | Create, update, delete and lint templates |
-| Apps (8) | `apps_dashboard_render`, `apps_widget_infoCard`, `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_table`, `apps_widget_textBlock`, `apps_widget_aiSummary`, `apps_chart_render` | Visual widgets in conversation |
-| Status (1) | `GetStatus` | Server health check |
+| Templates (7) | `templates_dashboards_list`, `templates_widgets_list`, `templates_reports_list`, `templates_captures_list`, `templates_reports_get`, `templates_reports_resolve_content`, `templates_captures_get` | Discover templates |
+| Template CRUD (13) | `templates_widgets_get/create/save/delete/lint/preview`, `templates_reports_create/save/delete`, `templates_dashboards_get/create/save/delete` | Create, update, delete and lint templates |
+| Apps (7) | `apps_dashboard_render`, `apps_widget_infoCard`, `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_table`, `apps_widget_aiSummary`, `apps_chart_render` | Visual widgets in conversation |
+| Status (2) | `status`, `version` | Server health check and version |
+| System (3) | `system_tenantAiConfig_get`, `system_tenantAiConfig_set`, `system_tenantAiUsage_get` | Tenant AI settings and usage |
+| Workflow (1) | `analysis_workflow` | Recommended analysis workflow |
 
 ### Resources (Auto-Loaded Context)
 
@@ -150,7 +152,7 @@ Detailed step-by-step workflows are in the bundled `docs/` directory:
 | Document | Contents |
 |----------|----------|
 | `docs/SKILL.md` | Concept glossary, tool categories, query patterns |
-| `docs/reference/tools.md` | All 47 tools with parameters and response formats |
+| `docs/reference/tools.md` | All 58 tools with parameters and response formats |
 | `docs/reference/resources.md` | Auto-loaded resource details |
 | `docs/reference/prompts.md` | Prompt parameters and usage |
 | `docs/reference/glossary.md` | Term definitions |

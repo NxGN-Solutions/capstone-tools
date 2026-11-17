@@ -152,19 +152,20 @@ map when checking whether a command family exists.
 | `model narrative-overrides` | `copy`, `create`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `model narratives` | `create`, `delete`, `delete-preview`, `delete-start`, `delete-status`, `distinct-values`, `download-excel`, `get`, `list`, `lookup`, `save`, `upload-excel`, `upload-status` |
 | `model org-nodes` | `list` |
-| `notifications rules` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `notifications templates` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
+| `notifications delivery-log` | `list` |
+| `notifications rules` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `recipients`, `runs`, `save`, `upload-excel` |
+| `notifications templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `save`, `tokens`, `upload-excel` |
 | `perf` | `memory-throughput` |
 | `reporting computed-values` | `audit`, `download-document`, `download-excel`, `list`, `query` |
 | `reporting dashboards` | `download-document`, `get-data`, `get-insights`, `header` |
 | `reporting widgets` | `get-data`, `info-card`, `pie-chart`, `table`, `text-block`, `textblock`, `xy-chart` |
 | `root` | `concepts`, `schema`, `status`, `version` |
-| `security users` | `download-excel`, `upload-excel` |
+| `security users` | `download-excel`, `get`, `upload-excel` |
 | `system tenants` | `ai-config get`, `ai-config models`, `ai-config remove-key`, `ai-config set`, `ai-config test`, `ai-config usage`, `bootstrap-local`, `create`, `delete`, `delete-status`, `delete-watch`, `fiscal-config update`, `get`, `list`, `sample`, `save`, `schema`, `teardown` |
 | `templates capture-templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `resolve-content`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates dashboard-templates` | `audit`, `create`, `delete`, `download-excel`, `get`, `list`, `rename`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates lookups` | `get` |
-| `templates org-node-templates` | `create`, `delete`, `download-excel`, `get`, `list`, `sample`, `save`, `schema`, `upload-excel` |
+| `templates org-node-templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates report-templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `resolve-content`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates widget-templates` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `lint`, `list`, `preview`, `resolve-content`, `sample`, `save`, `schema`, `upload-excel` |
 | `update` | `check` |
@@ -275,7 +276,7 @@ Metric]`.
 ### Input Impact and Lint
 
 ```bash
-cap model inputs get <id> [--site-overrides] [--json]
+cap model inputs get <id> [--json]
 cap model inputs impact <id> [--json]
 cap model inputs lint (--file input.json | --id <id> | --all [--details]) [--json]
 ```
@@ -284,12 +285,12 @@ cap model inputs lint (--file input.json | --id <id> | --all [--details]) [--jso
 
 `impact` shows what a saved input holds and what uses it: values by status (locked, approved, pending, future), calculated values, sites with values, the period range, the calculations, limits and unit conversions that use it, and the sites that override it. Run it before changing an input's data interval: that change deletes every one of these values. After such a save, `save` and `create` print what was deleted ("Data interval Month → Quarter deleted … values"; with `--json`, a `notice` field).
 
-`get --site-overrides` adds the input's org-node overrides in full (`input.siteOverrides` with `--json`; a `Site overrides: N` table otherwise), so `get --json` → edit → `save --file` carries them: a `siteOverrides` list is saved as the full set, and an absent field leaves the stored overrides as they are. See [Model Building](./model-building.md#org-node-overrides-inputs-and-calculations) for the row shape.
+`get` includes the input's org-node overrides in full (`input.siteOverrides` with `--json`; a `Site overrides: N` table otherwise), so `get --json` → edit → `save --file` keeps them: a `siteOverrides` list is saved as the full set, and an absent or `null` field leaves the stored overrides as they are. See [Model Building](./model-building.md#org-node-overrides-inputs-and-calculations) for the row shape.
 
 ### Calculation Impact and Lint
 
 ```bash
-cap model calculations get <id> [--site-overrides] [--json]
+cap model calculations get <id> [--json]
 cap model calculations impact <id> [--json]
 cap model calculations lint (--file calculation.json | --id <id> | --all [--details]) [--json]
 ```
@@ -305,7 +306,7 @@ cap model calculations lint (--file calculation.json | --id <id> | --all [--deta
 
 With `--json` the result carries `counts`: `references` (each metric the formula uses, with its `metricType`, `dataInterval`, `calculationPhase` and both aggregations), `suggestedPhase`, `suggestionReason` and `suggestionReasonCode`. `create` and `save` lint the draft first and print its warnings and notes after saving (`create --json` carries them as `warnings` and `notes`). When lint finds errors, `create` and `save` (of an input too) don't send the draft: they exit with code 2 and list the errors under `lintErrors`, each with its code and, for a formula, its line and column.
 
-`get --site-overrides` adds the calculation's org-node overrides in full (`calculation.siteOverrides` with `--json`; a `Site overrides: N` table otherwise), so `get --json` → edit → `save --file` carries them, as for inputs: a `siteOverrides` list is saved as the full set (`[]` deletes them all), and an absent field leaves the stored overrides as they are.
+`get` includes the calculation's org-node overrides in full (`calculation.siteOverrides` with `--json`; a `Site overrides: N` table otherwise), so `get --json` → edit → `save --file` keeps them, as for inputs: a `siteOverrides` list is saved as the full set (`[]` deletes them all), and an absent or `null` field leaves the stored overrides as they are.
 
 `impact` lists what uses a saved calculation (calculations, limits and unit conversions): they recalculate after it is saved. An id that is not a calculation is reported as not found (exit code 2).
 
@@ -392,6 +393,7 @@ the download commands and the upload order.
 cap data time-periods list --data-interval <type> [--json]
 cap data time-periods diagnose <yyyy-MM-dd> --data-interval <type> [--strict-selectable-periods] [--json]
 cap data availability --data-interval month [--org-nodes "<id>"] [--json]
+cap data availability --data-interval month --dashboard-template <id> [--org-node-template <id|physical>] [--org-nodes "<id>"] [--json]
 ```
 
 | Type | Command |
@@ -436,17 +438,18 @@ available for direct lookup calls.
 `cap meta lookups get color-tokens --json` is offline and does not require API
 configuration. Use it to discover the shared dashboard/widget color registry,
 deprecated legacy tokens, and aliases. Template `schema --json` color fields
-list the 21 canonical non-deprecated token names in `values[]`.
+list the 22 canonical non-deprecated token names in `values[]`.
 
 Some widget-template enum sets are schema-owned rather than standalone lookup
-endpoints. For Pie/Donut center, legend-value, and slice-label modes, read
+endpoints. For Pie/Donut center, legend-value, slice-label, shape (`pieShape`) and Other-slice (`otherSliceMode`) modes, read
 `cap templates widget-templates schema --widget-type pie --json` and inspect
 `.fieldLookups[]` for `widgetTemplate.centerMode`,
-`widgetTemplate.legendValueMode`, and `widgetTemplate.sliceLabelMode`.
+`widgetTemplate.legendValueMode`, `widgetTemplate.sliceLabelMode`,
+`widgetTemplate.pieShape` and `widgetTemplate.otherSliceMode`.
 
 ### Reporting Commands
 
-Computed values, dashboards, and widgets. `--periods` is required for live data. `--data-interval` is the request grain: `day`, `week`, `month`, `quarter`, `year`, or `match-selected`. Period names are resolved preferring that grain, then other types (`month` + `FY 26` works). Omit `--data-interval` on dashboards to use `defaultDataInterval`, else match-selected. Typed widget commands omit `--data-interval` to match selected periods (a pinned widget interval still wins). `computed-values query` and `computed-values audit` can resolve recent periods with `--period-count`.
+Computed values, dashboards, and widgets. `--periods` is required for live data. `--data-interval` is the request grain: `day`, `week`, `month`, `quarter`, `year`, or `match-selected`. Period names are resolved preferring that grain, then other types (`month` + `FY 26` works). Omit `--data-interval` on dashboards to use `defaultDataInterval`, else match-selected. Typed widget commands omit `--data-interval` to use a following widget's default interval, else match selected periods. A widget that fixes its interval ignores the request interval; a following widget's interval is only the default. `computed-values query` and `computed-values audit` can resolve recent periods with `--period-count`.
 
 ```bash
 # Computed values (via report template filter lens)
@@ -547,14 +550,20 @@ cap reporting dashboards get-insights <dashboard-template-id> <layout-node-id> -
 # Dashboard header resolved for a selection (eyebrow, title, subtitle, badge + token warnings)
 cap reporting dashboards header <dashboard-template-id> --org-node <id> --periods "Q1 FY 26, Q2 FY 26" [--data-interval quarter] [--json]
 
-# Dashboard as a PDF or Word document (charts and AI Summaries print as placeholders: they are drawn in the browser)
-cap reporting dashboards download-document <dashboard-template-id> --org-node <id> --periods "Q2 FY 27" [--data-interval quarter] [--format pdf|word] [--formatting on|off] [-o dashboard.pdf] [--json]
+# Dashboard as a PDF, Word or PowerPoint document (charts and AI Summaries print as placeholders: they are drawn in the browser).
+# PowerPoint gives each section that holds widgets its own 16:9 slides, after a title slide.
+cap reporting dashboards download-document <dashboard-template-id> --org-node <id> --periods "Q2 FY 27" [--data-interval quarter] [--format pdf|word|pptx] [--formatting on|off] [-o dashboard.pdf] [--json]
+
+# Same dashboard on another org structure, when the template lets viewers switch it (an org node template ID, or physical)
+cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --org-node-template <org-node-template-id> --periods "FY 26" [--json]
 
 # Dashboard template static audit before live data checks
 cap templates dashboard-templates audit <dashboard-template-id> --strict --json
 ```
 
-> **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`, `text-block`) use `--org-nodes` (plural). `--data-interval` is the request grain (`day|week|month|quarter|year|match-selected`). Names prefer that grain, then other types. Omit `--data-interval` to match selected periods (a pinned widget interval still wins; a table that follows the dashboard, `showDataIntervalFilter: true`, reads at `--data-interval` and uses its own interval only when it is omitted). `dashboards get-data` omit `--data-interval` uses the template `defaultDataInterval`, else match-selected. Its CSV is a **union of columns** across widgets — pinned or Static-range widgets can add extra period columns; use typed widget commands to inspect one widget. CSV `widgets get-data` uses `--org-node` (singular) and returns the legacy CSV envelope. Prefer `reporting computed-values` or typed widget commands for automation-safe checks.
+> **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`, `text-block`) use `--org-nodes` (plural). `--data-interval` is the request grain (`day|week|month|quarter|year|match-selected`). Names prefer that grain, then other types. Omit `--data-interval` to match selected periods (a widget that fixes its interval ignores the request interval, and a following widget's interval is only the default; a table or pie that follows the dashboard, `showDataIntervalFilter: true`, reads at `--data-interval` and uses its own interval only when it is omitted). `dashboards get-data` omit `--data-interval` uses the template `defaultDataInterval`, else match-selected. Its CSV is a **union of columns** across widgets — pinned or Static-range widgets can add extra period columns; use typed widget commands to inspect one widget. CSV `widgets get-data` uses `--org-node` (singular) and returns the legacy CSV envelope. Prefer `reporting computed-values` or typed widget commands for automation-safe checks.
+
+`--org-node-template <id|physical>` on `dashboards get-data`, `get-insights`, `header` and `download-document` picks the org structure for a dashboard with `showOrgNodeTemplateFilter: true`. Omit it for the dashboard's default structure. The key must be one of the dashboard's allowed structures (`orgNodeTemplates`, or every structure you can access when that list is empty, plus `physical` when `allowPhysicalStructure` is true), else the API answers 403. A fixed dashboard only accepts its own structure. Pass an `--org-node` of the chosen structure. A node of a structure you have no grant for is refused (403), whatever key you name: on dashboard, widget and header requests alike.
 
 ### Dashboard Template Layout Metadata
 
@@ -570,7 +579,7 @@ cap templates dashboard-templates download-excel -o dashboards.xlsx
 cap templates dashboard-templates upload-excel -f dashboards.xlsx --json
 ```
 
-The JSON contract adds `showDataIntervalFilter` (default `false`) and `defaultDataInterval` (`{ "id": 2, "name": "Month" }`, omit for Match selected periods) at the template root, plus `dashboardStyle` and the following optional groups on `treeItems`:
+The JSON contract adds `showDataIntervalFilter` (default `false`) and `defaultDataInterval` (`{ "id": 2, "name": "Month" }`, omit for Match selected periods) at the template root. For the org structure it has `orgNodeTemplate` (`{id}`, null = physical): the default structure. Set `showOrgNodeTemplateFilter: true` to let viewers switch between `orgNodeTemplates` (`[{id}]`; empty = every structure the viewer can access) plus the physical structure when `allowPhysicalStructure` is true (default). The default must be one of them ("The default org structure must be one of the allowed org structures."), and a switchable structure needs `showOrgNodeFilter: true` ("Viewers who can switch the org structure need the Sites filter."). `defaultOrgNode` belongs to the default structure and applies there only. Excel carries the same settings in the "Show Org Node Template Filter", "Org Node Templates" (semicolon-separated names) and "Allow Physical Structure" columns. The template root also has `dashboardStyle` and the following optional groups on `treeItems`:
 
 | JSON group | Applies to | Fields |
 |------------|------------|--------|
@@ -651,12 +660,18 @@ tokens add two value states: `NotApplicable`
 `AmbiguousOrgNode` (`6`, "Select a single org unit": zero or several
 `--org-nodes`). Pass exactly one `--org-nodes` id to resolve narrative text. Use `cap reporting widgets
 pie-chart ... --json` when an agent needs the shared pie/donut render contract
-with returned `styleConfiguration`, `centerNumberFormat`, resolved `center`,
+with returned `styleConfiguration`, `pieShape`, `centerNumberFormat`, resolved `center`,
 `labelDisplay`, `legend`, `dataItems[].presentation`,
 `dataItems[].numberFormat`, `dataItems[].legendValue`, and
-`dataItems[].sliceLabel` metadata. In non-JSON mode, the command prints
-`Center: <label>: <value>` when configured and includes `Legend` and `Slice
-Label` columns. Use `cap reporting widgets table ... --json` when an agent
+`dataItems[].sliceLabel` metadata, the shares (`dataItems[].share`, `formattedShare`), the Other slice (`isOther`, `otherMembers`, `otherMemberCount`), plus `dataWarnings` (`PieNegativeValuesLeftOut`,
+`PieManySlices`, `PieNoValues`, `PieMixedUnits`: what the data leaves the pie unable to draw
+well), `dataItems[].notDrawn` (a negative value the pie leaves out of the ring;
+only the legend lists it) and `dataItems[].dataItemIndex` (the position in the
+template's `dataItems` of the row the slice came from; none for a filtered
+pie's slices). In non-JSON mode, the command prints
+`Center: <label>: <value>` when configured and includes `Share`, `Legend` and `Slice
+Label` columns; a negative slice's value reads `(not drawn)`, Other's label reads `Other (5 slices)`, and the data
+warnings follow the table under `Warnings:` as `- [Code] message`. Use `cap reporting widgets table ... --json` when an agent
 needs the shared dashboard table contract with `timePeriodColumns`,
 `metricColumns`, `metricNumberFormats`, `gridRows`, `metadataColumns`,
 `selectionDiagnostics`, `styleConfiguration`, `warnings`, `totalCount`, and
@@ -703,8 +718,36 @@ Table templates report, among others, `NameRequired`, `NameDuplicate` (another
 template in the tenant has the name), `MetricsRequired` (Static selection with
 filters but no metrics listed), `NarrativesRequired`, `FrameworkGroupingNeedsMatching`,
 `OrgNodeAttributeFilterIncomplete` and `UnknownMetrics` (a metric that does not
-exist in the tenant). Other widget types keep their existing codes
-(`DASHSELECT_*`, `WIDGET_TOKEN_*`, `XYSTYLE_*`, `INFOCARD_*`). A table saved
+exist in the tenant). Info card templates (stages `data`, `look` and `style`)
+report, among others, `DataItemDuplicate` (the same metric twice with the same
+period, sites and combining), `UnknownMetrics` and `MetricNotViewable` on a row,
+`StyleSlotValueInvalid` and `StyleSlotPropertyUnsupported` (with `path` and
+`allowed`), the warnings `DataItemLabelDuplicate`, `DataItemWindowSinglePeriod`
+and `TrendIconWithoutLabel`, and the notes `OverrideFieldsCleared` and
+`TrendRangesGiveNoVerdict` (a `#trend` coloured by direction because its
+metric's ranges give no verdict); see
+[Create Widget Template](../recipes/configuration/create-widget-template.md#infocard-lint).
+Pie templates (stages `data`, `layout`, `look` and `style`) report, among
+others, `PieChartTypeRequired`, the center codes (`PieCenterNeedsDonut`,
+`PieCenterModeReserved`, `PieCenterFieldsNeedMode`, `PieCenterTextRequired`,
+`PieCenterFieldNotForMode`, `PieCenterMetricRequired`, `PieCenterMetricNotInPie`,
+`PieCenterShareAlwaysFull`), `PieOtherThresholdInvalid`, `EnumValueInvalid`,
+`TimePeriodAggregationRequired` (a warning on a pie already saved without a
+method), `UnknownMetrics` and `MetricNotViewable` on a slice or `centerMetricId`,
+and the notes `PieCenterNumberFormatFolded` and `PieSliceBandsFolded` (what
+`save` removes); see
+[Create Widget Template](../recipes/configuration/create-widget-template.md#piechart-lint).
+XY templates keep their existing codes (`DASHSELECT_*`, `WIDGET_TOKEN_*`,
+`XYSTYLE_*`). A metric token in text block or info card text, or in a card's row
+label, reports the shared `WIDGET_TOKEN_*` codes (for example
+`WIDGET_TOKEN_METRIC_REFERENCE_INVALID`, `_MISSING`, `_INACCESSIBLE`), which
+replace the retired `INFOCARD_*` token codes; see
+[Create Widget Template](../recipes/configuration/create-widget-template.md#textblock-token-lint).
+Raw JSON text may name a metric (`[Diesel Consumption]`) instead of giving its
+ID; `lint`, `save` and `preview` resolve the name and `save` stores the ID. Each code has
+one English message, the same in the web editor, the CLI, MCP and the Excel
+upload. An info card saved with a repeated row gets a `DataItemDuplicate`
+warning instead of an error. A table saved
 before these checks that already breaks `MetricsRequired` or `NarrativesRequired`
 gets a warning instead, so it still saves; a new break, and any other rule, is
 an error. A table that carries `metricTypeFilters` gets the note
@@ -725,13 +768,13 @@ and the CLI says it could not check. A refused save looks like this:
 ```text
 Error: Failed to save widget template: 1 lint error(s).
   lintErrors:
-    - [NameDuplicate] name: A widget template with this name already exists.
+    - [NameDuplicate] name: Another widget template is already called Site emissions.
 ```
 
 Without lint (an older server), a save the server rejects lists each field's
 messages under `errors` instead.
 
-#### Preview a draft table widget template
+#### Preview a draft table, info card, text block, pie chart or XY chart widget template
 
 ```bash
 cap templates widget-templates preview --file widget.json --org-nodes <guid> --periods "Jan 2026,Feb 2026" [--data-interval day|week|month|quarter|year] [--json]
@@ -745,10 +788,49 @@ interval keeps it, and one that follows reads at `--data-interval`, else at its 
 table fixes its interval and `--data-interval` asks for another one, the JSON has `fixedDataInterval`. The preview shows every
 row: the CLI pages through the preview 1000 rows at a time until `totalCount` (the Preview API alone returns only the
 table's first page, `pageSize` rows, to a request without `take`). Text mode prints the same grid as `cap reporting widgets table`; `--json`
-prints the same table render contract. Only table templates preview; any other
-type is refused (HTTP 400). A draft wider than the report grid's cell
+prints the same table render contract. Table, info card, text block, pie chart and XY chart templates preview
+(the CLI reads the type from `widgetType` in the file); any other type is
+refused (HTTP 400). A draft wider than the report grid's cell
 limit is refused with code `WideGridCellLimit`. It needs `Templates.Manage` and
 `Reporting.View`.
+
+An info card previews in one request (a card has no pages) and renders exactly
+as `cap reporting widgets info-card` renders it once saved: rows the file adds
+render too, and a row's own `bands` colour its value. Text mode prints each
+item's label, value and unit; `--json` prints the info card render contract the
+server returned (the same shape as `reporting widgets info-card --json`, without
+the CLI's `noData` hint). A draft with an error that stops it rendering (no name,
+no period window) is refused with HTTP 400, each message under its field.
+
+A text block previews in one request and renders exactly as
+`cap reporting widgets text-block` renders it once saved. Metric names in its
+text resolve to IDs first, as `save` stores them; a following text block reads at
+`--data-interval`. Text mode prints the resolved title, subtitle, description and
+footnote and any warnings; `--json` prints the text block render contract, where
+each value span carries the `periodName` it was read at. A text block that would
+not render (no text at all, no period window) is refused with HTTP 400, each
+message under its field.
+
+A pie previews in one request and renders exactly as
+`cap reporting widgets pie-chart` renders it once saved. Text mode prints the
+center, the slices (a negative one with `(not drawn)`) and the data warnings;
+`--json` prints the pie render contract the server returned (the same shape as
+`reporting widgets pie-chart --json`, without the CLI's `noData` hint), with
+`dataWarnings`, `dataItems[].notDrawn` and `dataItems[].dataItemIndex`. A pie
+that fixes its interval ignores `--data-interval`; one that follows reads at it.
+A filtered pie whose filters match no metric is refused with HTTP 400 "No
+metrics match this widget's filters."
+
+An XY chart previews in one request and renders exactly as
+`cap reporting widgets xy-chart` renders it once saved, including axes and series
+the file adds before they have ids. Text mode prints the series (with their axis
+and type), the axes in drawing order and the render notes; `--json` prints the XY
+render contract the server returned (the same shape as `reporting widgets
+xy-chart --json`), where each series carries the `dataItemIndex` of the row it
+came from. The notes include `LowContrast` for a series colour that is hard to
+read on white, `ExcessiveSeriesExpansion` over 40 series, and `XyNoValues` when no
+series has a value for the periods at the site. A chart that fixes its interval
+ignores `--data-interval`; one that follows reads at it.
 
 #### Resolve a widget template's content
 
@@ -761,8 +843,12 @@ resolves to, without saving it, the same way `report-templates
 resolve-content` does. Give exactly one of `--file` (the same payload as
 `save`) or `--id` (a saved template, as stored). Text mode prints
 `Metrics (n)` and `Narratives (n)` with one name per line; `--json` prints
-`{ "metrics": [{id, name}], "narratives": [{id, name}] }`. Only table templates
-resolve. It needs `Templates.Manage`.
+`{ "metrics": [{id, name}], "narratives": [{id, name}] }`. Table, info card and pie chart
+templates resolve. An info card that picks its metrics lists them; one that
+filters metrics lists every metric its filters match, whatever your data
+permissions (the card's rows override these by metric id); it lists no
+narratives. A pie lists its slice metrics the same way (picked, or matched by
+its filters), not its center metric. It needs `Templates.Manage`.
 
 **Info Card style discovery for agents:**
 
@@ -806,7 +892,7 @@ For automation, use these JSON roots:
 | `cap templates widget-templates schema --widget-type pie --json` | `.fieldLookups[]` contains enum values, including schema-only Pie center/legend/slice modes. |
 | `cap templates widget-templates get <id> --json` | `.widgetTemplate` contains the editable full DTO. |
 | `cap templates widget-templates save --file pie-chart.json --json` | Top-level acknowledgement with `success`, `id`, child data-item counts, and `warnings`; run `get` for the full updated DTO. |
-| `cap reporting widgets pie-chart <id> ... --json` | Top-level render contract with `id`, `title`, `pieChartWidgetType`, `styleConfiguration`, `center`, `legend`, `labelDisplay`, and `dataItems[]`. |
+| `cap reporting widgets pie-chart <id> ... --json` | Top-level render contract with `id`, `title`, `pieChartWidgetType`, `styleConfiguration`, `center`, `legend`, `labelDisplay`, `dataWarnings`, and `dataItems[]` (with `notDrawn` and `dataItemIndex`). |
 
 The sample and schema document Pie `styleConfiguration` slots (`panel`,
 `title`, `description`, `footnote`, `chartArea`, `slices`, `sliceBorders`,
@@ -947,6 +1033,65 @@ add an Evidence column after each value column (`<period> Evidence`, or
 the value and the date the latest was added, for example
 `2 files, 7 Oct 2026`. In Excel, values with files carry the same text as a
 cell note whatever the setting.
+
+Capture and report templates may set `showChangeRequests` and
+`allowChangeRequestsToggle` (both default false). `showChangeRequests: true`
+marks grid cells whose value has a pending change request the viewer may see.
+`allowChangeRequestsToggle: true` gives viewers a Change Requests switch.
+Opening a value names its pending request whatever the setting. Excel and
+document downloads do not change. `get` prints both as **Show Change
+Requests** and **Allow Change Requests Toggle**, and `save` keeps them. In the
+template Excel workbook they are the `Show Change Requests` and
+`Allow Change Requests Toggle` columns; a blank cell or a missing column means
+false. A capture or validation completion report refuses both
+(`MeasureExcludesChangeRequests`, see below).
+
+Report templates may set `measure` (`{ "id": 0 }` Value, the default; `1`
+Capture completion; `2` Validation completion). A completion template
+counts, per cell, the values of its inputs and narratives that are expected
+and due, and how many are captured (or validated) instead of showing values.
+Nothing is stored; counts are worked out per request, over the data the
+caller may view. Its layout is fixed: inputs and narratives as rows (no
+calculations, so `includedDataTypes` must not be empty or include
+calculations, and no `metricTypes` filter), periods as columns, every
+grouping level on rows, the physical org structure, and none of
+`showMetricsInColumns`, `showTimePeriodsInRows`, `expandCalculations`,
+`showOnlyRowsWithValues`, `showRowsWithValuesFilter`, `showEvidence`,
+`showChangeRequests`, `allowChangeRequestsToggle` or an
+org node template setting. `save`, `create` and `upload-excel` refuse a
+breach with the rule's message (for example "Capture and validation progress
+show metrics as rows, not columns."), exit code 2; `lint` reports each breach
+with a `Measure…` code (for example `MeasureRequiresMetricsInRows`). A selection of more than 65,000 values
+(item × site × period) is refused with "Too many values to count. Narrow the
+sites or the period."
+
+A completion template may set `completionBands`: bands as a metric's `bands`
+(`lowerBoundValue`, `upperBoundValue`, `backgroundColor`, `foregroundColor`)
+over the share done, 0 to 100, for example
+`[{"backgroundColor":"danger-subtle"},{"lowerBoundValue":50,"backgroundColor":"success-subtle"}]`.
+Omitted or null uses the defaults: red (`danger-subtle`) below 40, amber
+(`warning-subtle`) from 40 and green (`success-subtle`) from 90; `[]` colours
+nothing. The band rules apply, and an end must be a number: a
+`lowerBoundMetric` or `upperBoundMetric`, `requireComment` or `autoValidate`
+is refused. `save`, `create` and `upload-excel` refuse a breach with the
+rule's message, exit code 2; `lint` names its code (for example
+`CompletionBandsLimitMetric`). The bands only colour the browser, PDF and Word;
+`computed-values list --json` returns them as `completionBands`.
+
+On a completion template, `reporting computed-values list --json` adds
+`measure`, `isScopeRestricted` (true when the counts cover only the data the
+caller may view), `completion` on each cell and `completionTotal` on each row
+(`expected`, `done`, `percent`, `state` when the cell holds one value,
+`notDue` when nothing in it is due yet), and `groupCells`: every group row's
+figures keyed by its path (levels joined with ` -> `; `""` is the total).
+`metricValue` is null. States: 0 Not captured, 1 Captured, 2 Awaiting
+validation, 3 In validation, 4 Validated, 5 Rejected. Use `--json`: the table
+output shows no completion figures. `download-document` prints the figures
+with a Total row and column; `download-excel` writes a **Values** sheet (one
+row per due value with its State, filterable to "Not captured") and a
+**Summary** sheet of group figures. A value counts in the column that holds
+its period's end (a quarterly input in the quarter-end month); a period is
+due once its last day is before today's UTC date.
 Each of the site, discipline and framework filters has two lists.
 `orgNodes`, `disciplines` and `frameworks` (plus the matching
 `*AttributeFilters`) are the **Limit to** lists: no viewer reaches data
@@ -994,8 +1139,8 @@ filter must have no `defaultOrgNodes` (`FixedSitesRequireFixedStructure`);
 rows grouped without Org Node, or a grouping viewers can change, need
 `showOrgNodeFilter: true` (`SwitchableStructureRequiresOpenSites`). An open site filter's
 `defaultOrgNodes` apply to the default structure only; other structures start
-at their root. Dashboards, notifications and data availability always use the
-default structure.
+at their root. Notifications always use the default structure. Dashboards have
+their own org structure switch (see `reporting dashboards` above).
 
 #### Lint a capture or report template
 
@@ -1033,9 +1178,24 @@ Other error codes include `SingleOrgNodeRequired`, `SingleDefaultOrgNodeRequired
 `FixedSitesRequireFixedStructure`, `SwitchableStructureRequiresOpenSites`,
 `MetricsInColumnsRequiresGrouping`, `TimePeriodsInRowsRequiresMetricsInColumns`,
 `ExpandCalculationsRequiresRows`, `DuplicateNarratives`, `UnknownNarratives`
-(a bound narrative that does not exist in the tenant), `UnknownOrgNodeTemplate`,
-`BandsInvalid` (a template band breaks the band rules) and
-`BandMetricReferenceInvalid`. Save refuses exactly what `lint` reports as an error.
+(a bound narrative that does not exist in the tenant), `UnknownOrgNodeTemplate`
+and `BandMetricReferenceInvalid` (a range compares with its own metric or one
+that does not exist). A range whose limit metric's unit has no conversion to the
+row metric's unit reports `BandMetricUnitNotConvertible`, as input and calculation
+lint do; widget templates report both codes the same way. Save refuses exactly
+what `lint` reports as an error.
+
+A template range that breaks a range rule reports that rule's own code, the same
+code a metric or a widget reports: `BandsTooMany`, `BandFirstHasLowerBound`,
+`BandLowerBoundRequired`, `BandLowerBoundNotAscending`, `BandBoundsReversed`,
+`BandBoundHasValueAndMetric`, `BandColourNotToken`, `BandColourContrastTooLow`,
+`BandRequireCommentNotAllowed` or `BandAutoValidateNotAllowed`, with `metric`,
+`band` (the range's number, from 1) and `path` params. These replace the single
+`BandsInvalid` code earlier versions reported. Overlapping ranges (`BandOverlap`)
+and a gap between ranges (`BandCoverageGap`) are notes: they never block a save
+or an Excel upload. Excel row errors and save errors on ranges start with the
+code, for example `[BandBoundsReversed] bands[1].lowerBoundValue must be less
+than or equal to upperBoundValue.`
 
 #### Resolve what a capture or report template contains
 
@@ -1072,8 +1232,22 @@ saving. A template that `save` would reject is skipped and reported as an upload
 error; the other templates in the file still save. Warnings are reported and the
 template saves. Both use row 0 with the template name in front, for example
 `Site Monthly: Narratives are selected, but Narratives is not one of the row
-types, so they will not show.` The workbook has no narrative columns, so the
-checks use the template's stored narratives.
+types, so they will not show.` The checks use the narratives in the sheet, or
+the template's stored narratives when the sheet has no Narrative Name column.
+
+The capture and report template workbooks carry each template's narratives in
+a **Narrative** column group (`Narrative Name`, `Narrative Sort Order`), one
+narrative per row below the template row, beside the metric rows. Download
+writes names in the request language (fallback default), ordered by sort order.
+On upload:
+
+- With the `Narrative Name` column, the sheet's rows replace the template's
+  narratives; a template with no narrative rows has its narratives removed.
+- Without the column (a workbook downloaded before it existed), the stored
+  narratives are kept.
+- An unknown or ambiguous narrative name, or a GUID, is a row error on that
+  cell. That template is not saved; the other templates in the file still
+  save. Upload narratives (`model narratives`) before the templates.
 
 ### Update Existing Item
 
@@ -1338,9 +1512,12 @@ types (`includedDataTypes`) say which metric types it shows, and `save` folds
 any metric types it is sent into them. Empty arrays still mean "all" for an authored
 axis once Dynamic mode has a non-empty filter family.
 
-A Table template has one period window in both modes: with `dataRangeMode`
-Static, set the widget-level `dataPeriodStart` and `dataPeriodEnd` (lint error
-`PeriodWindowRequired` when missing). Table `dataItems[]` take no window.
+A Table template has one period window in every `dataRangeMode`: with Static,
+set the widget-level `dataPeriodStart` and `dataPeriodEnd` (lint error
+`PeriodWindowRequired` when missing); with SelectedYear (id 2) the window is the
+periods of the viewer's year up to their last selected period, and no offsets are
+set. A table refuses SelectedYearToLatestData (id 3) with
+`DataRangeModeNotSupported`. Table `dataItems[]` take no window.
 
 To sort and Top/Bottom-rank either a dynamically-resolved Info Card/Pie metric
 set or an explicit static chart/card metric set, attach a **widget-level**
@@ -1511,15 +1688,15 @@ Pie and donut templates use the same shared WidgetTemplate API and CLI command s
 
 | JSON field | Excel column | Values / default | Rule |
 |------------|--------------|------------------|------|
-| `pieChartWidgetTemplateType` | `Pie Chart Type` | `0` Pie Chart, `1` Donut Chart | Required for pie widgets |
-| `centerMode` | `Center Mode` | `0` None, `1` Static Text, `2` Metric Value; default `None` | Donut Chart only |
+| `pieChartWidgetTemplateType` | `Pie Chart Type` | `0` Pie Chart, `1` Donut Chart | Required for pie widgets (`PieChartTypeRequired`) |
+| `centerMode` | `Center Mode` | `0` None, `1` Static Text, `2` Metric Value; default `None` | Donut Chart only (`PieCenterNeedsDonut`) |
 | `centerStaticText` | `Center Static Text` | Free text | Required when `centerMode.id` is `1`; disallowed for Metric Value |
-| `centerMetricId` | `Center Metric Id` | Metric GUID | Required when `centerMode.id` is `2`; disallowed for Static Text |
+| `centerMetricId` | `Center Metric` (by name) | Metric GUID in JSON; `""` or `null` is not picked | Required when `centerMode.id` is `2`; disallowed for Static Text |
 | `centerMetricLabel` | `Center Metric Label` | Optional text | Optional override for Metric Value centers; if blank, render uses metric friendly name, then metric name |
 | `legendValueMode` | `Legend Value Mode` | `0` Hidden, `1` Value; default `Value` | Stored enum behind the UI's **Show Legend Value** checkbox; controls numeric values in visible legend rows, not row visibility |
 | `sliceLabelMode` | `Slice Label Mode` | `0` Hidden, `1` Label, `2` Value, `3` Label and Value; default `Hidden` | Controls labels rendered on slices, separate from tooltips and legend rows |
 
-Widget-template Excel download/upload includes the display columns above plus `Center Metric`. On upload, set `Center Metric Id` for a stable metric reference or `Center Metric` for an exact-name lookup; if both are present they must resolve to the same metric. Legacy workbooks that omit the new columns continue to import with defaults.
+Widget-template Excel download/upload includes the display columns above. On upload, `Center Metric` names the center metric (an exact-name lookup). Legacy workbooks that omit the new columns continue to import with defaults.
 
 The dashboard editor presents `centerMetricId` through the searchable metric grid picker. The CLI and Excel contracts still use the explicit metric ID/name fields so imports remain stable and diffable.
 
@@ -1540,7 +1717,7 @@ TextBlock templates use the same shared WidgetTemplate API, CLI command surface,
 | Area | Rule |
 |------|------|
 | `dataGrouping` | Required; primary row grouping. `additionalDataGrouping` holds optional Then By levels (0–2). OrgNode anywhere in the chain requires `orgNodeRowSelectionMode`. Framework anywhere requires Dynamic metric selection. |
-| Layout | `showMetricsInColumns` needs a grouping, or `showTimePeriodsInRows` (`MetricsInColumnsRequiresGrouping`). `showTimePeriodsInRows` needs `showMetricsInColumns` (`TimePeriodsInRowsRequiresMetricsInColumns`). `columnDataGroupingLevels` must be chain levels and leave a row and a column (`ColumnDataGroupingLevelOutsideChain`, `LayoutRequiresRow`, `LayoutRequiresColumn`). `showTotalRow` outside an OrgNode-only, metrics-as-columns layout is a warning (`TotalRowNeedsSiteOnly`). `valueSelectionConfig` (order and limit) needs OrgNode on rows: in the chain and not in `columnDataGroupingLevels` (`ValueSelectionNeedsSiteGrouping`; a warning on tables saved before the rule). `showDataIntervalFilter: false` (the table fixes its interval) needs a `dataInterval` (`IntervalFixedNeedsInterval`). `pageSize` (Rows per page) is 1 to 1000, or `null` for 50 (`PageSizeOutOfRange`); left out, an update keeps the stored value. |
+| Layout | `showMetricsInColumns` needs a grouping, or `showTimePeriodsInRows` (`MetricsInColumnsRequiresGrouping`). `showTimePeriodsInRows` needs `showMetricsInColumns` (`TimePeriodsInRowsRequiresMetricsInColumns`). `columnDataGroupingLevels` must be chain levels and leave a row and a column (`ColumnDataGroupingLevelOutsideChain`, `LayoutRequiresRow`, `LayoutRequiresColumn`). `showTotalRow` outside an OrgNode-only, metrics-as-columns layout is a warning (`TotalRowNeedsSiteOnly`). `valueSelectionConfig` (order and limit) needs OrgNode on rows: in the chain and not in `columnDataGroupingLevels` (`ValueSelectionNeedsSiteGrouping`; a warning on tables saved before the rule). `showDataIntervalFilter: false` (the table fixes its interval) needs a `dataInterval` (`IntervalFixedNeedsInterval`). `pageSize` (Rows per page) is 1 to 1000, default 50 (`PageSizeOutOfRange`). `heightMode` is `0` Fixed or `1` FitRows (`UnknownHeightMode`); `maxHeightPx` is 200 to 2000, default 600, checked only for Fixed (`MaxHeightOutOfRange`). Left out, an update keeps the stored value; the CLI drops a JSON `null`, so send the default value (`50`, `0` and `600`) to reset one. |
 | Tooltips | `metricTooltipProperties` and `metricTooltipAttributeTypeIds` choose the metric-name tooltip, with the same rules as `metricPropertyColumns` and `metricAttributeTypeIds`. |
 | Metric selection | Metrics are listed or filtered, never both. Static tables use explicit `dataItems[]` and ignore the metric filters, which `save` clears (a Static table with filters and no `dataItems[]` saves as Dynamic); Static narratives likewise ignore the narrative scope. Dynamic tables use discipline, framework, metric-attribute, discipline-attribute, and framework-attribute filters and clear explicit data items on save. Metric types come from the row types (`includedDataTypes`). |
 | Org-node scope | `orgNodeAttributeFilters` filters the resolved org-node scope before values are loaded; it is not the deferred `OrgNodeAttribute` row-grouping mode. |
@@ -1549,7 +1726,7 @@ TextBlock templates use the same shared WidgetTemplate API, CLI command surface,
 | `narrativeScopeConfigured` | Set `true` when Dynamic Narrative Scope is intentionally authored. Empty scope arrays then mean all permitted values; `false`/omitted preserves legacy metric-scope fallback. |
 | Narrative Scope | Dynamic scope can filter by `narrativeDisciplineFilters`, `narrativeFrameworkFilters`, `narrativeMetricAttributeFilters`, `narrativeDisciplineNodeAttributeFilters`, `narrativeFrameworkNodeAttributeFilters`, and `narrativeAttributeFilters`. |
 | Static narratives | `narratives[]` contains `{ narrative: { id, name }, sortOrder }` entries and is used only when `narrativeSelectionMode` is Static. |
-| Org-node template | Do not author `orgNodeTemplateId` on new Table widgets; dashboard config determines the org-node-template lens at render time. |
+| Org-node template | Do not author `orgNodeTemplateId` on new Table widgets; the table runs on the org structure the dashboard is showing. |
 | Included data types | Do not use `includedDataTypes` as a new authoring control; it is an internal spreadsheet-adapter compatibility field. |
 | Style | `styleConfiguration` uses the bounded Table style contract for slots, `rowLabelHeader`, `zebraStripeColor`, column overrides, row overrides, conditional formatting, and categorical color tags. |
 | Deferred columns/grouping | Arbitrary static-text columns, org-node-attribute display columns, expression columns, and `OrgNodeAttribute` row grouping are not current authoring fields. |
@@ -1753,6 +1930,10 @@ cap data narrative-values validate <id> --result <approve|reject> [--comments ".
 
 An approval is recorded even when the value stays `Validation In Progress`, for example on a Consensus level that still needs another approver. Each item in `results` then carries `awaitingLevelName`, the level the value still waits for, and `repeatedOwnDecision`, which is `true` when the approval only repeated your own earlier one and so counted nothing new. The single-value text output says the same: `Input value <id> validation status: Validation In Progress. Waiting for the Manager level.` The `--ids` table adds `Awaiting Level` and `Repeat` columns.
 
+`change-requests validate` decides each pending value of the request on its own: the values you can decide now at your level are approved or rejected, and the rest are skipped. A reject needs `--comments`; the CLI refuses it without one. The output summarises what the decision did, for example `Change request <id>: approved 4, moved on 0, rejected 0, skipped 2 (clash 2)`. When you approve at a Consensus level that still needs other approvers, the value stays at that level and the summary adds `recorded <n> (waiting on more approvals)`; its `outcome` is `Recorded`. A value is skipped as `clash` when another pending change request targets the same value, as `no permission` when you can't approve its discipline, and as `already decided` when you already decided it at every level you hold. With `--json`, `decisions` carries each value's `outcome`, `valueStatus` and `awaitingLevelName`, plus the `summary`. When no value could be decided, the command fails with the reason. A request whose values were decided both ways ends as `Partly Approved`.
+
+`change-requests get` lists each value after the request's fields: item, period, value, `Status`, `Waiting On` (the level a pending value waits on) and `Last Decision` (outcome, level, decider, date and comment). With `--json`, each input and narrative value carries `validationStatus` (the status number), `awaitingLevelName` and `decisions`. `change-requests list --status` accepts `draft`, `validation-required`, `validation-in-progress`, `approved`, `rejected` and `partly-approved`.
+
 ### Bulk Validation
 
 Use `preview` and `validate` to approve or reject every input and narrative value in a
@@ -1785,6 +1966,7 @@ cap data bulk-validation validate \
   - You must pass at least one of `--org-nodes` and `--discipline-nodes`.
 - **Interval:** `--data-interval` is an exact filter. A monthly scope never touches quarterly or annual values.
 - **Overwrites:** any earlier decision you made on a value in scope is replaced.
+- **Rejects:** `--result reject` needs `--comments` with the reason. The capturer sees it, and the CLI and the API refuse a reject without one.
 - **Skipped values:** values you can't validate, and values that don't require validation, are skipped and counted.
 - **Locked values:** these are still validated.
 - **Files:** `preview` counts the values to be decided that carry supporting files (`withAttachments` in `--json`, the `With files` column in the table). A bulk decision opens none of them, so review those values first.
@@ -1821,15 +2003,33 @@ Narrative names must be unique per tenant per language (trimmed,
 case-insensitive, including auto-created translation stubs) and cannot contain
 `{` or `}`, because widget text references narratives as `{Narrative Name}`.
 A database unique index enforces the name rule, so concurrent saves of the
-same name also fail cleanly. `model narratives create`/`save` return 409 for a
-duplicate name and 400 with field errors (`name`, `discipline`,
-`captureInterval`, `metricIds`) for a missing field, braces or an unusable
-metric link; `model narratives upload-excel` fails with the named conflict.
+same name also fail cleanly. `model narratives create`/`save` return 400 with
+field errors for a name another narrative has (`NameNotUnique`), a missing
+field, braces, a discipline, framework node, attribute value or site the
+workspace doesn't have, a data feed rule or an unusable metric link (`name`,
+`discipline`, `frameworkNodes`, `attributeValues`, `captureInterval`,
+`orgNodeExclusions`, `siteOverrides`, `narrativeDataFeeds`, `metricIds`). A 409
+means another save got there first: `NarrativeNameConflict` (it took the name)
+or `NarrativeConcurrentSave` (it changed the same narrative; save again).
+`model narratives upload-excel` fails with the named conflict.
 A save with an id edits that narrative, or creates it when no narrative has
-the id, so a new narrative named like another gets the 409; only a request
+the id, so a new narrative named like another is refused; only a request
 without an id (`create`, Excel rows) updates the narrative of that name.
 Saving a narrative with a different capture interval deletes its values at
 every other interval, locked and approved values included.
+
+```bash
+cap model narratives lint (--file narrative.json | --id <id> | --all [--details]) [--json]
+```
+
+`lint` checks a narrative without saving it, with the codes the web editor
+uses: errors are exactly what `save` would reject (exit code 2). The file is
+the same payload as `save` (or the output of `get --json`); `--id` lints a saved
+narrative as it is stored. Warnings never block a save:
+`CaptureIntervalChangeDeletesValues` says how many values (locked and approved
+counted) a capture interval change deletes. `create` and `save` lint first and
+print the same warnings. `--all` lints every narrative as it is stored; see
+[Lint every metric](#lint-every-metric---all) for the summary.
 
 Narrative JSON input uses the Capstone narrative request
 contracts. Use `--file <path>` or pipe JSON on stdin; use `--json` so automation
@@ -1872,6 +2072,257 @@ Use `--periods "<start>,<end>"` for a continuous range, or use
 `--start-period` and `--end-period`. At least one `--org-nodes` or
 `--discipline-nodes` value is required; narrative lock tests must pass both.
 
+### Notification Templates
+
+```bash
+cap notifications templates list [--limit N] [--offset N] [--json]
+cap notifications templates get <id> [--json]
+cap notifications templates tokens [-t|--type <type>] [-e|--event <event>] [--json]
+cap notifications templates lint (-f|--file template.json | -i|--id <guid>) [--json]
+```
+
+Every template is **Written for** one thing: one event, or its notification
+type's digest, which scheduled rules send. The values are:
+
+| Notification type | Written for |
+|-------------------|-------------|
+| `DataCapture` | Pending capture digest, Input Value Captured, Data Lock Applied |
+| `Validation` | Pending validation digest, Validation Completed |
+| `ChangeRequest` | Pending change requests digest, Change Request Validated |
+| `DataFeedChanges` | Data feed changes digest |
+| `AiProvider` | AI Key Failing, AI Key Recovered (no digest) |
+
+In JSON a digest has a null `eventType`; an event template names its event,
+for example `"eventType": {"id": 3, "name": "Input Value Captured"}`.
+
+`list` shows the columns ID, Name, Type, **Written for**, **Used by** (`Not
+used`, `1 rule` or `N rules`) and **Available to rules** (`yes`/`no`). Each
+`--json` row carries `writtenFor` and `ruleCount`. `get` shows the same
+fields, with the names of the rules under Used by. `get --json` carries
+`rules` (`[{id, name}]`); `save` ignores it, so `get --json` output still
+saves as is. `isActive` is **Available to rules**: it only decides whether
+the rule picker offers the template, and rules that already use it keep
+sending. Templates have no default any more: `isDefault` is gone from `get`
+and `list`.
+
+While any rule uses a template, what it is written for (its
+`notificationType` and `eventType`) cannot change. `save` refuses it with the
+code `ContentInUse` and names the rules. Point the rules at another template
+first, or create a new template.
+
+#### List the tokens
+
+`tokens` lists each Written for value with a one-line hint and the tokens
+every send of it fills: `{{Token}}`, a description, and `yes` under Body only
+for a token that holds HTML (the digest tables and `{{ActionLink}}`), which
+the subject cannot use. Filter with `-t`/`--type` (`DataCapture`,
+`Validation`, `ChangeRequest`, `DataFeedChanges`, `AiProvider`) and
+`-e`/`--event` (`InputValueCaptured`, `DataLockApplied`, `ValidationCompleted`,
+`ChangeRequestValidated`, `AiKeyFailing`, `AiKeyRecovered`). A type alone
+returns its digest and its events; there is no digest-only filter. `--json`
+prints the API result: `{ "contents": [{ notificationType, eventType,
+writtenFor, hint, tokens: [{ key, group, description, sample, bodyOnly }] }] }`.
+`group` is `RecipientAndWorkspace`, `ThisDigest`, `ThisEvent` or
+`TablesAndLinks`. It needs `MasterData.View`.
+
+Only tokens filled on every send are listed. A few more are accepted but not
+listed, because they can be empty or are kept for older templates:
+`{{ValidationResult}}`, `{{InputValueId}}` and `{{InputValueIds}}` on
+Validation Completed, `{{ValidationResult}}` on Change Request Validated,
+and `{{ActionUrl}}` and `{{ActionLink}}` on the Data feed
+changes digest (empty for a recipient with no capture template that shows the
+changes). A template that uses them saves and sends. `{{ScopeSummary}}` and
+`{{NarrativeValueCount}}` on Validation Completed are filled only for a bulk
+decision or a capturer's rejected values, so a single approval would fail;
+`save` refuses them.
+
+#### Lint a notification template
+
+`lint` checks a template without saving it. Give exactly one of `--file`
+(the same payload as `save`, or the output of `get --json`) or `--id` (a
+saved template, read and checked as stored). **Errors** are exactly what
+`save` would refuse; **warnings** never block a save. Each issue has a
+`code`, a `message`, a `field` (`name`, `subject`, `body`, `eventType`,
+`notificationType` or `translations`) and the stage `template`; a token issue
+carries its position in `params`. Text output prints one line per issue as
+`Error   [Code] field: message`, then a count line. The exit code is `2` when
+there is at least one error and `0` otherwise. `--json` prints the API result
+unchanged: `{ "errors": [...], "warnings": [...], "notes": [...] }`. It needs
+`MasterData.Manage`.
+
+| Code | Meaning |
+|------|---------|
+| `UnknownToken` | `{{X}}` is not a token; the message suggests the closest one when it can |
+| `TokenNotFilled` | The token is real, but this Written for value does not fill it |
+| `TokenNotAlwaysFilled` | `{{ScopeSummary}}` or `{{NarrativeValueCount}}` on Validation Completed |
+| `HtmlTokenInSubject` | A body-only token in the subject |
+| `DigestTableOnEvent` | A digest table in an event template |
+| `WrongDigestTable` | Another digest's table |
+| `ContentNotForType` | The event is not one this notification type offers |
+| `AiNeedsEvent` | An AI Provider template without an event |
+| `ContentInUse` | `notificationType` or `eventType` changed while rules use the template |
+| `Required`, `TooLong` | Name, subject or body empty, or longer than 250, 500 or 8000 characters |
+| `DuplicateName` | Another template has the name |
+
+A token issue is an error only when the draft changes that text or what the
+template is written for. Text that is the same as stored gets a warning, so a
+mistake stored in another language never blocks a fix. So `lint --id`
+reports stored token problems as warnings, and exits `0` unless a field is
+missing or too long, or the name is taken.
+
+`create` and `save` do not lint first; the server runs the same checks on
+save. A refused save answers HTTP 400 with the field-keyed body
+`{ "errors": { "eventType": ["..."], "body": ["..."] } }`, and the CLI lists
+each field's messages under `errors`. Up to version 0.4.121 a refused template
+save answered `{ "error": "..." }` instead. The Excel upload runs the same
+checks per row: errors leave the row out, warnings are reported.
+
+The web editor's live preview (`POST Notifications/Templates/Preview`)
+renders a draft with sample values. The CLI has no preview command.
+
+### Notification Rules
+
+```bash
+cap notifications rules lint (-f|--file rule.json | -i|--id <guid>) [--json]
+```
+
+`lint` checks a rule without saving it, as the web rule editor does. Give
+exactly one of `--file` (the same payload as `save`, or the output of
+`get --json`) or `--id` (a saved rule, read and checked as stored).
+**Errors** are exactly what `save` and `upload-excel` refuse; **warnings**
+(`RuleInactive`, `TemplateUnavailable`) never block a save. Each issue has a
+`code`, a `message`, a `field` and the editor section it belongs to as
+`stage` (`definition`, `when`, `message` or `recipients`). Text output
+prints one line per issue as `Error   [Code] field: message`, then a count
+line. The exit code is `2` when there is at least one error and `0`
+otherwise. `--json` prints the API result unchanged, with the next five
+sends under `counts.nextRuns` (`[{ fireAtUtc, periodName }]`; `periodName` is null except
+for period-end rules). The next sends are empty for an event rule and
+while the When section has an error. It needs `MasterData.View`.
+
+| Code | Meaning |
+|------|---------|
+| `Required`, `TooLong`, `DuplicateName` | A name, trigger type, template, channel or priority is missing, a name is longer than 250 characters or `digestGroup` longer than 200, or another rule has the name |
+| `TriggerBothRetired` | Trigger type Both is retired; use Scheduled |
+| `TemplateNotFound` | The template does not exist |
+| `TemplateNeedsEvent`, `TemplateNeedsDigest` | An Event Driven rule needs an event template; a Scheduled rule needs a digest |
+| `DataFeedChangesNeedsSchedule` | A Data Feed Changes rule must be Scheduled |
+| `AiEventScoped` | An AI key rule cannot have an org node or discipline (reported on `orgNode`, or on `disciplineNode` when only a discipline is set) |
+| `ScheduleRequired`, `ScheduleCronAndOffsets` | A scheduled rule needs a `cronExpression` or period-end offsets, not both |
+| `CronInvalid`, `CronNeverRuns` | The CRON expression does not parse, or never runs again |
+| `OffsetsNeedSchedule`, `OffsetOutOfRange`, `OffsetRepeated` | Offsets only on a scheduled rule, between -31 and 31 days, no repeats |
+| `PeriodTypeRequired`, `FireTimeRequired`, `FireTimeNeedsOffsets` | Offsets need Month, Quarter or Year and a `fireTime` (`HH:mm`); a `fireTime` without offsets is refused |
+| `TimeZoneRequired`, `TimeZoneInvalid` | A scheduled rule needs a valid `timeZoneId` |
+| `DataFeedChangesGap` | A Data Feed Changes rule must send at least every 120 days |
+
+#### A rule's runs
+
+```bash
+cap notifications rules runs <rule-id> [--limit N] [--offset N] [--json]
+```
+
+Lists each time the rule was evaluated, newest first, as the web rule editor's
+run history shows it: `evaluatedAt` (UTC), `evaluationSource` (Scheduled or
+Event Driven), `result` (Dispatched, Skipped or Error), `skipReason`,
+`evaluationKey` (the period or event the run was about), `recipientCount` and
+`dispatchedCount`. For a scheduled reminder, `recipientCount` is the people
+with pending work they can act on (when nobody has any, the run is Skipped
+with `EMPTY_TABLE_RENDERINGS` and the count is everyone in scope: for Data
+Capture everyone the rule reaches, for Validation and Change Request only the
+people at the validation levels open at the time), and
+`dispatchedCount` is the emails queued, leaving out anyone this rule already
+emailed for the same send. A run keeps counts only: it does not record who
+was left out or why. To see who a run emailed, read the delivery log for the
+rule around the run's time. `--json`
+returns `{ tenant, ruleId, data: [...], pagination }`. It needs
+`MasterData.View`.
+
+#### Who a rule reaches
+
+```bash
+cap notifications rules recipients <rule-id> [--json]
+```
+
+Reads the saved rule, then lists everyone its template's notification type,
+org node and discipline reach, as the rule editor's recipient preview does.
+Each person has `userId`, `name`, `email`, `timeZoneId` and `access`, which
+says why they are included: an "Authorize all" scope such as `All data`,
+`All capture` or `All validation` (with ` (role)` when it comes through a
+role), or `Granted: <org node> · <discipline> · <level>` for the data
+permission that covers the rule's org node and discipline. An AI Provider rule
+is about the tenant itself, so it reaches the tenant's administrators (System
+Manage) instead. This is who **can** receive the rule, not who a run emails:
+
+- A scheduled Data Capture or Validation reminder mails only the people among
+  them who have pending work they can act on.
+- A Validation reminder also looks only at the validation levels that are open
+  at the time, so the list can be longer than any one run's.
+- An inactive rule mails nobody. The text output then says
+  `Rule: <name> (inactive: it sends nothing)`, and the JSON has `isActive`.
+
+With `MasterData.View` you get only the count. Names and emails need
+`MasterData.Manage`; without it the text output prints
+`The rule reaches N people. Names and emails need MasterData.Manage.` and the
+JSON has `count` with an empty `recipients`. `--json` returns
+`{ tenant, ruleId, ruleName, isActive, count, recipients: [...] }`.
+
+### Notification Delivery Log
+
+```bash
+cap notifications delivery-log list [-r|--rule <guid>] [--since yyyy-MM-dd] [--until yyyy-MM-dd]
+    [--status <status>] [--type <type>] [--recipient <text>] [--limit N] [--offset N] [--json]
+```
+
+Lists every notification the tenant has sent or tried to send, newest first, as
+the web Delivery Log shows it: `createdAt` and `sentAt` (UTC), `ruleId` and
+`ruleName` (null for a deleted rule), `recipientName`, `recipientEmail`,
+`subject`, `status` (Pending, Processing, Sent or Failed), `notificationType`
+(for example `Data Capture`), `channel` and `errorMessage`.
+
+- `--rule` is filtered by the server.
+- `--since` and `--until` are UTC dates, both inclusive.
+- `--status` and `--type` match the whole value, ignoring case. `--status`
+  must be Pending, Processing, Sent or Failed, and `--since` cannot be after
+  `--until`; either mistake exits with code `2`.
+- `--recipient` matches part of the name or email.
+
+Those filters run in the CLI over every page of the log (stopping at the first
+page older than `--since`), and `--limit`, `--offset` and `pagination.total`
+then count the matches. Give `--since` or `--rule` to keep a large log quick.
+
+It needs `MasterData.View`. Recipient names, emails and error messages need
+`MasterData.Manage`; without it they are empty, the text output shows
+`(hidden)` and `--recipient` matches nothing. The text output then ends with
+`Recipients are hidden: names, emails and errors need MasterData.Manage.`, also
+when no row matched. `--json` returns
+`{ tenant, data: [...], pagination }`.
+
+To check a scheduled rule's send without the browser:
+
+```bash
+cap notifications rules get <rule-id> --json          # lastFiredAt, lastEvaluationResult
+cap notifications rules runs <rule-id> --limit 5      # people with pending work vs emails queued
+cap notifications delivery-log list --rule <rule-id> --since 2026-11-14 --json   # who it emailed
+cap notifications rules recipients <rule-id>          # who it could have emailed
+cap security users get someone@example.com            # one person's grants and "Authorize all" scopes
+```
+
+### Users
+
+```bash
+cap security users get <user-id-or-email> [--json]
+```
+
+Shows one user in the current tenant as the web user editor does: roles, the
+capture, report, dashboard and org node templates selected for them, the
+number of their own data permissions in this tenant, and the nine **Authorize all** scopes. Each scope
+has its `code` (for example `nxgn.capstone.templates.capture.unrestricted`),
+whether the user holds it (`isSelected`) and whether that comes through a role
+(`isInheritedFromRole`). An email is looked up with one call to the users list,
+ignoring case; like the web users list, that call needs Identity to be
+reachable. `--json` returns `{ tenant, user }`, with the full user including
+`dataPermissions`. It needs `Security.View`.
+
 ---
 
 ## Excel Commands
@@ -1902,7 +2353,10 @@ cap <domain> <entity> download-excel -o file.xlsx
 
 ```bash
 cap <domain> <entity> upload-excel <file.xlsx> [--json]
+cap <domain> <entity> upload-excel -f <file.xlsx> [--json]
 ```
+
+Most upload commands take the file as the first argument. These take it with `-f` (`--file`) instead: `templates capture-templates`, `templates report-templates`, `templates widget-templates`, `templates dashboard-templates`, `templates org-node-templates`, `notifications templates`, `notifications rules`, `security users` and `data input-values`.
 
 A workbook can be up to 100 MB. A larger file is refused before it is sent, with `File exceeds the maximum upload size (100 MB): <file>` and exit code `2`.
 
@@ -1914,7 +2368,7 @@ cap masterdata org-nodes upload-excel "artifacts/performance/excel/Org Structure
   --json
 ```
 
-The default timeout is `3000` seconds (50 minutes) for the tree-node uploads and `600` seconds (10 minutes) for the others. Use `--timeout-seconds <n>` for larger files. In JSON mode the final status payload includes `uploadId`, `status`, `fileName`, `fileSizeBytes`, `totalRows`, `processedRows`, `createdDate`, `updatedDate` (last activity, when the server reports it), `completedDate`, and `errors`. Each error has `rowIndex`, `columnIndex`, `errorMessage`, `severity` (`Warning` for a warning) and, when a coded rule raised it, the lint `code` (for example `UnitOfMeasureUnknown` or `FormulaUnknownMetric`); the text table shows it in a `Code` column.
+The default timeout is `3000` seconds (50 minutes) for the tree-node uploads and `600` seconds (10 minutes) for the others. Use `--timeout-seconds <n>` for larger files. In JSON mode the final status payload includes `uploadId`, `status`, `fileName`, `fileSizeBytes`, `totalRows`, `processedRows`, `createdDate`, `updatedDate` (last activity, when the server reports it), `completedDate`, and `errors`. Each error has `rowIndex`, `columnIndex`, `errorMessage`, `severity` (`Warning` for a warning) and, when a coded rule raised it, the lint `code` (for example `UnitOfMeasureUnknown` or `FormulaUnknownMetric`); the text table shows it in a `Code` column. `rowIndex` and `columnIndex` are 0-based; the text table shows the Excel row number and column letter instead (cell D5 is row `5`, column `D` in the table, `rowIndex` 4 and `columnIndex` 3 in JSON).
 
 **Timeout and resume.** If the upload does not finish within the timeout, the command exits `5` and prints the upload id. The upload keeps running on the server. Check it later with the same entity's `upload-status` command, which the timeout message names:
 
@@ -1936,7 +2390,8 @@ An upload that stays `Pending` because its processing message was lost is re-sen
 
 Non-async Excel upload commands return `ExcelUploadResult` in JSON mode:
 `items`, row counts such as `savedRows`/`newRows`/`updatedRows`, `isValid`, and
-`uploadErrors` with `rowIndex`, `columnIndex`, and `errorMessage`. Keep these
+`uploadErrors` with 0-based `rowIndex` and `columnIndex` (the text table shows
+the Excel row number and column letter), and `errorMessage`. Keep these
 row/cell diagnostics for spreadsheet workflows; for a single item kept as JSON,
 use `create --file` or `save --file`.
 
@@ -2026,9 +2481,9 @@ This table is a high-level availability summary only.
 | `templates` | All CRUD + Excel, schema/sample helpers, dashboard audit/rename | ✅ Available |
 | `data` | availability, lookups, time-periods, recalculation, input-values, narrative-values, change-requests, data-lock, bulk-validation | ✅ Available |
 | `reporting` | computed-values, dashboards, widgets | ✅ Available |
-| `notifications` | notification templates (CRUD + Excel), notification rules (CRUD + Excel) | ✅ Available |
+| `notifications` | notification templates (CRUD + Excel, tokens, lint), notification rules (CRUD + Excel, lint, runs, recipients), delivery log | ✅ Available |
 | `perf` | memory-throughput diagnostics | ✅ Available |
-| `security` | users Excel import/export | ✅ Available |
+| `security` | users Excel import/export, user get | ✅ Available |
 | `security` | user CRUD, roles, version | ⏳ Planned |
 | `system` | tenant CRUD, schema/sample, teardown, tenant fiscal config, local bootstrap; language list via `auth languages` | ✅ Available |
 | `system` | language CRUD, translations | ⏳ Planned |

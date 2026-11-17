@@ -111,6 +111,20 @@ structural template issues.
 
 ## Breaking Changes
 
+### Notification template save errors and fields
+
+A refused notification template save (`POST Notifications/Templates`) now
+answers HTTP 400 with the field-keyed body
+`{ "errors": { "<field>": ["..."] } }`, as other validated saves do. It used
+to answer `{ "error": "..." }`. `cap notifications templates create` and
+`save` list each field's messages under `errors`.
+
+Templates no longer carry `isDefault`: it is gone from `get` and `list`, and
+the Excel sheet ignores an `Is Default` column. The Excel headers are now
+`Written for` and `Available to rules`; the old `Sends On` and `Is Active`
+headers are still read. New commands: `cap notifications templates tokens`
+and `cap notifications templates lint` (exit code `2` on errors).
+
 ### Tenant delete force semantics
 
 `cap system tenants delete --force` now uses the async force-delete operation
@@ -189,4 +203,4 @@ These downloads and documents are distributed under the [Capstone Tools Distribu
 
 For help, use your Capstone implementation, support, or account contact. Security reporting guidance is in [SECURITY.md](SECURITY.md), and support request guidance is in [SUPPORT.md](SUPPORT.md).
 
-Last updated: `2026-11-10T06:00:08Z`
+Last updated: `2026-11-17T09:04:07Z`

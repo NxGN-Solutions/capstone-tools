@@ -277,9 +277,11 @@ Upload successful: 42 Metric(s) imported
 Warning: Upload completed with errors: 40 imported, 2 error(s)
 Row | Column | Error
 ----|--------|----------------------------------
-3   | 2      | Invalid metric name format
-5   | 4      | Duplicate entry
+4   | C      | Invalid metric name format
+6   | E      | Duplicate entry
 ```
+
+The table shows the cell as Excel does: row 4, column C is cell C4. A `-` means the issue has no cell (for example an interrupted async upload). File-level errors such as an empty worksheet point at row 1, column A.
 
 ### JSON Mode
 
@@ -303,7 +305,7 @@ Row | Column | Error
 - `isValid: true` means all rows imported successfully
 - `isValid: false` means some rows had errors (partial success)
 - `items` contains successfully imported records
-- `uploadErrors` lists row/column/message for each failure
+- `uploadErrors` lists row/column/message for each failure; `rowIndex` and `columnIndex` are 0-based (cell C4 is `rowIndex` 3, `columnIndex` 2), a negative or null index means no cell, and file-level errors use `0` / `0`
 - `uploadWarnings` lists row/column/message for rows that imported but need attention, such as a reference to a metric that is not imported yet; warnings do not make `isValid` false
 
 Async uploads (inputs, calculations, input values) report both in `errors`; an entry with `"severity": "Warning"` is a warning. A succeeded upload with only warnings exits `0`; any error exits `6`.
@@ -337,7 +339,7 @@ Widget commands have two output families:
 |---------|--------------|----------|
 | `cap reporting widgets get-data` | Legacy CSV compatibility object with `format`, `periods`, `sourceMetadata`, and `csvCompatibility.rawCsv` | Backward-compatible widget extraction when typed render commands are not available |
 | `cap reporting widgets info-card` | Typed info-card DTO | Dashboard card render validation |
-| `cap reporting widgets pie-chart` | Typed pie-chart DTO | Slice/percentage validation |
+| `cap reporting widgets pie-chart` | Typed pie-chart DTO | Slice, share and Other validation |
 | `cap reporting widgets xy-chart` | Typed XY-chart render DTO, JSON-first | Browser-aligned series, axis, value, render metadata, and metric metadata validation |
 | `cap reporting widgets table` | Typed Table render DTO | Dashboard grid/table render validation; `titleContent`, `descriptionContent` and `footnoteContent` carry the resolved text and token spans as for Text Block |
 | `cap reporting widgets text-block` | Typed TextBlock render DTO | Resolved text slots, token spans (metric, trend, period, narrative), warnings |
@@ -373,11 +375,15 @@ Top-level fields:
 | `valueAxes` | array | Value axis definitions, titles, and dynamic-axis flags |
 | `chartSeries` | array | Rendered series; each item can include legacy fields plus `renderConfig` and `metricMetadata` |
 | `styleMetadata` | array | Schema-limited style metadata for chart-internal elements such as series and axes |
-| `invertAxes` | boolean | Legacy/programmatic orientation flag; prefer series `renderConfig.orientation` for render semantics |
+| `invertAxes` | boolean | The chart is drawn horizontally (bars across, periods on the left); series `renderConfig.orientation` says the same per series |
 | `showLegend` | boolean | Widget legend setting |
 | `warnings` | array | Human-readable warnings, including no-data guidance |
 | `noData` | object/null | Structured no-data diagnostic when selected periods return no values |
 | `diagnostics` | array | Structured render diagnostics for automation and audit |
+| `referenceLines` | array/omitted | Lines and zones across the plot: `valueAxisName`, `value`, `toValue` (a zone), `label` (with the formatted value), `valueText` (the formatted value alone), `color` (hex), `strokeDashArray`, `width`, `source` (`fixed` from the axis, `metric` from a reference-line row), `dataItemIndex` |
+| `height` | number/omitted | The plot's height in px (Grow or Fixed); omitted when the chart fills its placement |
+
+Value axes also carry `minimum`, `maximum`, `logarithmic` and `percentStacked` when set. Each series' `renderConfig` carries `stackGroup` (2 or more for a second stack), `lineShape` (`smooth`, `step`) and `role` (`reference` for a reference-line row drawn over time) when set, and banded series carry `bulletRangeLabels` beside `bulletFillColours` (each point's range in words, as tooltips show it). Omitted members are unset, so charts without these settings read as before.
 
 Each `chartSeries[].renderConfig` is the authoritative render contract for that series:
 
@@ -386,7 +392,7 @@ Each `chartSeries[].renderConfig` is the authoritative render contract for that 
 | `seriesKey` | Stable response-local identifier for diagnostics and style metadata |
 | `sourceDataItemId`, `sourceMetricId`, `sourcePartitionKey`, `sourcePartitionLabel` | Source widget data item, metric, and optional partition identity |
 | `displayLabel` | Label used by the browser/CLI/MCP renderers |
-| `configuredSeriesType`, `renderSeriesType` | Authored type and final rendered type (`Column`, `Bar`, `Line`, `Area`) |
+| `configuredSeriesType`, `renderSeriesType` | Authored type and final rendered type (`Column`, `Line`, `Area`; a `Bar` saved before Save folded it renders as `Column`) |
 | `orientation` | `vertical` or `horizontal` |
 | `categoryAxisKey`, `valueAxisKey` | Axis assignment used for rendering |
 | `sortOrder`, `renderLayer` | Ordering metadata for legend/data alignment and draw layering |
@@ -465,14 +471,16 @@ Top-level fields:
 | `id` | Widget/template identifier from the render response |
 | `title`, `description`, `footnote` | Display text after template resolution |
 | `pieChartWidgetType` | Rendered Pie/Donut type |
+| `pieShape` | `{ id: 0, name: "Full Circle" }` or `{ id: 1, name: "Half Circle" }`, the top half |
 | `showLegend` | Whether legend rendering is enabled |
 | `styleConfiguration` | Server-resolved chart-wide bounded style slots |
 | `centerNumberFormat` | Donut Metric Value center display format, when configured |
-| `center` | Resolved donut center metadata, when configured |
+| `center` | Resolved donut center metadata, when configured. A Total or Percentage center reuses `label`, `value` and `formattedValue` |
 | `labelDisplay` | Slice-label and tick visibility derived from `sliceLabelMode` |
 | `legend` | Resolved legend visibility, value mode, and item labels/values |
 | `dataItems[]` | Rendered slices with values, labels, colour, source identity, presentation, and number format |
 | `styleWarnings`, `warnings`, `noData` | Non-fatal diagnostics and empty-data state |
+| `dataWarnings` | What the data leaves the pie unable to draw well (`PieNegativeValuesLeftOut`, `PieManySlices`, `PieNoValues`, `PieMixedUnits`), each with `code` and `message`; never stops the render |
 
 Legend values and slice labels are resolved per data item. `dataItems[].legendValue` is populated only when the visible legend row should include the formatted value. `dataItems[].sliceLabel` follows `sliceLabelMode`. The aggregate legend block also exposes `legend.valueMode` and `legend.items[]` for dashboard render parity.
 
@@ -486,6 +494,13 @@ metadata used by browser dashboards and MCP apps:
 | `dataItems[].presentation` | Source data-item non-fill presentation for slice labels, tooltip, legend marker, legend label, and legend value |
 | `dataItems[].numberFormat` | Source data-item value display format |
 | `dataItems[].sourceDataItemKey` | Stable source identity used to connect runtime slices back to configured data items where available |
+| `dataItems[].dataItemIndex` | Position in the template's `dataItems` of the row the slice came from; slices a row splits into share it; none for a filtered pie's slices |
+| `dataItems[].notDrawn` | `true` for a negative value: the pie leaves it out of the ring and only the legend lists it. Text mode prints its value with `(not drawn)` |
+| `dataItems[].share`, `dataItems[].formattedShare` | The slice's share of the drawn total (0 to 1) and as shown (`"30.3%"`, one decimal, `"<0.1%"` for a tiny positive share). The shown shares of a pie, Other included, add up to 100.0%. Null when the slice isn't drawn, has no value, or the total is 0. Text mode prints it in the `Share` column |
+| `dataItems[].isOther` | `true` for the slice that groups small slices (`otherSliceMode`): drawn last, no `dataItemIndex`, `sourceDataItemKey` `other`. Text mode prints its label as `Other (5 slices)` |
+| `dataItems[].otherMembers[]`, `dataItems[].otherMemberCount` | What Other holds, largest first, at most 10, each with `label`, `formattedValue` and `formattedShare`; `otherMemberCount` counts them all |
+
+The server builds every display string, so `dataItems[].sliceLabel`, `legendValue` and `tooltipValue` already contain the share when the template shows percent. Read those strings, not `share`, to print what the dashboard shows.
 | `styleWarnings` / `dataItems[].styleWarnings` | Non-fatal inherited/default style warnings, such as contrast warnings that cannot be resolved at save time |
 | `selectionDiagnostics` | Value-selection counts, warnings, and rank/page metadata when widget-level or data-item value selection is configured |
 

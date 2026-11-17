@@ -85,7 +85,7 @@ cap templates widget-templates schema --widget-type info --json
 cap templates dashboard-templates schema --json
 ```
 
-`schema --json` lists the 21 canonical, non-deprecated token names in color
+`schema --json` lists the 22 canonical, non-deprecated token names in color
 field `values[]`. The meta lookup returns the full registry: canonical tokens,
 deprecated legacy tokens, and aliases. The table below is checked against
 `docs/cli/reference/color-tokens.json`; update the generated artifact and this
@@ -97,7 +97,8 @@ table together.
 | `secondary` | Brand | `#475467` | `--cap-color-secondary` | Canonical | Secondary emphasis |
 | `chrome` | Brand | `#313a46` | `--cap-color-chrome` | Canonical | Dark chrome surfaces (headers, bands) |
 | `success` | Status | `#027a48` | `--cap-color-success` | Canonical | Positive state |
-| `warning` | Status | `#b54708` | `--cap-color-warning` | Canonical | Caution state |
+| `warning` | Status | `#c59d00` | `--cap-color-warning` | Canonical | Caution state (amber; text on it is dark) |
+| `warning-text` | Status | `#b54708` | `--cap-color-warning-text` | Canonical | Caution state as text on a light surface |
 | `danger` | Status | `#b42318` | `--cap-color-danger` | Canonical | Negative / breach state |
 | `info` | Status | `#3667e3` | `--cap-color-info` | Canonical | Informational state |
 | `neutral` | Status | `#667085` | `--cap-color-neutral` | Canonical | No-signal state |
@@ -396,10 +397,12 @@ color alone, the icon and value carry the signal too.
 
 **Variant `Composition-Donut`** — the standard composition widget:
 
-- 2–6 slices only. More than 6 → the data belongs in a ranked bar or table.
+- 2–6 slices only. More than 6 → the data belongs in a ranked bar or table, or group the small slices into one Other slice
+  (`otherSliceMode` Top N with `otherSliceThreshold` 5, so five slices and Other).
 - `pieChartWidgetTemplateType: Donut`, legend on, per-slice `showInLegend: true`.
 - Center shows a **live metric value** (`centerMode` metric-value +
-  `centerNumberFormat`) — never a static text label that will go stale.
+  `centerNumberFormat`) — never a static text label that will go stale. A `Total` centre (`centerMode` 3, the sum of
+  the drawn slices) is the same kind of live value when the slices add up to the headline figure.
 
 ```json
 "styleConfiguration": {
@@ -421,6 +424,10 @@ color alone, the icon and value carry the signal too.
 
 Variant `Mix-Pie`: same styling, `pieChartWidgetTemplateType: PieChart`, no
 center — only when the whole-vs-parts metaphor matters more than the total.
+
+Variant `Half-Donut`: `pieShape` Half Circle on a donut, for a gauge-like share-of-whole
+with the centre at the base. Percent in the legend or slice labels (`legendValueMode` 2 or 3,
+`sliceLabelMode` 4 or 5) shows each slice's share of the total.
 
 Slice colors default to the platform palette; override per-slice
 (`dataItems[].presentation`) only to echo a color system the client already
@@ -462,7 +469,7 @@ identity.
 |---------|-------|-------|
 | `Trend-Line` | `xyChartWidgetTemplateDataItemType: Line` | `timePeriodAggregationMethod: None` at template **and** data-item level (any other value collapses the trend to one point). Actual = brand accent; plan/budget comparator = near-black dashed; forecast = amber dotted |
 | `Breakdown-Column` | (reference above) | `dataLabel Always` only when ≤ ~8 categories; otherwise labels off, tooltip carries values |
-| `Ranking-Bar` | `Bar` type + `invertAxes: true` | For ranked comparisons with long labels; top-N via `partitioningRankMode` + limit |
+| `Ranking-Bar` | `Column` type + `invertAxes: true` (horizontal) | For ranked comparisons with long labels; top-N via `partitioningRankMode` + limit |
 
 Keep the sample's `axes` array verbatim and reference its axis id from every
 data item — axis label text is the axis `name` (put the unit there:

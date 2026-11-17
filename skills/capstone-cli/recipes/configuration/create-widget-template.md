@@ -95,7 +95,7 @@ cap model metrics list --json
 **For Table:** Metrics become row sources; value columns can use row metrics, selected metrics, or calculation metrics
 **For TextBlock:** Metrics and narratives are discovered from tokens in `title`, `subtitle`, `description`, and `footnote`; do not create hidden data-item rows for those references
 
-**Note metric IDs** for `dataItems[]` configuration or raw CLI text tokens. Widget Template Excel can accept metric-name tokens and transpose them to IDs during upload.
+**Note metric IDs** for `dataItems[]` configuration. Text tokens in raw CLI JSON take a metric ID or the metric's name (`[<metric-id>]` or `[Diesel Consumption]`), in TextBlock and InfoCard text: `lint`, `save` and `preview` resolve names to IDs, and `save` stores the IDs. A name that more than one metric uses is refused with `WIDGET_TOKEN_METRIC_REFERENCE_AMBIGUOUS`; use the ID then. Widget Template Excel takes metric names only.
 
 **Narrative tokens (TextBlock, InfoCard and Table text only):** find narrative IDs with `cap model narratives list --json`. Raw CLI JSON uses `{<narrative-id>}` or `{<narrative-id>}|-1|`; the editor and Excel use `{Narrative Name}`. The token resolves at the narrative's own capture interval, whatever the widget's data interval.
 
@@ -109,12 +109,13 @@ cap model metrics list --json
 - `description` - Optional text shown to dashboard users below the widget content (see User-Facing Fields rules below)
 - `widgetType` - { id: 0|1|2|4|6, name: "InfoCard"|"PieChart"|"XYChart"|"Table"|"TextBlock" }
 - `discipline` - { id: "<id>" }
-- `dataRangeMode` - { id: 1, name: "Static" } or { id: 0, name: "Dynamic" }
+- `dataRangeMode` - { id: 1, name: "Static" } or { id: 0, name: "Dynamic" }. XY charts and tables also take { id: 2, name: "SelectedYear" }: the periods of the tenant's year that holds the viewer's last selected period, from the year's start up to that period (FY 27 picked on a quarterly chart: Q1 to Q4; Q2 FY 27 picked: Q1 and Q2). XY charts also take { id: 3, name: "SelectedYearToLatestData" }, which ends at the latest period in which a series has a value; rows with the Reference line role don't count. Neither uses `dataPeriodStart` or `dataPeriodEnd`. Other widget types refuse them (`DataRangeModeNotSupported`). The window only picks periods: every value is the stored computed value of its period. For one year-so-far figure, read the metric at the Year interval or model a to-date calculation such as `SUM([Metric]|YEARSTART():NOW()|)`
 - `dataInterval` - { id: 2, name: "Month" }, { id: 3, name: "Quarter" }, etc.
+- `showDataIntervalFilter` (Table, InfoCard, TextBlock and PieChart) - `true` follows the dashboard's interval, with `dataInterval` as the default when the dashboard sends none; `false` fixes `dataInterval` (lint error `IntervalFixedNeedsInterval` without one). Left out on create, the widget follows exactly when it has no `dataInterval`; left out on update, it keeps its saved value (clearing `dataInterval` makes it follow). An InfoCard's `dataItems[].dataPeriodStart` and the text-token offsets of an InfoCard or TextBlock count in the interval it reads at: a following card with a `Quarter` default on a Month dashboard reads `-1` as the previous month. A following pie's period windows (the widget's and each slice's) convert to the periods that cover the same months, as a table's do. Excel column: `Table Show Data Interval Filter`, on InfoCard, TextBlock and PieChart rows too. XY charts always read at `dataInterval` when they have one
 - `metricSelectionMode` - { id: 0, name: "Static" } (explicit metrics) or { id: 1, name: "Dynamic" }
 - `timePeriodAggregationMethod` - Required for Dynamic widgets that collapse multiple selected periods into one value. Use Sum for additive metrics, Average for rates/percentages, Last Value for snapshots, and None only for deliberate time-series output. Tables don't use it for their cells (each value is the stored value at the interval, rolled up with the metric's own time period aggregation); on a table it only seeds the aggregation of a new order-and-limit selection, and the web table editor has no control for it.
 - `dataItems` - Array of metric configurations for metric-set widgets; omit or set to `[]` for TextBlock
-- `showConditionalFormatting` - Default `true`. Hard gate: when false, Table / Info Card / XY never paint band colours, even if a dashboard viewer has switched formatting on. The dashboard template's `allowConditionalFormattingToggle` decides whether viewers see the filter-row toggle. On a Table, the widget's own `allowConditionalFormattingToggle: false` fixes formatting at `showConditionalFormatting` whatever the viewer chooses; Info Card and XY ignore it. Spreadsheet/report templates still have their own Allow flag for that page.
+- `showConditionalFormatting` - Default `true`. Hard gate: when false, Table / Info Card / XY never paint band colours, even if a dashboard viewer has switched formatting on. The dashboard template's `allowConditionalFormattingToggle` decides whether viewers see the filter-row toggle. On a Table or Info Card, the widget's own `allowConditionalFormattingToggle: false` fixes formatting at `showConditionalFormatting` whatever the viewer chooses; XY ignores it. Spreadsheet/report templates still have their own Allow flag for that page.
 
 > **Dynamic metric selection:** Set `metricSelectionMode` to
 > `{ id: 1, name: "Dynamic" }` to resolve metrics at render time instead of
@@ -152,7 +153,8 @@ cap model metrics list --json
 - `columnDataGroupingLevels` - EnumDTO list of grouping-chain levels (`1` OrgNode, `2` Discipline, `3` Framework) shown as column groups instead of rows. Empty (the default) puts every level on rows. Every level must be in the chain, and the layout must keep at least one row and one column (lint codes `ColumnDataGroupingLevelOutsideChain`, `LayoutRequiresRow`, `LayoutRequiresColumn`)
 - `metricTooltipProperties`, `metricTooltipAttributeTypeIds` - Metric properties (same EnumDTO list as `metricPropertyColumns`) and metric attribute-type GUIDs shown in the tooltip on metric names
 - `showTotalRow` - Engine-sourced footer for the dashboard org node's calculated values. Only rendered when the grouping chain is OrgNode-only, on rows, with `showMetricsInColumns` and periods as columns; otherwise the render returns `TABLE_TOTAL_UNAVAILABLE` and lint warns `TotalRowNeedsSiteOnly`
-- `pageSize` - Rows per page: the page a dashboard viewer starts on (the editor offers 10, 25, 50 and 100; viewers can still pick another size on the page toolbar). Any whole number from 1 to 1000; `null` (or a blank Excel cell) is 50, stored as none (`PageSizeOutOfRange` otherwise; in Excel, text or a fraction is an upload error on that cell). Like the layout fields, an update or a workbook that leaves it out keeps the stored value. A table data response's `pageSize` says how many (a request without `take` gets every row; a preview request without `take` gets this many); `cap reporting widgets table` without `--take` and `widget-templates preview` page through every row. Excel column: `Table Rows Per Page`
+- `pageSize` - Rows per page: the page a dashboard viewer starts on (the editor offers 10, 25, 50 and 100; viewers can still pick another size on the page toolbar). Any whole number from 1 to 1000 (`PageSizeOutOfRange` otherwise; in Excel, text or a fraction is an upload error on that cell); `50` (or a blank Excel cell) is the default, stored as none. Like the layout fields, an update or a workbook that leaves it out keeps the stored value. The CLI drops a JSON `null` before it posts, so `null` counts as left out and keeps the stored value: send `50` to go back to the default. A table data response's `pageSize` says how many (a request without `take` gets every row; a preview request without `take` gets this many); `cap reporting widgets table` without `--take` and `widget-templates preview` page through every row. Excel column: `Table Rows Per Page`
+- `heightMode`, `maxHeightPx` - How tall the table's grid is on a dashboard. `heightMode` `{ "id": 0 }` Fixed (the default) grows with the rows up to `maxHeightPx` and then scrolls the rows inside the table; `{ "id": 1 }` FitRows is as tall as the page's rows, with no scrollbar inside the table (the page scrolls instead, and the page size, `pageSize` or the viewer's pick on the page toolbar, bounds how many rows a page holds). `maxHeightPx` is a whole number from 200 to 2000 (`MaxHeightOutOfRange` otherwise, checked only for Fixed: FitRows ignores it); `600` (or a blank Excel cell) is the default, stored as none. An unknown `heightMode` is `UnknownHeightMode`. Like `pageSize`, an update or a workbook that leaves either out keeps the stored value, and a JSON `null` sent through the CLI counts as left out: to go back to the default send `{ "id": 0 }` and `600` (or blank cells in Excel). A table data response's `maxHeightPx` is the height the grid stops at, or `null` for FitRows. PDF and Word exports always show every row. Excel columns: `Table Height Mode` (`Fixed` or `FitRows`) and `Table Max Height Px`
 - `showDataIntervalFilter` - `true` follows the dashboard's interval, with `dataInterval` as the default when the dashboard sends none; `false` fixes `dataInterval`, and the table's footer shows "Interval fixed: Quarter" when the dashboard asks for another interval. Fixed needs a `dataInterval` (lint error `IntervalFixedNeedsInterval`). Left out on create, a table follows exactly when it has no `dataInterval`. When a following table renders at another interval, its Static window (counted in `dataInterval`) converts to the periods that cover the same months: quarters `-3`..`0` are months `-11`..`0` or year `0`..`0`, year `-1`..`0` is months `-23`..`0`, and months `-7`..`-2` are quarters `-2`..`0`. Day and Week offsets carry over unchanged
 - `valueSelectionConfig` (order and limit) - Needs OrgNode on rows: in the grouping and not in `columnDataGroupingLevels`, since with sites on columns a row has no site to rank (`ValueSelectionNeedsSiteGrouping`: an error on a new table, a warning on a table saved before this rule)
 - An update that leaves out `showTimePeriodsInRows`, `columnDataGroupingLevels`, `metricTooltipProperties`, `metricTooltipAttributeTypeIds` or `showDataIntervalFilter` keeps their saved values; a workbook without their columns does too. Leaving out `showDataIntervalFilter` while clearing `dataInterval` makes the table follow the dashboard, and while giving a table that had no `dataInterval` one fixes it, as setting and clearing the interval did before the flag
@@ -169,6 +171,7 @@ Do not author `includedDataTypes` or `orgNodeTemplateId` for new Table templates
 - At least one of `title`, `subtitle`, `description`, or `footnote` - Text slots that support the same metric, trend, and period tokens as other widget text fields, plus narrative tokens
 - `dataRangeMode`, `metricSelectionMode`, and `timePeriodAggregationMethod`
 - `dataInterval`, `dataPeriodStart`, and `dataPeriodEnd` when `dataRangeMode` is `Static`
+- `showDataIntervalFilter` (optional) - as for InfoCard: `true` follows the dashboard's interval with `dataInterval` as the default, `false` fixes `dataInterval`. Left out on create, a text block follows exactly when it has no `dataInterval`
 
 TextBlock does not support `dataItems`; metrics and narratives are discovered only from explicit text tokens. `styleConfiguration` is optional and uses bounded TextBlock slots for `panel`, `title`, `subtitle`, `description`, `footnote`, `trend`, and `stateMessages`. TextBlock style colors accept registry tokens from `cap meta lookups get color-tokens` or `#RGB`/`#RRGGBB`/`#RRGGBBAA` hex values, font family uses the shared `theme`/`sans`/`serif`/`mono`/`nunito`/`roboto`/`poppins`/`arial` catalogue, and font weight accepts `Normal`/`Medium`/`Semibold`/`Bold`.
 
@@ -208,7 +211,7 @@ Use a subtitle for a short secondary heading below the title. It supports the sa
 
 | Use Case | Example |
 |----------|---------|
-| Trend indicator | `#trend[<change-calculation-metric-name>] since @[period:-1]` in the editor/Excel; `#trend[<change-calculation-metric-id>] since @[period:-1]` in raw CLI JSON |
+| Trend indicator | `#trend[<change-calculation-metric-name>] since @[period:-1]` in the editor, Excel and raw CLI JSON, or `#trend[<change-calculation-metric-id>]` in raw CLI JSON. `#trend` takes a % change calculation metric: its value's sign sets the arrow, so a plain total shows a trend arrow for any non-zero value |
 | Narrative text (TextBlock/InfoCard/Table) | `{<narrative-name>}` in the editor/Excel; `{<narrative-id>}` in raw CLI JSON. Renders the narrative's text for the selected org unit; `#trend` is not supported |
 | Selection label (TextBlock/InfoCard/Table) | `For @[periods] at @[orgNode]` → "For Q1–Q3 FY 26 at Operation 2". `@[periods]` labels the whole selection (rolled up and collapsed into a range); `@[interval]` shows the interval, e.g. "Quarterly" |
 | Interpretive hint | `Positive = Cola earns more per unit than Orange` |
@@ -295,6 +298,7 @@ This pattern shows two data items (current vs previous period) with a trend indi
   "discipline": { "id": "<discipline-id>" },
   "dataRangeMode": { "id": 1, "name": "Static" },
   "dataInterval": { "id": 0, "name": "Day" },
+  "showDataIntervalFilter": false,
   "metricSelectionMode": { "id": 0, "name": "Static" },
   "timePeriodAggregationMethod": { "id": 0, "name": "None" },
   "styleConfiguration": {
@@ -310,13 +314,13 @@ This pattern shows two data items (current vs previous period) with a trend indi
       "up": { "color": "success", "icon": "arrow-up" },
       "down": { "color": "danger", "icon": "arrow-down" },
       "flat": { "color": "neutral", "icon": "equals" },
-      "unknown": { "color": "neutral", "icon": "none" }
+      "unknown": { "color": "neutral", "icon": "circle" }
     }
   },
   "dataItems": [
     {
       "metric": { "id": "<metric-id>", "name": "Profit" },
-      "displayName": "@[period]",
+      "name": "@[period]",
       "dataPeriodStart": 0,
       "dataPeriodEnd": 0,
       "sortOrder": 1,
@@ -325,7 +329,7 @@ This pattern shows two data items (current vs previous period) with a trend indi
     },
     {
       "metric": { "id": "<metric-id>", "name": "Profit" },
-      "displayName": "@[period:-1]",
+      "name": "@[period:-1]",
       "dataPeriodStart": -1,
       "dataPeriodEnd": -1,
       "sortOrder": 2,
@@ -338,8 +342,9 @@ This pattern shows two data items (current vs previous period) with a trend indi
 
 **Key fields:**
 - `dataRangeMode: Static` — required for period offsets to work
-- `dataPeriodStart` / `dataPeriodEnd` — `0` = last period with data, `-1` = previous period
-- `displayName` — use `@[period]` tokens so labels show the actual period name
+- `showDataIntervalFilter: false` — fixes the card at `dataInterval`. Offsets count in the interval the card reads at, unconverted, so a comparison card should fix its interval
+- `dataPeriodStart` / `dataPeriodEnd` — `0` = last period with data, `-1` = previous period. Set both to the same offset: a card reads one period per row (its start)
+- `name` — use `@[period]` tokens so labels show the actual period name
 - `timePeriodAggregationMethod: None` is intentional here because each data item resolves exactly one static period by offset. Do not copy `None` to Dynamic cards that summarize a user-selected range; choose Sum, Average, or Last Value by metric role.
 - `styleConfiguration.trend` — controls only visual presentation. It does not define whether a metric is good or bad.
 - `styleConfiguration.panel/title/value/...` — controls card-level slot styling. Font families are allowlisted token IDs, widths/sizes are bounded integers, and `accentSide`/`accentWidth` are panel-only. Partial border/accent settings are retained but render as no border/accent until the color/side/positive width combination is complete.
@@ -350,9 +355,31 @@ left-accent, and full-bleed style fragments, use
 the CLI-first guide for translating dashboard mockups into
 `styleConfiguration` JSON.
 
-Raw CLI JSON posts directly to the API, so metric tokens inside `title`, `subtitle`, `description`, `footnote`, and data item `name` should use stored metric IDs. The widget editor and Widget Template Excel accept metric names and transpose them to IDs internally. InfoCard and Table `title`, `description`, and `footnote` also accept narrative tokens (`{<narrative-id>}`); data item `name` does not.
+Raw CLI JSON posts directly to the API. Metric tokens inside `title`, `description`, `footnote`, and data item `name` take a metric ID or the metric's name; `save` stores IDs. The widget editor and Widget Template Excel also accept metric names and transpose them to IDs. InfoCard and Table `title`, `description`, and `footnote` also accept narrative tokens (`{<narrative-id>}`); data item `name` does not.
 
 **Naming convention:** `{Metric} | Comparison | {Interval} | Card`
+
+#### InfoCard with Filter Metrics
+
+With `metricSelectionMode` Dynamic the filters decide which metrics the card shows, in model order. `dataItems[]` then keep per-metric changes as overrides, as on a Table: an item changes the label, `numberFormat` and `bands` of the matched metric with the same `metric.id`. An override never adds a metric; one whose metric the filters don't match shows nothing. A matched metric without an override paints its metric's own bands. The card's own window, combining and value selection apply to every matched metric, so `save` clears an override's period offsets, site breakdown, value selection and its own combining, with the `OverrideFieldsCleared` note. `cap templates widget-templates resolve-content --file widget.json` lists the metrics the filters match, with their ids.
+
+#### InfoCard Lint
+
+Besides the shared codes (`NameRequired`, `DataItemsRequired`, `NumberFormatInvalid`, the `Band*` codes, `DASHSELECT_*`, `WIDGET_TOKEN_*`, the `StyleSlot*` codes in [Configure Info Card Styles](./configure-info-card-styles.md)), an info card reports these. Each code has one English text, the same in the web editor, `lint`, `save`, Excel and MCP; row issues carry the row's `index` in `params`:
+
+| Code | Severity | Message |
+|------|----------|---------|
+| `DataItemDuplicate` | Error | `{metric} is on this card twice with the same period, sites and combining. Remove one, or change its period.` A card saved with the same repeat gets a warning instead, so it still saves; a new repeat is an error |
+| `DataItemLabelDuplicate` | Warning | `Two metrics on this card are labelled "{label}"; readers can't tell them apart.` A label that is empty or equals the metric's name counts as the metric's friendly name (else its name), as the card shows it; rows split by site are skipped |
+| `DataItemWindowSinglePeriod` | Warning | `{metric} shows only period {start}: with One period, a card reads one period per metric.` A picked row under Static range with `dataPeriodEnd` ≠ `dataPeriodStart` |
+| `TrendIconWithoutLabel` | Warning | `The {direction} trend has no icon and no label, so only its colour shows it. Pick an icon or turn on Show direction label.` |
+| `TrendRangesGiveNoVerdict` | Note | `#trend on {metric} is coloured by direction, not by its ranges: none of its ranges reads good, watch or bad.` On the text field that holds the token, when `styleConfiguration.trend.colorBy` is not `Direction` and the metric's own ranges give no verdict; a text block gets it too. See [Configure Info Card Styles](./configure-info-card-styles.md) |
+| `OverrideFieldsCleared` | Note | `{metric} is matched by the filters, so its own period and sites were cleared; its label, format and ranges stay.` |
+| `UnknownMetrics` | Error | `These metrics don't exist: {ids}.` A row whose metric is not in the tenant |
+| `MetricNotViewable` | Error | `This widget refers to a metric you can't view: {metric}.` A row whose metric's discipline you can't view |
+| `IntervalFixedNeedsInterval` | Error | `Choose the interval this widget fixes, or let it follow the dashboard.` |
+
+A metric token in `title`, `description`, `footnote` or a row label reports the shared token codes (see [TextBlock token lint](#textblock-token-lint)): `WIDGET_TOKEN_METRIC_REFERENCE_INVALID` for a bracket that is no metric id or name (a name with spaces included), `WIDGET_TOKEN_METRIC_REFERENCE_MISSING` for a deleted metric and `WIDGET_TOKEN_METRIC_REFERENCE_INACCESSIBLE` for one you can't view. They replace the retired `INFOCARD_TOKEN_METRIC_REFERENCE_INVALID`, `INFOCARD_METRIC_REFERENCE_MISSING` and `INFOCARD_METRIC_REFERENCE_INACCESSIBLE`. Ranges (`bands`) on a filtered card's items are allowed (`BandsRequireStaticSelection` applies to XY only).
 
 #### PieChart Example:
 ```json
@@ -408,21 +435,29 @@ Raw CLI JSON posts directly to the API, so metric tokens inside `title`, `subtit
 }
 ```
 
-Pie and donut charts collapse the selected range into one slice value per data item, so a Dynamic pie must set a non-None time aggregation method. Keep `showInLegend` true on each data item when `showLegend` is true.
+Pie and donut charts collapse the selected range into one slice value per data item, so a pie must say how its slices combine periods: a widget `timePeriodAggregationMethod` (Sum, Average or Last Value), or one on every data item. A Dynamic pie needs the widget method. Without one, `lint`, `create` and `save` report `TimePeriodAggregationRequired` as an error; a pie already saved without one gets a warning instead, so it still saves. Keep `showInLegend` true on each data item when `showLegend` is true. This example leaves `showDataIntervalFilter` out and has a `dataInterval`, so it fixes the pie at Month; set `"showDataIntervalFilter": true` to follow the dashboard's interval with Month as the default.
+
+Pies draw no bands: `save` removes `bands` on a data item, with the note `PieSliceBandsFolded`. A data item with no `name` of its own shows the metric's friendly name, then its name.
 
 **Pie/donut display fields:**
 
 | Field | Use |
 |-------|-----|
-| `pieChartWidgetTemplateType` | `0` Pie Chart or `1` Donut Chart. |
-| `centerMode` | Donut-only center content: `0` None, `1` Static Text, or `2` Metric Value. Standard Pie templates must omit center fields or use `None`. |
+| `pieChartWidgetTemplateType` | `0` Pie Chart or `1` Donut Chart. Required (`PieChartTypeRequired`). |
+| `centerMode` | Donut-only center content: `0` None, `1` Static Text, `2` Metric Value, `3` Total (the sum of the drawn slices), or `5` Percentage (one metric's share of the drawn slices). `4` Share of Total is rejected (`PieCenterModeReserved`): use `5`. A Pie with another mode is `PieCenterNeedsDonut`; Standard Pie templates must omit center fields or use `None`. |
 | `centerStaticText` | Required only when `centerMode.id` is `1`. |
-| `centerMetricId` | Required only when `centerMode.id` is `2`; references an existing Input or Calculation metric. In the dashboard editor, this is selected through the searchable metric grid picker. |
-| `centerMetricLabel` | Optional display-label override for Metric Value centers. If blank, rendering uses the center metric friendly name, then the metric name. |
-| `legendValueMode` | `0` Hidden or `1` Value. This is the stored enum behind the UI's **Show Legend Value** checkbox; `showLegend` and data-item `showInLegend` still control row visibility. |
-| `sliceLabelMode` | `0` Hidden, `1` Label, `2` Value, or `3` Label and Value for labels rendered on slices. This is separate from tooltips and legend rows. |
+| `centerMetricId` | Required when `centerMode.id` is `2` or `5`; references an existing Input or Calculation metric you can view. For `5` it must be one of the pie's own metrics (`PieCenterMetricNotInPie`). Not allowed on Total (`3`). `""` or `null` reads as not picked. |
+| `centerNumberFormat` | Only for a Metric Value or Total center. On any other chart or center, `save` removes it, with the note `PieCenterNumberFormatFolded`. |
+| `centerMetricLabel` | Optional display-label override for Metric Value, Total and Percentage centers. If blank, a Metric Value or Percentage center uses the metric friendly name, then the metric name; a Total center reads "Total". |
+| `legendValueMode` | `0` Hidden, `1` Value, `2` Percent, or `3` Value and Percent: what each legend row adds to its label. `showLegend` and data-item `showInLegend` still control row visibility. |
+| `sliceLabelMode` | `0` Hidden, `1` Label, `2` Value, `3` Label and Value, `4` Percent, or `5` Label and Percent for labels rendered on slices. This is separate from tooltips and legend rows. |
+| `pieShape` | `0` Full Circle (default) or `1` Half Circle: the top half, for a pie or a donut. |
+| `otherSliceMode` | `0` None (default), `1` Top N (keep the largest N slices, group the rest into Other), or `2` Below Percent (group slices under N% of the total into Other; the largest slice always keeps its name). Other forms only when it would hold two or more slices. |
+| `otherSliceThreshold` | The number for `otherSliceMode`: `2` to `20` for Top N, `1` to `25` for Below Percent. Required with a mode and refused without one (`PieOtherThresholdInvalid`). |
 
-The same fields round-trip through widget-template Excel download/upload as `Pie Chart Type`, `Center Mode`, `Center Static Text`, `Center Metric Id`, `Center Metric`, `Center Metric Label`, `Legend Value Mode`, and `Slice Label Mode`. On upload, set `Center Metric Id` for a stable metric reference or `Center Metric` for an exact-name lookup; if both are present they must resolve to the same metric. Legacy workbooks that omit these columns keep the default behavior: no center, legend values visible, and slice labels hidden.
+Percent is each slice's share of the drawn total, to one decimal, rounded after grouping so the shown shares (Other included) add up to 100.0%. A negative slice is left out of the total, a zero slice counts at 0%, and a slice with no value is not a slice. Other's fill is the `styleConfiguration.otherSlice.backgroundColor` slot (default `#8E96A8`).
+
+The same fields round-trip through widget-template Excel download/upload as `Pie Chart Type`, `Center Mode`, `Center Static Text`, `Center Metric`, `Center Metric Label`, `Center Number Format`, `Legend Value Mode`, `Slice Label Mode`, `Pie Shape`, `Other Slice Mode` and `Other Slice Threshold`. On upload, `Center Metric` names the center metric (an exact-name lookup). Legacy workbooks that omit these columns keep the default behavior: no center, legend values visible, slice labels hidden, a full circle, and no Other slice.
 
 For styled Pie/Donut templates, use `styleConfiguration`, `centerNumberFormat`,
 `dataItems[].presentation`, and `dataItems[].numberFormat`. These are bounded
@@ -458,12 +493,76 @@ JSON output is a top-level render contract and includes resolved `center`,
 `labelDisplay`, `legend`, `styleConfiguration`, `dataItems[].presentation`,
 `dataItems[].numberFormat`, `dataItems[].legendValue`, and
 `dataItems[].sliceLabel` metadata. Non-JSON output prints
-`Center: <label>: <value>` when configured and includes `Legend` and `Slice
-Label` columns for quick smoke checks.
+`Center: <label>: <value>` when configured and includes `Share`, `Legend` and `Slice
+Label` columns for quick smoke checks. Other's label reads `Other (5 slices)`.
+
+A negative value can't be a share of a pie, so the slice is left out of the
+ring and only the legend lists it: in JSON it has `notDrawn: true`, and text
+mode prints its value with `(not drawn)`. Each slice also carries
+`dataItemIndex`, the position in `dataItems` of the row it came from (slices a
+row splits into share it; a filtered pie's slices have none). The JSON's
+`dataWarnings` list says what the data at these sites and periods leaves the
+pie unable to draw well; text mode prints them after the table as
+`- [Code] message`:
+
+| Code | Severity | Message |
+|------|----------|---------|
+| `PieNegativeValuesLeftOut` | Warning | `Below zero for {period} at {site}, so left out of the pie: {names}. A pie can't draw a negative share.` |
+| `PieManySlices` | Warning | `This pie has {count} slices. Above 7, small slices are hard to read: group small slices into Other, use Keep → Top 6, or split less.` |
+| `PieNoValues` | Note | `No slice has a value for {period} at {site}.` |
+| `PieMixedUnits` | Warning | `Slices use different units ({units}), so the total shows – and Other shows only its share.` |
+| `PieCenterMetricNotInPie` | Warning (a filtered pie's Percentage metric) | `The centre shows the share of a metric that isn't one of this pie's slices. Pick one of its metrics.` |
+
+They depend on the data, so they never block a save and `lint` does not report
+them. `dataWarnings` is separate from `warnings` (the CLI's own no-data hints)
+and `styleWarnings`.
+
+Render a draft pie without saving it with `preview` (see
+[Step 6](#step-6-lint-then-create-the-widget-template)).
+
+#### PieChart Lint
+
+Besides the shared codes (`NameRequired`, `DataItemsRequired`, `MetricFiltersRequired`, `UnknownMetrics`, `MetricNotViewable`, the period window codes, `IntervalFixedNeedsInterval`, `NumberFormatInvalid` and the `StyleSlot*` codes in [Configure Pie Chart Styles](./configure-pie-chart-styles.md)), a pie reports these. Each code has one English text, the same in the web editor, `lint`, `save`, Excel and MCP. Each issue's `stage` is `layout` for the chart type, shape, center, small-slice grouping, legend and slice labels, `look` for the text, `style` for `styleConfiguration` and data-item `presentation` (except `presentation.slice.backgroundColor`, which is `data`), and `data` for the rest:
+
+| Code | Field | Severity | Message |
+|------|-------|----------|---------|
+| `PieChartTypeRequired` | `pieChartWidgetTemplateType` | Error | `Choose Pie or Donut.` |
+| `PieCenterModeReserved` | `centerMode` | Error | `Centre mode {mode} isn't available. Use Percentage to show one metric's share.` (only Share of Total) |
+| `PieCenterNeedsDonut` | `centerMode` | Error | `A centre needs a donut. Set Chart to Donut, or set the centre to None.` |
+| `PieCenterFieldsNeedMode` | the first of `centerStaticText`, `centerMetricId`, `centerMetricLabel` that is set | Error | `{field} needs a centre mode. Pick Text, Metric value, Total or Percentage, or clear it.` |
+| `PieCenterTextRequired` | `centerStaticText` | Error | `Enter the centre text.` |
+| `PieCenterFieldNotForMode` | the field the mode doesn't use | Error | `{field} doesn't apply to a {mode} centre. Clear it.` |
+| `PieCenterMetricRequired` | `centerMetricId` | Error | `Pick the metric for the centre.` |
+| `PieCenterMetricNotInPie` | `centerMetricId` | Error on a picked pie | `The centre shows the share of a metric that isn't one of this pie's slices. Pick one of its metrics.` |
+| `PieOtherThresholdInvalid` | `otherSliceThreshold` | Error | `Grouping small slices needs a rule and a number: keep the largest 2 to 20, or group below 1 to 25% of the total.` |
+| `TimePeriodAggregationRequired` | `timePeriodAggregationMethod` | Error; a warning on a pie already saved without one | `Choose how slices combine periods: Sum, Average or Last value.` |
+| `EnumValueInvalid` | `pieChartWidgetTemplateType`, `centerMode`, `legendValueMode`, `sliceLabelMode`, `pieShape`, `otherSliceMode` | Error | `{value} isn't one of {allowed}.` |
+| `PieCenterNumberFormatFolded` | `centerNumberFormat` | Note | `The centre number format only applies to a Metric value or Total centre, so Save removes it.` |
+| `PieCenterShareAlwaysFull` | `centerMetricId` | Warning | `Every slice is this metric, so the centre always shows 100%. Pick Total, or add other metrics.` |
+| `PieSliceBandsFolded` | `dataItems` (with `index` and `name`) | Note | `Pies don't draw bands, so Save removes the bands on {name}.` |
+
+`UnknownMetrics` and `MetricNotViewable` apply to each data item's metric (with the row's `index`) and to `centerMetricId`. A data item `presentation` issue carries the row's `index` and the full `path`. Pies skip the band rules (`BandsRequireStaticSelection` and the `Band*` codes), because `save` removes slice bands.
 
 #### XYChart Example:
 
 > **Important:** XY Charts require an `axes` array, and every data item must include `xyChartWidgetTemplateAxis` with a `name` matching an axis entry. The API matches by name (not ID) during creation.
+
+**Axes, orientation and series types:**
+
+- **Axis order is drawing order.** The first axis in `axes` is drawn on the left, the second on the right (bottom and top when the chart is horizontal), a third on the left again. Save stores the list order; to swap sides, reverse the two axes (the web editor's **Swap sides**). An axis without an id (from Excel) keeps its stored place and a new one goes last.
+- **An axis name may be empty.** An unnamed axis draws the unit of its first series as its title.
+- **Start at zero is the axis' `dynamicAxis`.** `false` starts the axis at zero; `true` fits it to the values. `styleConfiguration.valueAxis.startAtZero` is deprecated: it is still accepted, and Save moves it into `dynamicAxis` on every axis and removes it from the style.
+- **Horizontal charts use `invertAxes: true`.** Series types are Column (0), Line (2) and Area (3). Bar (1) is still accepted on input, but Save stores it as Column and sets `invertAxes`, which draws the same chart; `lookups xy-chart-data-item-types` no longer lists it.
+- **Periods are one window per series.** With `dataRangeMode` Dynamic the series read the viewer's periods; with Static each series reads its own `dataPeriodStart`..`dataPeriodEnd` (the web editor writes the same "last N" window to every series); with SelectedYear or SelectedYearToLatestData every series reads the viewer's year up to their period, and a metric listed twice is a duplicate.
+- **Series take the chart's period total.** The widget's `timePeriodAggregationMethod` totals every series. A data item's own `timePeriodAggregationMethod` is still accepted, but Save clears it, with the note `XySeriesPeriodTotalCleared` (none for `None`).
+- **Axis text is styled chart-wide.** `styleConfiguration.axisLabel` styles both axes' labels and `axisTitle` both axis titles. `categoryAxis`/`valueAxis` still accept `labelStyle` and `titleStyle`: Save moves each setting into `axisLabel` or `axisTitle` where that part leaves it empty (the category axis' first), removes them from the axis, and adds the note `XyAxisTextStyleMerged`.
+- **Lines and zones across the plot.** An axis' `referenceLines` lists fixed lines and zones: `{ "value": 100, "label": "Target", "color": "chrome", "dashArray": "Dash", "width": 2 }` draws a line; adding `"toValue": 85` to `"value": 80` draws a shaded zone from 80 to 85. `color` is a colour token or hex (default `chrome` for a line, `warning-subtle` for a zone), `dashArray` a dash preset (default `Dash`), `width` 1–3 (default 2). Unknown members are refused. A line drawn at a metric's value is a series row with `"role": { "id": 1, "name": "ReferenceLine" }`: in a chart that totals its periods (Period total, By site) it draws one line across the bars at the metric's total for the dashboard's site and periods, not a bar; over time it draws as a dashed step line. A reference row can't be broken down by site, stacked, or drawn on a 100% axis (`XyReferenceLineBySite`, `XyReferenceLineStacked`, `XyReferenceLineOnPercentAxis`).
+- **Axis scale.** An axis takes `minimum` and `maximum` (blank = from the data) and `logarithmic: true` (needs `dynamicAxis: true` and values above 0, `XyAxisLogScaleNotPositive`; no stacking on it).
+- **Stacks.** `isStacked: true` puts a series in Stack 1; `stackGroup: 2` (or higher) puts it in another stack drawn beside the first. An axis with `percentStacked: true` adds each stack up to 100%: every series on it must be in one stack (`XyAxisPercentNeedsOneStack`), and it takes no `minimum` or `maximum`. A stack mixing columns and lines draws as two stacks (warning `XyStackMixed`).
+- **Line shapes.** A Line or Area series takes `"lineShape": { "id": 1, "name": "Smooth" }` or `{ "id": 2, "name": "Step" }`; Straight (0) is the default.
+- **Height.** `heightMode` Fit (0, default: fills the dashboard placement, at least 400 px), Grow (1: a horizontal chart gets about 28 px per bar, 240–1,200 px) or Fixed (2, with `height` 240–1,200 px, `XyHeightInvalid`). The plot never gets shorter than the placement.
+- **Leaving these out keeps them.** A payload without `role`, an axis without `logarithmic`, or a chart without `heightMode` keeps the stored settings, so older payloads and workbooks don't reset them.
+- **Dashes are presets.** `series.dashArray` takes `Solid`, `Dash`, `Dot`, `DashDot` or `LongDash`. A raw `strokeDashArray` (chart-wide or per series) is still accepted: Save replaces it with the preset of the same pattern (`[6,4]` Dash, `[2,4]` Dot, `[6,4,2,4]` DashDot, `[12,6]` LongDash), otherwise DashDot when its dashes differ in length, otherwise the preset with the nearest dash length (Dot 2, Dash 6, LongDash 12; a tie takes Dash), with the note `XyDashPatternMapped`.
 
 ```json
 {
@@ -541,7 +640,6 @@ Label` columns for quick smoke checks.
       "showInLegend": true,
       "showTooltip": true,
       "isStacked": false,
-      "timePeriodAggregationMethod": { "id": 0, "name": "None" },
       "sortOrder": 1
     }
   ],
@@ -549,7 +647,7 @@ Label` columns for quick smoke checks.
 }
 ```
 
-`None` is correct for this XY example because it is a time series and should render one point per selected month. For an aggregated XY summary, set both the widget and each data item to Sum, Average, Last Value, Min, or Max.
+`None` is correct for this XY example because it is a time series and should render one point per selected month. For an aggregated XY summary, set the widget's `timePeriodAggregationMethod` to Sum, Average, Last Value, Min, or Max; every series takes it.
 
 **XY style fields:**
 
@@ -557,9 +655,9 @@ Label` columns for quick smoke checks.
 |------|-------|
 | `styleConfiguration.version` | Use `"1"` for the bounded XY style contract. |
 | Slot objects | Supported slots include `panel`, `title`, `description`, `footnote`, `chartArea`, `plotArea`, `categoryAxis`, `valueAxis`, `axisTitle`, `axisLabel`, `gridline`, `series`, `marker`, `dataLabel`, `tooltip`, `legend`, `legendMarker`, `legendLabel`, `legendValue`, `stateMessages`, and `numberFormat`. |
-| Axis controls | `categoryAxis`/`valueAxis` accept `labelRotation` (-90..90), `labelDensity` (`Auto`/`Comfortable`/`Compact`), `minLabelGap` (10..300px, overrides density), and value-axis `startAtZero` (`true` = zero baseline, `false` = auto-range). |
+| Axis controls | `categoryAxis`/`valueAxis` accept `labelRotation` (-90..90), `labelDensity` (`Auto`/`Comfortable`/`Compact`), `minLabelGap` (10..300px, overrides density) and `labelMaxWidth`. Their `labelStyle` and `titleStyle` are deprecated: style axis text with `axisLabel` and `axisTitle`; Save folds them in. Value-axis `startAtZero` is deprecated: set each axis' `dynamicAxis` instead (`false` = zero baseline); Save folds a `startAtZero` it receives into the axes. |
 | Safety bounds | The CLI and API reject raw CSS, HTML, JavaScript, callbacks, URL/CSS functions, unknown slots, unknown properties, and out-of-range sizes. Errors include `styleConfiguration.<field>` paths. |
-| Data-item presentation | Per-series visual overrides live in `dataItems[].presentation.series`; use `color`, `strokeWidth`, `dashArray`, `strokeDashArray`, border fields, radius, and opacity there. |
+| Data-item presentation | Per-series visual overrides live in `dataItems[].presentation.series`; use `color`, `strokeWidth`, `dashArray`, border fields, radius, and opacity there. `strokeDashArray` is deprecated: Save replaces it with a `dashArray` preset. |
 | Behavioral fields | `showBullets`, `showInLegend`, `showTooltip`, stacking, series type, and axis assignment stay as data-item behavior fields. |
 | Excel parity | Widget-template Excel exports chart-wide JSON through `XY Chart Style` and per-series JSON through data-item `Presentation`. Legacy workbook `Rotate Category Axis Labels`, `Colour`, `Stroke Width`, and `Stroke Dash Array` columns are import-only aliases mapped into style/presentation slots. |
 
@@ -694,6 +792,7 @@ TextBlock widgets render metric- and narrative-aware dashboard text without char
   "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
   "dataPeriodStart": -1,
   "dataPeriodEnd": 0,
+  "showDataIntervalFilter": false,
   "styleConfiguration": {
     "panel": {
       "backgroundColor": "surface",
@@ -723,7 +822,28 @@ TextBlock widgets render metric- and narrative-aware dashboard text without char
 }
 ```
 
-Widget-template Excel roundtrips TextBlock text through `Title`, `Subtitle`, `Description`, and `Footnote`, and style JSON through `Text Block Style`. In Excel, metric-name and narrative-name tokens (`[Metric Name]`, `{Narrative Name}`) are accepted in the text slots and transposed to IDs on upload. Unknown or ambiguous narrative names, and GUIDs, are row/column errors.
+`showDataIntervalFilter: false` fixes this text block at Month; leave it out, or set `true`, to follow the dashboard's interval.
+
+Widget-template Excel roundtrips TextBlock text through `Title`, `Subtitle`, `Description`, and `Footnote`, style JSON through `Text Block Style`, and the interval flag through `Table Show Data Interval Filter` (a blank cell keeps the saved flag). In Excel, metric-name and narrative-name tokens (`[Metric Name]`, `{Narrative Name}`) are accepted in the text slots and transposed to IDs on upload. Each of these refuses the row, reported on its cell, while the other rows save: a bracket that is no metric name (a typo, or prose such as `[1]`) is `WIDGET_TOKEN_METRIC_REFERENCE_INVALID`; a name more than one metric uses is `WIDGET_TOKEN_METRIC_REFERENCE_AMBIGUOUS`; a metric ID that is no metric in the tenant is `WIDGET_TOKEN_METRIC_REFERENCE_MISSING`. Unknown or ambiguous narrative names, and other GUIDs, are row/column errors too.
+
+`@[…]` is only for period and selection tokens (`@[period]`, `@[period:-1]`, `@[periods]`, `@[orgNode]`, `@[interval]`), so `@[Metric Name]` in a workbook is reported as `WIDGET_TOKEN_UNKNOWN`; write `[Metric Name]` for a metric.
+
+#### TextBlock token lint
+
+`lint`, `save`, `preview`, Excel and MCP report the same codes for tokens in `title`, `subtitle`, `description` and `footnote` (InfoCard text and row labels too). Each issue's `field` is the slot and `params.key` the token as written:
+
+| Code | Severity | Message |
+|------|----------|---------|
+| `WIDGET_TOKEN_METRIC_REFERENCE_INVALID` | Error | `{key} is not a metric id or name. Use an existing metric, or remove the brackets.` |
+| `WIDGET_TOKEN_METRIC_REFERENCE_AMBIGUOUS` | Error | `More than one metric is named {name}. Give the metrics distinct names, then try again.` |
+| `WIDGET_TOKEN_METRIC_REFERENCE_MISSING` | Error | `{key} refers to a metric that no longer exists. Remove the token or use another metric.` |
+| `WIDGET_TOKEN_METRIC_REFERENCE_INACCESSIBLE` | Error | `This text refers to a metric you cannot view. Use a metric you can view, or ask an administrator for access.` |
+| `WIDGET_TOKEN_UNKNOWN` | Error | `{key} is not a valid token. Check its spelling and any \|n\| offset.` An `@[…]` that is not `period`, `period:n`, `periods`, `orgNode` or `interval`, an offset that is not a whole number (`\|+1\|`, `\|a\|`), or an offset after `@[period]` or `@[orgNode]` |
+| `WIDGET_TOKEN_TREND_OFFSET_ORDER` | Error | `Put #trend before the offset, as #trend[metric]\|-1\| or [metric]#trend\|-1\|.` |
+| `WIDGET_TOKEN_PERIOD_OFFSET_FUTURE` | Warning | `{key} points after the latest period with data. Offsets usually count back, as \|-1\|.` |
+| `TextBlockTextRequired` | Error | `Write a title, subtitle, description or footnote.` |
+
+A token break the saved template already has stays a warning, so it still saves; a new one is an error. `WIDGET_TOKEN_METRIC_REFERENCE_INACCESSIBLE` is always an error. `TextTooLong` counts each metric token as its stored 38-character ID.
 
 A narrative token resolves at the narrative's own capture interval, whatever the widget's `dataInterval`: a quarterly narrative on a monthly widget shows the quarter containing the selected month, and on a yearly widget the latest quarter with text. Offsets such as `|-1|` count in capture periods. Each resolved narrative span carries `periodName` (for example `"Q2 FY 26"`). Narrative save codes are `WIDGET_TOKEN_NARRATIVE_NOT_SUPPORTED`, `WIDGET_TOKEN_NARRATIVE_TREND_NOT_SUPPORTED`, `WIDGET_TOKEN_NARRATIVE_REFERENCE_INVALID` (braces that aren't a `{narrative-guid}` reference), and `WIDGET_TOKEN_NARRATIVE_REFERENCE_MISSING`.
 
@@ -842,21 +962,21 @@ cap templates widget-templates lint --file widget.json
 `lint` takes the same payload as `create` and `save` (with or without the `widgetTemplate` wrapper) and runs the same local checks first. It prints one line per issue, errors first, each with a stable code, for example:
 
 ```text
-Error   [MetricsRequired] dataItems: Select at least one metric, or a metric scope.
-Warning [UnknownMetrics] dataItems: 1 selected metric no longer exists.
+Error   [MetricsRequired] dataItems: Pick at least one metric, or choose Filter metrics.
+Warning [OrgNodeTemplateIgnored] orgNodeTemplateId: Tables don't use an org structure of their own; the dashboard's org structure applies.
 
 1 error(s), 1 warning(s), 0 note(s).
 ```
 
 Errors are exactly what `create` and `save` would reject (exit code `2`); fix them and lint again. Warnings and notes never block a save. Use `--id <guid>` instead of `--file` to check a saved template as it is stored, and `--json` for the raw `{ "errors", "warnings", "notes" }` result. `create` and `save` run the same check first: a template with errors is not sent, and the warnings print after saving. Against an older server without lint they save without it.
 
-**Preview a draft table (nothing is saved):**
+**Preview a draft table, info card, text block or pie chart (nothing is saved):**
 ```bash
 cap templates widget-templates resolve-content --file widget.json
 cap templates widget-templates preview --file widget.json --org-nodes <org-node-id> --periods "Jan 2026,Feb 2026"
 ```
 
-`resolve-content` lists the metrics and narratives the table resolves to. `preview` renders every row for the org node and the named periods, with the same options and the same grid as `cap reporting widgets table`; add `--data-interval month` (or another interval) to set the request interval and `--json` for the full render contract. Only table templates preview or resolve.
+`resolve-content` lists the metrics and narratives the table resolves to. `preview` renders every row for the org node and the named periods, with the same options and the same grid as `cap reporting widgets table`; add `--data-interval month` (or another interval) to set the request interval and `--json` for the full render contract. Table, info card and pie chart templates preview and resolve; an info card previews in one request and prints its items. A text block previews in one request and prints its resolved title, subtitle, description and footnote; metric names in its text resolve as `save` stores them, and `--json` returns the text block render contract, each value span with the `periodName` it was read at. A pie previews in one request and prints what `cap reporting widgets pie-chart` prints once it is saved: the center, the slices (a negative one marked `(not drawn)`) and its data warnings; `--json` returns the pie render contract the server returned, without the CLI's `noData` hint. A filtered pie whose filters match no metric is refused with HTTP 400 "No metrics match this widget's filters." `resolve-content` lists a pie's slice metrics (picked, or matched by its filters), not its center metric. `resolve-content` does not take text blocks: their references are the tokens in their text.
 
 **Command (auto-wrapped JSON):**
 ```bash
@@ -1045,7 +1165,7 @@ cap templates widget-templates download-excel --output widget-templates.xlsx
 cap templates widget-templates upload-excel -f widget-templates.xlsx --json
 ```
 
-Upload runs the same lint as `lint` on each template. Templates without errors are saved; a template with an error is not saved and is reported on its first row and the column of the failing field, with the code. The result starts with the counts, for example "12 saved, 2 not saved"; warnings are reported and the template saves. Fix the reported rows and upload again: rows match existing templates by name, so the saved ones are updated in place.
+Upload runs the same lint as `lint` on each template. Templates without errors are saved; a template with an error is not saved and is reported on its first row and the column of the failing field, with the code. An info card's issue on one of its metrics is reported on that metric's row instead, in the column of the setting: `Number Format`, `Name` (`DataItemLabelDuplicate`), `Data Period Start` (`DataItemWindowSinglePeriod`), `Bands` for band codes, else `Metric`; its style issues are in the `Info Card Style` column. The result starts with the counts, for example "12 saved, 2 not saved"; warnings are reported and the template saves. Fix the reported rows and upload again: rows match existing templates by name, so the saved ones are updated in place.
 
 The table narrative settings have their own columns: `Table Narrative Selection Mode`, `Table Narrative Scope Configured` and the five narrative scope filter columns. A workbook downloaded before these columns existed can still be uploaded: on update the template keeps its stored narrative settings, and a new template takes the defaults. When the columns are there, a blank mode or scope-configured cell also keeps the stored value, while a blank filter cell clears that filter. Filter cells use the same `Attribute: Value|Value` text as the other attribute filter columns, and each value is looked up within its own attribute. Other missing columns behave as described for each column.
 
@@ -1126,8 +1246,10 @@ Choose widget sizes based on the content type and how they appear on different s
 ### XY Chart Best Practices
 
 - Configure dense category labels with `styleConfiguration.categoryAxis.labelRotation`, `labelDensity`, `minLabelGap`, or `labelMaxWidth`.
-- For horizontal Bar charts, apply the same readability settings to the category axis; the renderer maps the configured category-axis style to the displayed category labels.
+- For a horizontal chart (`invertAxes: true` with Column series), apply the same readability settings to the category axis; the renderer maps the configured category-axis style to the displayed category labels.
 - Use `showLegend: true` when multiple series are plotted on the same chart.
+- Rank many bars horizontally with `heightMode` Grow, so each bar keeps about 28 px.
+- Show a target across bars that compare sites or metrics with a reference line (an axis' fixed `referenceLines`, or a target metric row with role ReferenceLine), not with another bar.
 
 ---
 

@@ -46,28 +46,59 @@ cap meta lookups list # All known lookup names across CLI domains (then: meta lo
 ## Notes
 
 - Most reporting commands require `--data-interval` and `--periods`.
-- `notifications templates` (`create`/`get`/`list`/`save`/`delete`/`download-excel`/`upload-excel`)
+- `notifications templates` (`create`/`get`/`list`/`save`/`delete`/`download-excel`/`upload-excel`/`tokens`/`lint`)
   administers notification templates, and `notifications rules`
-  (`create`/`get`/`list`/`save`/`delete`/`download-excel`/`upload-excel`) administers
+  (`create`/`get`/`list`/`save`/`delete`/`download-excel`/`upload-excel`/`lint`) administers
   notification rules; `create` and `save` accept the output of `get --json` as is;
-  see [reference/commands.md](./reference/commands.md).
-- A notification template's `eventType` makes it an event template for exactly that event, for
-  example `"eventType": {"id": 3, "name": "Input Value Captured"}` (the `id` is what is saved:
-  2 Change Request Validated, 3 Input Value Captured, 4 Validation Completed, 5 Data Lock Applied).
-  A null or omitted `eventType` makes it a scheduled reminder. An Event Driven rule needs an event
-  template, and a Scheduled or Both rule needs a scheduled reminder. An event template cannot
-  contain `{{DataCaptureTable}}`, `{{ValidationTable}}` or `{{ChangeRequestTable}}`.
-  `{{ActionLink}}` is a styled link for the email body only; a subject that contains it is
-  rejected on `save` and on `upload-excel`. On `save`, the root `name`, `subject` and `body` are
-  the text for the request language, so an edit to that language inside `translations[]` is
-  ignored; edit the root fields instead.
+  see [reference/commands.md](./reference/commands.md#notification-templates).
+  `notifications rules lint` checks a rule without saving it and, with `--json`, returns its
+  next five sends (exit code 2 on errors; see
+  [reference/commands.md](./reference/commands.md#notification-rules)).
+- To check what a rule sent: `notifications rules runs <id>` lists its runs (people found and
+  emails queued), `notifications delivery-log list --rule <id>` lists the emails, and
+  `notifications rules recipients <id>` lists who the rule can reach. `security users get
+  <id-or-email>` shows a user's template grants and "Authorize all" scopes; see
+  [reference/commands.md](./reference/commands.md#notification-delivery-log).
+- A notification template is **Written for** one event or its type's digest. Its `eventType`
+  names the event, for example `"eventType": {"id": 3, "name": "Input Value Captured"}` (the `id`
+  is what is saved: 2 Change Request Validated, 3 Input Value Captured, 4 Validation Completed,
+  5 Data Lock Applied, 6 AI Key Failing, 7 AI Key Recovered). A null or omitted `eventType` makes
+  it the type's digest: Pending capture digest, Pending validation digest, Pending change requests
+  digest or Data feed changes digest. An Event Driven rule needs an event template, and a
+  Scheduled rule needs a digest. `notifications templates tokens` lists the tokens each
+  one fills; `notifications templates lint` checks a template without saving it (exit code 2 on
+  errors). A token the template's Written for does not fill, a digest table in an event template,
+  and `{{ActionLink}}` or a table in the subject are refused on `save` and on `upload-excel`.
+  While any rule uses a template, its `notificationType` and `eventType` cannot change.
+  `isActive` ("Available to rules") only decides whether the rule picker offers the template;
+  rules that use it keep sending. Templates have no `isDefault`. A refused save answers the
+  field-keyed `{ "errors": { "field": ["..."] } }`. On `save`, the root `name`, `subject` and
+  `body` are the text for the request language, so an edit to that language inside
+  `translations[]` is ignored; edit the root fields instead.
 - A scheduled notification rule fires on either a `cronExpression` or period-end
   offsets, never both. Period-end offsets are `timePeriodType` (Month, Quarter or
   Year; quarters and years follow the tenant's fiscal calendar),
   `periodEndOffsetDays` (signed days from the period's last day, -31 to 31, e.g.
   `[-5, -3, 0]`) and `fireTime` (`HH:mm`), all in the rule's `timeZoneId`. A
   reminder that fires after period end still chases the period that just ended.
-  `rules list` shows each rule's schedule; `rules get` shows the fields.
+  `rules list` shows each rule's schedule; `rules get` shows the fields. Trigger
+  type Both is retired: existing Both rules became Scheduled, and a rule saved or
+  uploaded as Both is refused. A refused rule save reports every issue at once as
+  `field: message` lines (the field-keyed `{ "errors": ... }` body); `upload-excel`
+  reports each issue on its row and column and saves the other rows.
+- Notification type **Data Feed Changes** (`"notificationType": {"id": 5, "name": "Data Feed
+  Changes"}`) mails the input values and narratives a data feed changed or cleared since the
+  rule's previous send. Its templates are written for the Data feed changes digest (null
+  `eventType`), use `{{DataFeedChangesTable}}` and no other table, and the seeded **Data Feed Changes** template is
+  ready to use. Its rules must be Scheduled, with sends at most 120 days apart (`* * * * *` sends
+  every minute). Recipients are the Data Owners in scope (a data permission that grants no access;
+  they also need View), plus, when the rule's `notifyReplacedValueSavers` is true (the default,
+  Excel column "Tell People Whose Value Was Replaced"), the person whose value the feed replaced,
+  once per change. A template's type cannot change while a rule uses it, so it cannot move to or
+  from Data Feed Changes.
+- The notification rules workbook carries each rule's scope and digest group in the `Discipline`
+  and `Org Node` columns (full paths) and the `Digest Group` column. A blank cell clears the value;
+  a workbook without these columns keeps the stored ones.
 - Capture and report templates have `showRowsWithValuesFilter` (let viewers
   switch between all rows and rows with values; `showOnlyRowsWithValues` is the
   default and applies as-is when the flag is false).

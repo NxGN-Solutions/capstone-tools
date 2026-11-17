@@ -150,13 +150,21 @@ cap <domain> <entity> upload-excel <filename>.xlsx --json
 > errors. In Pie, XY and Table rows a `{Name}` that matches a narrative is an
 > error; other braces stay as literal text.
 
+> **Capture and report templates carry their narratives.** The `Narrative Name`
+> and `Narrative Sort Order` columns list each template's narratives, one per
+> row below the template row. Uploading replaces the template's narratives with
+> those rows (none listed removes them). A workbook without the `Narrative Name`
+> column keeps the stored narratives. An unknown narrative name is a row error,
+> and that template is not saved. See
+> [commands reference](../../reference/commands.md) for the full rules.
+
 **Examples:**
 ```bash
 # Re-import edited metrics
 cap model inputs upload-excel inputs.xlsx --json
 
 # Re-import input values
-cap data input-values upload-excel values.xlsx --json
+cap data input-values upload-excel -f values.xlsx --json
 ```
 
 ---
@@ -180,8 +188,8 @@ Warning: Upload completed with errors: 40 imported, 2 error(s)
 
 Row | Column | Error
 ----|--------|----------------------------------
-12  | 3      | Invalid discipline name
-28  | 5      | Unit of measure not found
+13  | D      | Invalid discipline name
+29  | F      | Unit of measure not found
 
 To fix:
 1. Correct the errors in your Excel file

@@ -165,6 +165,7 @@ cat <<'EOF' | cap templates dashboard-templates create --json
     {
       "id": "<id>",
       "name": "Overview",
+      "path": "Overview",
       "isWidget": false,
       "sortOrder": 1,
       "parent": null,
@@ -187,9 +188,10 @@ cat <<'EOF' | cap templates dashboard-templates create --json
     {
       "id": "<id>",
       "name": "Total Energy",
+      "path": "Overview->Total Energy",
       "isWidget": true,
       "sortOrder": 1,
-      "parent": { "id": "<id>" },
+      "parent": { "id": "<id>", "path": "Overview" },
       "widgetTemplate": { "id": "<widget-1-id>" },
       "widgetType": { "id": 0, "name": "InfoCard" },
       "widgetSize": { "id": 2, "name": "50%" },
@@ -201,9 +203,10 @@ cat <<'EOF' | cap templates dashboard-templates create --json
     {
       "id": "<id>",
       "name": "Diesel Emissions",
+      "path": "Overview->Diesel Emissions",
       "isWidget": true,
       "sortOrder": 2,
-      "parent": { "id": "<id>" },
+      "parent": { "id": "<id>", "path": "Overview" },
       "widgetTemplate": { "id": "<widget-2-id>" },
       "widgetType": { "id": 0, "name": "InfoCard" },
       "widgetSize": { "id": 2, "name": "50%" }
@@ -211,9 +214,10 @@ cat <<'EOF' | cap templates dashboard-templates create --json
     {
       "id": "<id>",
       "name": "Energy Intensity",
+      "path": "Overview->Energy Intensity",
       "isWidget": true,
       "sortOrder": 3,
-      "parent": { "id": "<id>" },
+      "parent": { "id": "<id>", "path": "Overview" },
       "widgetTemplate": { "id": "<widget-3-id>" },
       "widgetType": { "id": 0, "name": "InfoCard" },
       "widgetSize": { "id": 2, "name": "50%" }
@@ -221,6 +225,7 @@ cat <<'EOF' | cap templates dashboard-templates create --json
     {
       "id": "<id>",
       "name": "Trends",
+      "path": "Trends",
       "isWidget": false,
       "sortOrder": 2,
       "parent": null
@@ -228,9 +233,10 @@ cat <<'EOF' | cap templates dashboard-templates create --json
     {
       "id": "<id>",
       "name": "Monthly Energy Trend",
+      "path": "Trends->Monthly Energy Trend",
       "isWidget": true,
       "sortOrder": 1,
-      "parent": { "id": "<id>" },
+      "parent": { "id": "<id>", "path": "Trends" },
       "widgetTemplate": { "id": "<widget-4-id>" },
       "widgetType": { "id": 2, "name": "XYChart" },
       "widgetSize": { "id": 5, "name": "100%" }
@@ -238,6 +244,7 @@ cat <<'EOF' | cap templates dashboard-templates create --json
     {
       "id": "<id>",
       "name": "Breakdown",
+      "path": "Breakdown",
       "isWidget": false,
       "sortOrder": 3,
       "parent": null
@@ -245,9 +252,10 @@ cat <<'EOF' | cap templates dashboard-templates create --json
     {
       "id": "<id>",
       "name": "Energy by Source",
+      "path": "Breakdown->Energy by Source",
       "isWidget": true,
       "sortOrder": 1,
-      "parent": { "id": "<id>" },
+      "parent": { "id": "<id>", "path": "Breakdown" },
       "widgetTemplate": { "id": "<widget-5-id>" },
       "widgetType": { "id": 1, "name": "PieChart" },
       "widgetSize": { "id": 1, "name": "33%" }
@@ -255,9 +263,10 @@ cat <<'EOF' | cap templates dashboard-templates create --json
     {
       "id": "<id>",
       "name": "Emissions by Type",
+      "path": "Breakdown->Emissions by Type",
       "isWidget": true,
       "sortOrder": 2,
-      "parent": { "id": "<id>" },
+      "parent": { "id": "<id>", "path": "Breakdown" },
       "widgetTemplate": { "id": "<widget-6-id>" },
       "widgetType": { "id": 1, "name": "PieChart" },
       "widgetSize": { "id": 1, "name": "33%" }
@@ -269,10 +278,11 @@ EOF
 
 **Tree structure key points:**
 - Sections (`isWidget: false`) are parent nodes with `parent: null` for top-level
-- Widgets (`isWidget: true`) reference a section via `parent: { "id": "<section-id>" }`
+- Widgets (`isWidget: true`) reference a section via `parent: { "id": "<section-id>", "path": "<section-path>" }`
+- Every item carries its `path`: its name for a top-level section, else its parent's path, `->`, and its name (`Overview->Total Energy`). An item with a `parent` but no `path` needs `parent.path`; without either the API refuses it (`parent.path is required when a parent object is supplied without an explicit item path`)
 - `sortOrder` controls display order within each section
 - Use sequential zero IDs for `id` on create — the API assigns real IDs
-- `orgNodeTemplate` on the dashboard is the reporting hierarchy lens supplied to all widgets. Do not hardcode table widget org-node-template context unless maintaining a legacy template.
+- `orgNodeTemplate` on the dashboard is its default org structure, supplied to all widgets. Set `showOrgNodeTemplateFilter: true` with `orgNodeTemplates` (and `allowPhysicalStructure`) to let viewers switch structures; every widget then runs on the selected one. Do not hardcode table widget org-node-template context unless maintaining a legacy template.
 - `showOrgNodeFilter` defaults to `true`. Set it to `false` and supply `defaultOrgNode` (`id` / `name` / `path`) for a dedicated dashboard that always renders one org node. Hidden without `defaultOrgNode` is rejected. Time periods still have no template default. The data interval now does: `showDataIntervalFilter` (default `false`) and `defaultDataInterval` (`{ "id": 2, "name": "Month" }`, omit for Match selected periods). `allowConditionalFormattingToggle` (default `true`) shows the dashboard-wide formatting toggle; `false` hides it and widgets follow their own `showConditionalFormatting`.
 - `dashboardStyle` styles the dashboard canvas/page area, not the internals of widget templates
 - `nodeLayout` and `nodeStyle` apply to structural nodes; `placementLayout` (layout only) applies to widget or narrative wrappers — widget chrome (background/border/shadow/radius/padding/accent) is owned by each widget's own `styleConfiguration`, not by the placement
@@ -283,9 +293,10 @@ EOF
 {
   "id": "<id>",
   "name": "Escalation Trigger",
+  "path": "<section-path>->Escalation Trigger",
   "isWidget": true,
   "sortOrder": 1,
-  "parent": { "id": "<section-id>" },
+  "parent": { "id": "<section-id>", "path": "<section-path>" },
   "widgetTemplate": { "id": "<textblock-widget-template-id>", "name": "Escalation Trigger Text" },
   "widgetType": { "id": 6, "name": "Text Block" },
   "widgetSize": { "id": 5, "name": "100%" },
@@ -501,9 +512,10 @@ Specify widget size in the treeItems entry:
 ```json
 {
   "name": "Filler Throughput | Card",
+  "path": "<section-path>->Filler Throughput | Card",
   "isWidget": true,
   "sortOrder": 1,
-  "parent": { "id": "<section-id>" },
+  "parent": { "id": "<section-id>", "path": "<section-path>" },
   "widgetTemplate": { "id": "<widget-template-id>" },
   "widgetType": { "id": 0, "name": "Info Card" },
   "widgetSize": { "id": 2, "name": "50%" }
