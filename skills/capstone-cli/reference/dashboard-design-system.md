@@ -306,9 +306,64 @@ placements.
 
 All three share `horizontalAlignment: Stretch`, `verticalAlignment: Start`.
 
+> `verticalAlignment` on a section or a placement does **not** change the
+> render today: every widget in a row still stretches to the tallest widget.
+> The recipe keeps writing `Start` so existing dashboards stay as they are.
+> To keep a widget at its own height, put it in a column group (below).
+
 > `Fill` overrides multi-column grids — that's why it is reserved for the
 > full-width role. Using `Fill` on a KPI card destroys the 4-column snapshot
 > row.
+
+### Column group — short widgets beside a tall one
+
+A section with `nodeLayout.layoutMode: Column` (`{ "id": 5, "name": "Column" }`)
+is a **column group**. It sits in its parent section's widget row as one cell
+and stacks its own widgets top to bottom, each at its own height. Use it for a
+card next to a tall chart, or for two or three cards stacked beside one chart.
+
+- **Width:** one column of the parent when the parent is a Grid with
+  `responsive.columns`; otherwise the default widget width (half the row).
+  Widget size inside the group is ignored — every widget is full group width.
+- **Order:** the group shares `sortOrder` with the widgets of its row (chart 1,
+  group 2 puts the group on the right).
+- **No header:** the group never draws a title or collapse control, whatever
+  `headerBehavior` says; its name is only an authoring label.
+- **Alignment:** the group's own `verticalAlignment` — unset or `Start` keeps
+  each widget at its own height at the top; `Center` / `End` move the stack;
+  `Stretch` shares the cell height between the widgets. Its
+  `horizontalAlignment` is ignored. Word/PDF export always draws `Start`.
+- **Breakpoints:** below the parent's `stackBelow` the group goes full width
+  like any cell, its widgets still stacked.
+- **Root or tab:** a Column section with no parent row renders as a headerless
+  single column of full-width widgets.
+- **Word/PDF:** the group is one cell of its row with its widgets stacked
+  inside. A table in a group follows the row at full width, as tables always
+  do. Word sizes the other widgets by `widgetSize`, so a group beside a 100%
+  chart moves to its own line there; pair it with a 50% chart.
+- **AI Summary scope:** a group is a node. A `Peers` summary in the parent no
+  longer reads the group's widgets, and a summary inside a group does not read
+  the widgets beside it. Put a section-wide summary outside any group, with
+  `Descendants` scope.
+
+```json
+[
+  { "name": "02 Risk snapshot", "path": "02 Risk snapshot", "isWidget": false,
+    "nodeLayout": { "layoutMode": { "id": 2, "name": "Grid" }, "responsive": { "columns": 2 } } },
+  { "path": "02 Risk snapshot->Residual rating", "parent": { "path": "02 Risk snapshot" }, "isWidget": true,
+    "sortOrder": 1, "widgetSize": { "id": 2, "name": "50%" } },
+  { "name": "Snapshot cards", "path": "02 Risk snapshot->Snapshot cards", "parent": { "path": "02 Risk snapshot" },
+    "isWidget": false, "sortOrder": 2,
+    "nodeLayout": { "layoutMode": { "id": 5, "name": "Column" }, "verticalAlignment": { "id": 1, "name": "Start" } } },
+  { "path": "02 Risk snapshot->Snapshot cards->Highest residual risks", "parent": { "path": "02 Risk snapshot->Snapshot cards" },
+    "isWidget": true, "sortOrder": 1 },
+  { "path": "02 Risk snapshot->Snapshot cards->Mitigation progress", "parent": { "path": "02 Risk snapshot->Snapshot cards" },
+    "isWidget": true, "sortOrder": 2 }
+]
+```
+
+Widget template and type fields are left out of the example for brevity; set
+them as for any placement.
 
 ---
 

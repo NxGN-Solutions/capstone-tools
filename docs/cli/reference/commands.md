@@ -600,7 +600,7 @@ Allowed enum/token values are:
 |--------------|--------|
 | Canvas content width | Default, FullWidth, Constrained, Wide |
 | Canvas content alignment | Default, Start, Center, Stretch |
-| Layout mode | Default, Stack, Grid, Inline |
+| Layout mode | Default, Stack, Grid, Inline, Column (Tabs, id 4, is rejected on sections) |
 | Alignment | Default, Start, Center, End, Stretch |
 | Minimum height | None, S, M, L |
 | Header behavior | Default, Visible, Hidden, Collapsible, CollapsedByDefault |
@@ -801,6 +801,10 @@ item's label, value and unit; `--json` prints the info card render contract the
 server returned (the same shape as `reporting widgets info-card --json`, without
 the CLI's `noData` hint). A draft with an error that stops it rendering (no name,
 no period window) is refused with HTTP 400, each message under its field.
+A card with `countByReading: true` also returns `readingCounts`: `good`, `watch`
+and `bad` hold the indexes of the data items whose value falls in that reading's
+range, and `notCounted` lists each other item with its `reason` (1 no value,
+2 not reported, 3 no access, 4 no range reading).
 
 A text block previews in one request and renders exactly as
 `cap reporting widgets text-block` renders it once saved. Metric names in its
@@ -974,6 +978,20 @@ single row for the selected site, so `reporting computed-values` returns one
 row with a column per metric instead of one row per metric.
 `allowMultiOrgNodeSelect` is coerced false when no grouping a viewer can use
 has Org Node.
+
+How viewers' pickers tick is set per template. Each setting has an `…Open`
+flag: `true` lets the viewer change it, `false` fixes it and shows the viewer
+the rule with a lock. Leaving them out keeps the defaults below.
+
+| Field | Values | Default |
+|---|---|---|
+| `orgNodeCascade`, `orgNodeCascadeOpen` | ticking a site ticks the sites below it | `false`, `true` |
+| `orgNodeLevelRule`, `orgNodeLevelRuleOpen` | `{ "id": 0, "name": "Any" }`, `{ "id": 1, "name": "Lowest" }` (only sites with no site under them in the viewer's picker), `{ "id": 2, "name": "One Level" }` (the first tick decides the level; needs `allowMultiOrgNodeSelect`) | Any, `false` |
+| `disciplineCascade`, `disciplineCascadeOpen` | ticking a discipline ticks the disciplines below it | `false`, `true` |
+| `frameworkCascade`, `frameworkCascadeOpen` | ticking a framework node ticks the nodes below it | `false`, `true` |
+
+These change the pickers only, not the rows a filter returns. A CLI older than
+these fields drops them on `save`, which resets them to the defaults.
 
 To let viewers regroup the grid, set `showDataGroupingFilter: true` and list
 the levels they may group by in `allowedDataGroupingLevels`. Viewers build their
@@ -1717,7 +1735,7 @@ TextBlock templates use the same shared WidgetTemplate API, CLI command surface,
 | Area | Rule |
 |------|------|
 | `dataGrouping` | Required; primary row grouping. `additionalDataGrouping` holds optional Then By levels (0–2). OrgNode anywhere in the chain requires `orgNodeRowSelectionMode`. Framework anywhere requires Dynamic metric selection. |
-| Layout | `showMetricsInColumns` needs a grouping, or `showTimePeriodsInRows` (`MetricsInColumnsRequiresGrouping`). `showTimePeriodsInRows` needs `showMetricsInColumns` (`TimePeriodsInRowsRequiresMetricsInColumns`). `columnDataGroupingLevels` must be chain levels and leave a row and a column (`ColumnDataGroupingLevelOutsideChain`, `LayoutRequiresRow`, `LayoutRequiresColumn`). `showTotalRow` outside an OrgNode-only, metrics-as-columns layout is a warning (`TotalRowNeedsSiteOnly`). `valueSelectionConfig` (order and limit) needs OrgNode on rows: in the chain and not in `columnDataGroupingLevels` (`ValueSelectionNeedsSiteGrouping`; a warning on tables saved before the rule). `showDataIntervalFilter: false` (the table fixes its interval) needs a `dataInterval` (`IntervalFixedNeedsInterval`). `pageSize` (Rows per page) is 1 to 1000, default 50 (`PageSizeOutOfRange`). `heightMode` is `0` Fixed or `1` FitRows (`UnknownHeightMode`); `maxHeightPx` is 200 to 2000, default 600, checked only for Fixed (`MaxHeightOutOfRange`). Left out, an update keeps the stored value; the CLI drops a JSON `null`, so send the default value (`50`, `0` and `600`) to reset one. |
+| Layout | `showMetricsInColumns` needs a grouping, or `showTimePeriodsInRows` (`MetricsInColumnsRequiresGrouping`). `showTimePeriodsInRows` needs `showMetricsInColumns` (`TimePeriodsInRowsRequiresMetricsInColumns`). `columnDataGroupingLevels` must be chain levels and leave a row and a column (`ColumnDataGroupingLevelOutsideChain`, `LayoutRequiresRow`, `LayoutRequiresColumn`). `showTotalRow` outside an OrgNode-only, metrics-as-columns layout is a warning (`TotalRowNeedsSiteOnly`). `valueSelectionConfig` (order and limit) needs OrgNode on rows: in the chain and not in `columnDataGroupingLevels` (`ValueSelectionNeedsSiteGrouping`; a warning on tables saved before the rule). `showDataIntervalFilter: false` (the table fixes its interval) needs a `dataInterval` (`IntervalFixedNeedsInterval`). `pageSize` (Rows per page) is 1 to 1000, default 50 (`PageSizeOutOfRange`). `heightMode` is `0` Fixed or `1` FitRows (`UnknownHeightMode`); `maxHeightPx` is 200 to 2000, default 600, checked only for Fixed (`MaxHeightOutOfRange`). `defaultExpandedLevels` (Open levels) is 0 to 10, default 10, every group open (`DefaultExpandedLevelsOutOfRange`). Left out, an update keeps the stored value; the CLI drops a JSON `null`, so send the default value (`50`, `0`, `600` and `10`) to reset one. |
 | Tooltips | `metricTooltipProperties` and `metricTooltipAttributeTypeIds` choose the metric-name tooltip, with the same rules as `metricPropertyColumns` and `metricAttributeTypeIds`. |
 | Metric selection | Metrics are listed or filtered, never both. Static tables use explicit `dataItems[]` and ignore the metric filters, which `save` clears (a Static table with filters and no `dataItems[]` saves as Dynamic); Static narratives likewise ignore the narrative scope. Dynamic tables use discipline, framework, metric-attribute, discipline-attribute, and framework-attribute filters and clear explicit data items on save. Metric types come from the row types (`includedDataTypes`). |
 | Org-node scope | `orgNodeAttributeFilters` filters the resolved org-node scope before values are loaded; it is not the deferred `OrgNodeAttribute` row-grouping mode. |

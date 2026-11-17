@@ -381,7 +381,8 @@ Top-level fields:
 | `noData` | object/null | Structured no-data diagnostic when selected periods return no values |
 | `diagnostics` | array | Structured render diagnostics for automation and audit |
 | `referenceLines` | array/omitted | Lines and zones across the plot: `valueAxisName`, `value`, `toValue` (a zone), `label` (with the formatted value), `valueText` (the formatted value alone), `color` (hex), `strokeDashArray`, `width`, `source` (`fixed` from the axis, `metric` from a reference-line row), `dataItemIndex` |
-| `height` | number/omitted | The plot's height in px (Grow or Fixed); omitted when the chart fills its placement |
+| `height` | number/omitted | The plot's exact height in px while the chart is Fixed; omitted otherwise |
+| `minHeight` | number/omitted | The least the plot draws on a horizontal Grow chart, in px: it fills its placement like Fit and grows past it when the bars need more room; omitted otherwise |
 
 Value axes also carry `minimum`, `maximum`, `logarithmic` and `percentStacked` when set. Each series' `renderConfig` carries `stackGroup` (2 or more for a second stack), `lineShape` (`smooth`, `step`) and `role` (`reference` for a reference-line row drawn over time) when set, and banded series carry `bulletRangeLabels` beside `bulletFillColours` (each point's range in words, as tooltips show it). Omitted members are unset, so charts without these settings read as before.
 

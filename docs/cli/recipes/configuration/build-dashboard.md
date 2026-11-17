@@ -706,7 +706,7 @@ DashboardTemplateTreeItemDTO extends TreeNodeDTO:
   WidgetSize: EnumDTO?            ← { "id": 2, "name": "50%" }
   SortOrder: int
   AISummaryContext: EnumDTO?      ← { "id": 0, "name": "Peers" }
-  NodeLayout: DashboardTemplateNodeLayoutDTO?           ← structural nodes only (layoutMode Tabs is rejected; use useTabSheet)
+  NodeLayout: DashboardTemplateNodeLayoutDTO?           ← structural nodes only (layoutMode Tabs is rejected; use useTabSheet; layoutMode Column = a column group, see the dashboard design system)
   NodeStyle: DashboardTemplateNodeStyleDTO?             ← structural nodes only
   PlacementLayout: DashboardTemplatePlacementLayoutDTO? ← widget/narrative placements only (layout only; widget chrome lives on the widget template's styleConfiguration)
   Callout: DashboardTemplateCalloutDTO?                 ← structural nodes and Narrative placements only

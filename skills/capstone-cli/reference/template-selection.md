@@ -58,6 +58,8 @@ Use these patterns when the goal is fast, low-noise manual capture.
 |---|---|---|
 | Single-location weekly entry | `DataGrouping=OrgNode`, `ShowOrgNodeFilter=true`, `AllowMultiOrgNodeSelect=false`, `AllowMultiTimePeriodSelect=true`, fixed `DataInterval` | Keeps scope to one selected location while allowing normal multi-week entry |
 | Multi-location side-by-side entry | `DataGrouping=OrgNode`, `ShowOrgNodeFilter=true`, `AllowMultiOrgNodeSelect=true` | Supports consistent entry across multiple locations |
+| Capture per site, never for a group | `OrgNodeLevelRule=Lowest`, `OrgNodeLevelRuleOpen=false` | Viewers can tick only sites with no site under them, and see that rule with a lock |
+| Picking a region means all its sites | `OrgNodeCascade=true`, `OrgNodeCascadeOpen=false` | Ticking a region ticks every site under it, and viewers can't switch it off |
 | Focused input set (avoid dense model noise) | Constrain by `Disciplines` and/or explicit `Metrics` | Prevents large grids from unrelated metrics |
 | Stable import/export behavior | Prefer row-based layout first (`ShowMetricsInColumns=false`) | Easier to validate and troubleshoot |
 | One sheet viewed by site or by discipline | `ShowDataGroupingFilter=true` with `AllowedDataGroupingLevels` listing OrgNode and Discipline | Viewers switch the grouping instead of needing a second template |

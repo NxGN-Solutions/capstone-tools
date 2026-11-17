@@ -106,6 +106,8 @@ cap reporting widgets table <widget-template-id> \
 
 > **Note:** Type-specific commands use `--org-nodes` (plural, comma-separated) and require `--data-interval`. The `get-data` command uses `--org-node` (singular) and auto-detects the interval.
 > XY chart JSON includes `categoryAxes`, `valueAxes`, `chartSeries[].renderConfig`, authorized `chartSeries[].metricMetadata`, `styleMetadata`, `diagnostics`, `warnings`, and `noData`; use those fields to verify rendered chart behavior instead of parsing series titles.
+>
+> A Static XY chart whose series end at different offsets (a comparison series, such as the same quarters a year earlier) lays them over each other: `categoryAxes[0].categoryValues` then reads `Q1 FY 26 · Q1 FY 25`, and the comparison series' value at that category is its Q1 FY 25 value.
 
 For Table widgets, use both paths when validating full functionality: `widgets table` verifies the dashboard render contract, while `widgets get-data` verifies the legacy CSV compatibility output.
 
