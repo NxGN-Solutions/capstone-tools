@@ -97,12 +97,15 @@ For widget templates, set this at both the widget default and data-item override
 
 **Recommended defaults:** InfoCards at 50%, daily XY Charts at 100%, site-comparison XY Charts at 50%, PieCharts at 33%, TextBlocks at 100% for narrative/status text, Tables at 100% for dense grids, AI Summary at 100%. See [Build Dashboard](../recipes/configuration/build-dashboard.md#widget-sizing-guidelines) for rationale.
 
-### AI Summary Context
+### AI Summary Scope
+
+An AI Summary widget template's `scope`:
 
 | ID | Name | Description |
 |----|------|-------------|
 | 0 | Peers | Analyzes sibling widgets in the same section |
-| 1 | Descendants | Analyzes all widgets in child sections |
+| 1 | Descendants | Analyzes all widgets in its section and child sections |
+| 2 | PickedMetrics | Analyzes the metrics in the template's `dataItems`, wherever it is placed |
 
 ### Pie Chart Types
 
@@ -298,6 +301,15 @@ At month, a quarterly count shows thirds (one exceedance in a quarter reads 0.33
   - Higher is better: `DIV([Actual] * 100, [Target], null)`.
   - Lower is better: `DIV([Target] * 100, [Actual], null)`.
 - **Colouring the actual:** add a band on the actual bound to the target metric (`lowerBoundMetric`).
+
+### Statistical control limits
+
+The input value window's Trend tab (and `GET DataManagement/InputValues/Trend`) colours an input's last 24 periods by its bands. Capstone computes no statistics. For control limits, add calculations and bound the input's bands to them. A band bound may be any metric except the input itself, including a calculation built from that input.
+- **Upper and lower limit:** `AVG([DF10]|-24:-1|) + 2 * STDEV([DF10]|-24:-1|)` and the same with `-`.
+- **Prior periods only (`|-24:-1|`):** the limits then exist for a period before it is captured, and a saved value can't move its own limits.
+- **Bands:** `warning-subtle; [DF10 −2 SD (24 m)]:- auto; [DF10 +2 SD (24 m)]:warning-subtle; [Limit: Dust Fallout]:danger-subtle !comment`. These bands also colour capture, ask for comments and auto-validate.
+- **Missing history:** if any bound has no value for a period, none of that period's bands apply, so the permit limit's colour and comment requirement also drop out (for example, while an input has fewer than two earlier values). Give each limit a fallback with `??`, such as `… ?? [Limit: Dust Fallout]` on the upper limit.
+- **Crossing bounds:** when a moving bound passes a fixed one, the higher band wins.
 
 ### Forecasts
 

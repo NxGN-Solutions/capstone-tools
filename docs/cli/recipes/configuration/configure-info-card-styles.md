@@ -180,7 +180,7 @@ Use for plain operational KPIs where the value is the focus.
   },
   "title": {
     "foregroundColor": "text-primary",
-    "fontWeight": "Semibold",
+    "fontWeight": "Bold",
     "fontSize": 16
   },
   "value": {
@@ -190,7 +190,7 @@ Use for plain operational KPIs where the value is the focus.
   },
   "unit": {
     "foregroundColor": "text-secondary",
-    "fontWeight": "Medium",
+    "fontWeight": "Normal",
     "fontSize": 14
   },
   "label": {
@@ -218,7 +218,7 @@ and lets the trend direction carry the color.
   },
   "title": {
     "foregroundColor": "text-primary",
-    "fontWeight": "Semibold",
+    "fontWeight": "Bold",
     "fontSize": 16
   },
   "value": {
@@ -236,7 +236,7 @@ and lets the trend direction carry the color.
   },
   "trend": {
     "foregroundColor": "text-secondary",
-    "fontWeight": "Medium",
+    "fontWeight": "Normal",
     "fontSize": 14,
     "showLabel": true,
     "up": { "color": "danger", "icon": "arrow-up" },
@@ -286,7 +286,7 @@ visual treatment.
     "borderWidth": 1
   },
   "trend": {
-    "fontWeight": "Medium",
+    "fontWeight": "Normal",
     "showLabel": true,
     "up": { "color": "danger", "icon": "caret-up" },
     "down": { "color": "success", "icon": "caret-down" },
@@ -324,7 +324,7 @@ or other cards that should stand apart without looking like an alert.
   },
   "unit": {
     "foregroundColor": "text-secondary",
-    "fontWeight": "Medium",
+    "fontWeight": "Normal",
     "fontSize": 14
   },
   "separators": {
@@ -332,7 +332,7 @@ or other cards that should stand apart without looking like an alert.
     "borderWidth": 1
   },
   "trend": {
-    "fontWeight": "Medium",
+    "fontWeight": "Normal",
     "showLabel": true,
     "up": { "color": "danger", "icon": "arrow-up" },
     "down": { "color": "info", "icon": "arrow-down" },
@@ -374,14 +374,14 @@ SO2 cards.
   },
   "unit": {
     "foregroundColor": "text-secondary",
-    "fontWeight": "Medium"
+    "fontWeight": "Normal"
   },
   "separators": {
     "borderColor": "border",
     "borderWidth": 1
   },
   "trend": {
-    "fontWeight": "Medium",
+    "fontWeight": "Normal",
     "showLabel": true,
     "up": { "color": "danger", "icon": "arrow-up" },
     "down": { "color": "success", "icon": "arrow-down" },
@@ -452,10 +452,10 @@ work, prefer registry tokens from `cap meta lookups get color-tokens`.
   },
   "footnote": {
     "foregroundColor": "#cbd5e1",
-    "fontWeight": "Medium"
+    "fontWeight": "Normal"
   },
   "trend": {
-    "fontWeight": "Medium",
+    "fontWeight": "Normal",
     "showLabel": false,
     "up": { "color": "#f87171", "icon": "arrow-up" },
     "down": { "color": "#4ade80", "icon": "arrow-down" },

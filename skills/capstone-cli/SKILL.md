@@ -33,7 +33,7 @@ Capstone is a **data management platform** for organizations that need to consol
 | Raw data, submitted value | Input Value | `data input-values` | Actual captured data points |
 | Text response, commentary value | Narrative Value | `data narrative-values` | Draft/submit/validate approved text |
 | Aggregated value, result, computed | Computed Value | `reporting computed-values` | Calculated/rolled-up values |
-| Dashboard chart, visualization | Widget | `reporting widgets` | Info Card, Pie Chart, XY Chart, TextBlock, Table |
+| Dashboard chart, visualization | Widget | `reporting widgets` | Info Card, Pie Chart, XY Chart, TextBlock, Table, AI Summary |
 | Chart configuration, widget setup | Widget Template | `templates widget-templates` | Defines widget data and display |
 | Dashboard layout, page configuration | Dashboard Template | `templates dashboard-templates` | Organizes widgets into sections |
 | Data entry form, capture sheet | Capture Template | `templates capture-templates` | Defines data entry structure |

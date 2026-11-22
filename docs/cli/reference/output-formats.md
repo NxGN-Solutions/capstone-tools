@@ -255,7 +255,7 @@ inside CLI envelopes:
 | `cap data narrative-values list --json` | `{ "tenant": "...", "data": GetNarrativeValueTreeGridListResponse }` |
 | `cap data narrative-values get <id> --json` | `{ "tenant": "...", "narrativeValue": NarrativeValueDTO }` |
 | `cap data narrative-values history <id> --json` | `{ "tenant": "...", "narrativeValueId": "...", "changes": [NarrativeValueChangeDTO] }` |
-| `cap data change-requests list --json` | `{ "tenant": "...", "data": [ChangeRequestGridRow], "pagination": {...} }` |
+| `cap data change-requests list --json` | `{ "rows": [ChangeRequestGridRow], "totalCount": 3, "view": 4 }` (the API's list response; no tenant envelope) |
 | `cap data data-lock lock|unlock --json` | `{ "tenant": "...", "success": true, "id": "...", "action": "lock|unlock", ... }` |
 
 Use `--json` for every step in an automated narrative workflow. Table output is
@@ -380,11 +380,13 @@ Top-level fields:
 | `warnings` | array | Human-readable warnings, including no-data guidance |
 | `noData` | object/null | Structured no-data diagnostic when selected periods return no values |
 | `diagnostics` | array | Structured render diagnostics for automation and audit |
-| `referenceLines` | array/omitted | Lines and zones across the plot: `valueAxisName`, `value`, `toValue` (a zone), `label` (with the formatted value), `valueText` (the formatted value alone), `color` (hex), `strokeDashArray`, `width`, `source` (`fixed` from the axis, `metric` from a reference-line row), `dataItemIndex` |
+| `referenceLines` | array/omitted | Lines and zones across the plot: `valueAxisName`, `value`, `toValue` (a zone), `label` (with the formatted value), `valueText` (the formatted value alone), `color` (hex), `strokeDashArray`, `width`, `source` (`fixed` from the axis, `metric` from a reference-line row), `dataItemIndex`, `showLabel` (false when the label is not drawn on the plot). A metric line over time also carries `showInLegend` and `showInTooltip` (its row's), `precision`, `symbol` and `symbolIsPrefix`, and, when its value changes or a period has none, `values` (one per category, `null` where none: it draws as a step and `value` is its last value) |
 | `height` | number/omitted | The plot's exact height in px while the chart is Fixed; omitted otherwise |
 | `minHeight` | number/omitted | The least the plot draws on a horizontal Grow chart, in px: it fills its placement like Fit and grows past it when the bars need more room; omitted otherwise |
 
-Value axes also carry `minimum`, `maximum`, `logarithmic` and `percentStacked` when set. Each series' `renderConfig` carries `stackGroup` (2 or more for a second stack), `lineShape` (`smooth`, `step`) and `role` (`reference` for a reference-line row drawn over time) when set, and banded series carry `bulletRangeLabels` beside `bulletFillColours` (each point's range in words, as tooltips show it). Omitted members are unset, so charts without these settings read as before.
+Value axes also carry `minimum`, `maximum`, `logarithmic` and `percentStacked` when set. Each series' `renderConfig` carries `stackGroup` (2 or more for a second stack), `lineShape` (`smooth`, `step`) when set (a reference-line row is never a series: it is a `referenceLines` entry), and banded series carry `bulletRangeLabels` beside `bulletFillColours` (each point's range in words, as tooltips show it). Omitted members are unset, so charts without these settings read as before.
+
+Series colours (`strokeColour`, `renderConfig.strokeColour`, `renderConfig.fillColour`) and reference-line `color` are hex. Band colours (`bulletFillColours`), bullet stroke colours and the colours in `styleMetadata` may be colour token names such as `danger` or `success-subtle`, as band colours are on Info Card and Table. A consumer that draws them resolves the token to its colour.
 
 Each `chartSeries[].renderConfig` is the authoritative render contract for that series:
 

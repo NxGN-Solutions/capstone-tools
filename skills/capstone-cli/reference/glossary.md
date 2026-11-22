@@ -239,6 +239,8 @@ cap reporting computed-values download-excel \
 
 Counts cover only the data the caller may view; nothing is stored. Cells are coloured by `completionBands`, bands over the share done like a metric's bands; the defaults are red below 40%, amber from 40% and green from 90%.
 
+**Who is next:** with `showWhoIsNext` on a completion template (or a progress Table widget), each outstanding value names who acts next, by the reminder rules: the capturers of a value not captured, the validators of the level it awaits, or whoever saved a rejected value. Tenant-wide holders are named only where nobody holds a direct grant; NxGN admins never are. Rows carry `whoIsNext`, cells `next`, and the response's `users` and `validationLevels` name the ids.
+
 **CLI:**
 ```bash
 cap reporting computed-values list --template <completion-template-id> --data-interval month --periods "Jan 2026" --json
@@ -376,6 +378,7 @@ cap templates report-templates get <id> --json
 - `pieShape` - PieChart-only: Full Circle (default) or Half Circle, the top half
 - `otherSliceMode` / `otherSliceThreshold` - PieChart-only: group small slices into one Other slice, by keeping the largest N (Top N, 2 to 20) or grouping slices below N% of the total (Below Percent, 1 to 25)
 - `dataGrouping`, `orgNodeRowSelectionMode`, `showOnlyRowsWithValues` - Table-only row grouping and table-wide display controls (at a leaf org node, Children and Descendants render the node itself)
+- `showChangeRequests` / `allowChangeRequestsToggle` - Table-only, both default false: mark value cells with a pending change request, and let the dashboard's Change Requests switch hide those marks (the switch never shows marks a widget hides)
 - `metricDisciplineFilters`, `metricFrameworkFilters`, and metric/discipline/framework attribute filters - Table dynamic Metric Scope controls (a table ignores `metricTypeFilters`; `includedDataTypes` decides its metric types)
 - `showMetricValue`, `metricPropertyColumns`, `metricAttributeTypeIds` - Table current custom-column controls. `metricPropertyColumns` is a `MetricProperty` EnumDTO list (not `metricColumns`, which means metrics rendered as columns)
 - `narrativeSelectionMode`, `narrativeScopeConfigured`, `narratives`, and narrative scope filters - Table dynamic/static narrative row controls
@@ -401,6 +404,8 @@ cap reporting widgets table <id> --org-nodes <org-node-id> --data-interval quart
 **Capstone Term:** Dashboard Template
 
 **Definition:** Defines the layout of a dashboard—sections, widget placement, and navigation structure.
+
+`allowChangeRequestsToggle` (default false) shows viewers a Change Requests switch beside the formatting toggle; table widgets that follow the dashboard hide their change request marks while it is off.
 
 **CLI:**
 ```bash

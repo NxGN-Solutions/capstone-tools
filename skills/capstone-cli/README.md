@@ -59,13 +59,15 @@ cap meta lookups list # All known lookup names across CLI domains (then: meta lo
   `notifications rules recipients <id>` lists who the rule can reach. `security users get
   <id-or-email>` shows a user's template grants and "Authorize all" scopes; see
   [reference/commands.md](./reference/commands.md#notification-delivery-log).
-- A notification template is **Written for** one event or its type's digest. Its `eventType`
-  names the event, for example `"eventType": {"id": 3, "name": "Input Value Captured"}` (the `id`
-  is what is saved: 2 Change Request Validated, 3 Input Value Captured, 4 Validation Completed,
-  5 Data Lock Applied, 6 AI Key Failing, 7 AI Key Recovered). A null or omitted `eventType` makes
+- A notification template is **Written for** one event, one event's summary, or its type's digest.
+  Its `eventType` names the event, for example `"eventType": {"id": 3, "name": "Input Value Captured"}`
+  (the `id` is what is saved: 2 Change Request Validated, 3 Input Value Captured, 4 Validation
+  Completed, 5 Data Lock Applied, 6 AI Key Failing, 7 AI Key Recovered, and the summaries 8 Input
+  Value Captured Summary, 9 Validation Completed Summary, 10 Change Request Validated Summary,
+  11 Data Lock Applied Summary). A null or omitted `eventType` makes
   it the type's digest: Pending capture digest, Pending validation digest, Pending change requests
-  digest or Data feed changes digest. An Event Driven rule needs an event template, and a
-  Scheduled rule needs a digest. `notifications templates tokens` lists the tokens each
+  digest or Data feed changes digest. An Event Driven rule needs an event template (or, when it
+  sends a summary, that event's summary template), and a Scheduled rule needs a digest. `notifications templates tokens` lists the tokens each
   one fills; `notifications templates lint` checks a template without saving it (exit code 2 on
   errors). A token the template's Written for does not fill, a digest table in an event template,
   and `{{ActionLink}}` or a table in the subject are refused on `save` and on `upload-excel`.
@@ -96,9 +98,20 @@ cap meta lookups list # All known lookup names across CLI domains (then: meta lo
   Excel column "Tell People Whose Value Was Replaced"), the person whose value the feed replaced,
   once per change. A template's type cannot change while a rule uses it, so it cannot move to or
   from Data Feed Changes.
-- The notification rules workbook carries each rule's scope and digest group in the `Discipline`
-  and `Org Node` columns (full paths) and the `Digest Group` column. A blank cell clears the value;
-  a workbook without these columns keeps the stored ones.
+- An Event Driven rule on Input Value Captured, Validation Completed, Change Request Validated or
+  Data Lock Applied has **Send** (`priority`): `{"id": 0, "name": "Each time"}` mails each event within
+  about a minute; `{"id": 1, "name": "Summary"}` mails each recipient one summary of the events since
+  the previous send, on the rule's schedule (the same `cronExpression` or period-end fields and
+  `timeZoneId` as a scheduled rule, sends at most 120 days apart). AI key rules always send each time.
+  `rules list` shows it in the Send column. Changing Send restarts the rule from the save; earlier
+  events are not sent again. Events are
+  logged after each save, so a restart does not lose them; an each-time event older than 24 hours is
+  skipped with `EVENT_TOO_OLD` in `notifications rules runs`. Rules that were *Digest* are now *Each
+  time*, and Digest Group is gone.
+- The notification rules workbook carries each rule's scope in the `Discipline` and `Org Node`
+  columns (full paths) and its Send in the `Send` column (`Each time` or `Summary`; blank is Each
+  time). A blank scope cell clears the value; a workbook without these columns keeps the stored
+  scope. An older workbook's `Priority` and `Digest Group` columns are ignored.
 - Capture and report templates have `showRowsWithValuesFilter` (let viewers
   switch between all rows and rows with values; `showOnlyRowsWithValues` is the
   default and applies as-is when the flag is false).

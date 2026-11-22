@@ -133,7 +133,7 @@ Then edit `pie-widget.json`. This fragment shows the styling fields to keep:
     },
     "title": {
       "foregroundColor": "text-primary",
-      "fontWeight": "Semibold",
+      "fontWeight": "Bold",
       "fontSize": 18
     },
     "chartArea": {
@@ -154,7 +154,7 @@ Then edit `pie-widget.json`. This fragment shows the styling fields to keep:
     },
     "legendValues": {
       "foregroundColor": "text-secondary",
-      "fontWeight": "Semibold",
+      "fontWeight": "Bold",
       "fontSize": 13
     },
     "donutCenter": {
@@ -177,7 +177,7 @@ Then edit `pie-widget.json`. This fragment shows the styling fields to keep:
           "backgroundColor": "#4a90d9"
         },
         "legendValue": {
-          "fontWeight": "Semibold",
+          "fontWeight": "Bold",
           "foregroundColor": "text-secondary"
         },
         "tooltip": {

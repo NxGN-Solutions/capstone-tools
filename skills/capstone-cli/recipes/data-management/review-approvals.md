@@ -28,7 +28,6 @@ Before starting, Claude needs:
 **Command:**
 ```bash
 cap data change-requests list \
-  --data-interval month \
   --status "validation-required,validation-in-progress" \
   --json
 ```
@@ -38,7 +37,7 @@ cap data change-requests list \
 No pending change requests.
 
 All caught up! Check back later or run this command to see resolved requests:
-cap data change-requests list --data-interval month --status approved --json
+cap data change-requests list --status approved --json
 ```
 
 **If requests exist, present summary:**
@@ -218,7 +217,6 @@ Rejected requests:
 **Claude:**
 ```bash
 cap data change-requests list \
-  --data-interval month \
   --status "validation-required,validation-in-progress" \
   --json
 ```
@@ -285,15 +283,27 @@ Would you like to:
 
 If user wants specific requests:
 ```bash
-# By submitter
-cap data change-requests list --data-interval month --status "validation-required,validation-in-progress" --json | filter by submitter
+# By submitter, metric or narrative (part of the name)
+cap data change-requests list --status "validation-required,validation-in-progress" --search "Jane" --json
 
-# By period
+# By period (--periods needs --data-interval to match the period names)
 cap data change-requests list --data-interval month --status "validation-required,validation-in-progress" --periods "Mar 2025" --json
 
 # By location
-cap data change-requests list --data-interval month --status "validation-required,validation-in-progress" --org-nodes <id> --json
+cap data change-requests list --status "validation-required,validation-in-progress" --org-nodes <id> --json
 ```
+
+### Diagnose a stuck or missing change
+
+When a user reports a problem with a change they asked for, start from the list. It covers every period and interval when you leave out `--periods`.
+
+| User says | Run | Look at |
+|---|---|---|
+| "I changed a value but it didn't update" / "I can't edit this value" | `cap data change-requests list --search "<metric or narrative>"` | A row still `Validation Required` or `Validation In Progress` holds the value until it is decided. |
+| "My change request is stuck" | `cap data change-requests list --search "<CR number or person>"` | `Waiting On` names the level that must decide. Many requests waiting on the same level usually means nobody holds that level for the discipline. |
+| "My value went back" / "Why was it rejected?" | `cap data change-requests list --search "<metric>" --status rejected,partly-approved` | `Last Rejection` gives the level, who rejected it, when and their comment. `Clashes` lists other pending requests on the same value. |
+
+For the value-by-value detail of one request, run `cap data change-requests get <id>`.
 
 ### Multi-Level Approval
 

@@ -481,7 +481,7 @@ Save input values (batch upsert). Uses business-key matching — zero IDs resolv
 
 > **Time period precedence:** If both `timePeriodNames` and `periodType`/`periodCount` are provided, `timePeriodNames` takes priority. If neither is provided, defaults to the 4 most recent months.
 
-**Returns:** Grid of computed values with metric name, period, and formatted value.
+**Returns:** Grid of computed values with metric name, period, and formatted value. A Capture or Validation completion template shows each cell's state or share done, with a Total column; with `showWhoIsNext` on it adds a last **Who is next** column naming who captures or validates next (roles separated by `; `).
 
 **Response structure:**
 ```json
@@ -1057,7 +1057,7 @@ Check a widget template without saving it. Errors are exactly what saving would 
 
 #### `templates_widgets_preview`
 
-Render an info card, text block, pie chart or XY chart widget template without saving it, as HTML, the way the dashboard would show it at the given sites and period, with your data permissions: the same figures, units, labels and band colours as `apps_widget_infoCard` shows once it is saved. A draft row that is not on the saved card yet renders too, and a draft's own bands colour the value. A text block renders its resolved title, subtitle, description and footnote as `apps_widget_textBlock` shows them once saved, so you can check commentary before saving; metric names in its text resolve as save stores them. A pie renders as `apps_widget_pieChart` shows it once saved: its slices (a negative slice is left out of the chart, as the dashboard leaves it out of the ring) and its data warnings (`PieNegativeValuesLeftOut`, `PieManySlices`, `PieNoValues`, `PieMixedUnits`), with its Other slice and half-circle shape. An XY chart renders as `apps_widget_xyChart` shows it once saved: its series on their axes, including axes and series the config adds before they have ids, and the render's notes (`XyNoValues` when no series has a value, `LowContrast` for a series colour that is hard to read on white, `ExcessiveSeriesExpansion` over 40 series). Only info cards, text blocks, pies and XY charts preview here; a table config is refused before the server is asked.
+Render an info card, text block, pie chart or XY chart widget template without saving it, as HTML, the way the dashboard would show it at the given sites and period, with your data permissions: the same figures, units, labels and band colours as `apps_widget_infoCard` shows once it is saved. A draft row that is not on the saved card yet renders too, and a draft's own bands colour the value. A text block renders its resolved title, subtitle, description and footnote as `apps_widget_textBlock` shows them once saved, so you can check commentary before saving; metric names in its text resolve as save stores them. A pie renders as `apps_widget_pieChart` shows it once saved: its slices (a negative slice is left out of the chart, as the dashboard leaves it out of the ring) and its data warnings (`PieNegativeValuesLeftOut`, `PieManySlices`, `PieNoValues`, `PieMixedUnits`), with its Other slice and half-circle shape. An XY chart renders as `apps_widget_xyChart` shows it once saved: its series on their axes, including axes and series the config adds before they have ids, and the render's notes (`XyNoValues` when no series has a value, `LowContrast` for a series colour that is hard to read on white, `ExcessiveSeriesExpansion` over 40 series). An AI Summary on Metrics I pick (`scope` 2) renders its resolved title, how many metrics it reads, and the insights already generated for those facts. The tool never calls the model, so a draft not generated yet in the widget editor says "Not generated". A section-scope AI Summary needs a dashboard section and previews in the widget editor. Only info cards, text blocks, pies, XY charts and AI Summaries preview here; a table config is refused before the server is asked.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -1229,10 +1229,9 @@ Create a new dashboard template from JSON config. Checks for name collisions —
 | `path` | string | Yes | Use `->` for nesting (e.g. `"Tab -> Widget"`) |
 | `isWidget` | boolean | Yes | `false` for tabs, `true` for widgets |
 | `widgetTemplate` | `{id: "id"}` | Widget only | Widget template ID (from `templates_widgets_list`) |
-| `widgetType` | `{id: int}` | Widget only | 0=InfoCard, 1=PieChart, 2=XYChart, 4=Table |
+| `widgetType` | `{id: int}` | Widget only | 0=InfoCard, 1=PieChart, 2=XYChart, 3=AISummary, 4=Table, 6=TextBlock. An AI Summary placement points at an AI Summary widget template, at most one per section |
 | `sortOrder` | int | No | Display order within tab |
 | `widgetSize` | `{id: int}` | No | Widget size |
-| `aiSummaryContext` | string | No | Context for AI summary generation |
 | `nodeLayout` | object | Structural node only | Layout mode, alignment, spacing, header, and responsive metadata |
 | `nodeStyle` | object | Structural node only | Background, foreground, title, header/content, typography, border, and radius metadata |
 | `placementLayout` | object | Widget/narrative only | Width behavior, alignment, minimum height, spacing, and responsive metadata |
@@ -1278,6 +1277,19 @@ Delete a dashboard template by ID. Permanently removes the dashboard template an
 | `id` | string (ID) | Yes | Dashboard template ID to delete |
 
 **Returns:** Confirmation message.
+
+---
+
+#### `templates_dashboards_lint`
+
+Check a dashboard template without saving it. Errors are exactly what saving would reject, each with a code and the path it is on (for example `treeItems[3].nodeStyle.fontSize.value`). Codes include `NameRequired`, `NameNotUnique` (a new template only), `UnsafeText` (header or callout text holding `<`, `>`, `{`, `}`, `;`, `javascript:`, `expression(` or `url(`; ordinary words such as "description" are fine), `OutOfBounds` (for example a font size outside 8–96px or 0.5–6rem), `InvalidColor`, `UnknownField`, `WidgetTemplateRequired`, the viewer filter codes (`HiddenFilterRequiresDefaultOrgNode`, `DefaultStructureOutsideLimit`, `SwitchableStructureRequiresSitesFilter`, `UnsupportedDefaultDataInterval`, and for the `orgNodes` site limit `SiteLimitRequiresFixedStructure` and `DefaultOutsideLimit`) and the checks against the tenant's data (`WidgetTemplateNotFound`, `UnknownOrgStructure`, `UnknownAllowedStructure`, `DefaultOrgNodeOutsideStructure`, `SiteNotInStructure`). Only the JSON is checked locally, so every code comes from the server.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `config` | string (JSON) | One of the two | The dashboard template config, as posted to `templates_dashboards_save` |
+| `templateId` | string (ID) | One of the two | A saved dashboard template to lint as it is stored |
+
+**Returns:** One line per issue, errors first, then warnings, then notes: `Error   [Code] field: message`, then a count line; or "No issues found in the dashboard template." `POST Templates/DashboardTemplates/Lint` (with `templateId`: `GET Templates/DashboardTemplates?id=` first).
 
 ---
 

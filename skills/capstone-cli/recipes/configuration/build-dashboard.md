@@ -283,7 +283,7 @@ EOF
 - `sortOrder` controls display order within each section
 - Use sequential zero IDs for `id` on create — the API assigns real IDs
 - `orgNodeTemplate` on the dashboard is its default org structure, supplied to all widgets. Set `showOrgNodeTemplateFilter: true` with `orgNodeTemplates` (and `allowPhysicalStructure`) to let viewers switch structures; every widget then runs on the selected one. Do not hardcode table widget org-node-template context unless maintaining a legacy template.
-- `showOrgNodeFilter` defaults to `true`. Set it to `false` and supply `defaultOrgNode` (`id` / `name` / `path`) for a dedicated dashboard that always renders one org node. Hidden without `defaultOrgNode` is rejected. Time periods still have no template default. The data interval now does: `showDataIntervalFilter` (default `false`) and `defaultDataInterval` (`{ "id": 2, "name": "Month" }`, omit for Match selected periods). `allowConditionalFormattingToggle` (default `true`) shows the dashboard-wide formatting toggle; `false` hides it and widgets follow their own `showConditionalFormatting`.
+- `showOrgNodeFilter` defaults to `true`. Set it to `false` and supply `defaultOrgNode` (`id` / `name` / `path`) for a dedicated dashboard that always renders one org node. Hidden without `defaultOrgNode` is rejected. While the Sites filter is shown, `orgNodes` (a list of `id` / `name` / `path`) limits the sites viewers can pick, as on report templates; empty means every site. A limit needs a fixed org structure (`SiteLimitRequiresFixedStructure`), its sites must belong to that structure (`SiteNotInStructure`), and `defaultOrgNode` must be one of them (`DefaultOutsideLimit`). A hidden Sites filter stores no limit. Time periods still have no template default. The data interval now does: `showDataIntervalFilter` (default `false`) and `defaultDataInterval` (`{ "id": 2, "name": "Month" }`, omit for Match selected periods). `allowConditionalFormattingToggle` (default `true`) shows the dashboard-wide formatting toggle. `showConditionalFormatting` and `showChangeRequests` set the dashboard-wide value: `true`, `false`, or omitted for each widget's own setting. While the toggle is shown it starts on that value; while hidden the value applies.
 - `dashboardStyle` styles the dashboard canvas/page area, not the internals of widget templates
 - `nodeLayout` and `nodeStyle` apply to structural nodes; `placementLayout` (layout only) applies to widget or narrative wrappers — widget chrome (background/border/shadow/radius/padding/accent) is owned by each widget's own `styleConfiguration`, not by the placement
 - Shell-frame objects — the dashboard-level `header` (`title`/`eyebrow`/`subtitle`/`badge`/`style`), `filterRegion`, and `tabStrip` — are documented under [Shell Styling Fields](#shell-styling-fields-header-filter-region-tab-strip) below (in `schema`/`sample`; they persist and round-trip)
@@ -587,9 +587,19 @@ Each top-level section becomes a tab.
 
 ### Adding AI Summary Widgets
 
-AI Summary widgets generate AI-powered insights from peer or descendant widgets. They have **no backing widget template** (`widgetTemplate: null`).
+An AI Summary writes checked insights about the widgets around it, or about metrics it picks. Like every other widget, the placement points at a **widget template** of its type: create an AI Summary widget template first (`cap templates widget-templates sample --widget-type ai-summary --json` shows the shape; see [Creating widget templates](create-widget-template.md)), then place it.
 
-**Preferred pattern:** Place the AI Summary in its **own dedicated section** named "Insights" with a `fas fa-lightbulb` icon, using the same background colour as the other sections in that tab. Set the context to `Peers` so it summarizes data from all sibling sections' widgets.
+The template decides what the summary reads (`scope`):
+
+| `scope` | Reads |
+|---|---|
+| `Descendants` (id 1) | The widgets in the section where it is placed, and every section under it |
+| `Peers` (id 0) | The widgets beside it in its section, without the sections under it |
+| `PickedMetrics` (id 2) | The metrics in its `dataItems`, wherever it is placed |
+
+`leaveOutWidgetTypes` drops whole widget types from a section scope (text blocks often repeat values already in the cards). The template also sets its title, subtitle and footnote, at most how many insights (`maxInsights`, 1–8), which kinds (`insightTypes`) and their order (`insightOrder`).
+
+**Preferred pattern:** Place the AI Summary in its **own dedicated section** named "Insights" with a `fas fa-lightbulb` icon, using the same background colour as the other sections in that tab, on a template with scope `Peers` so it summarizes all sibling sections' widgets.
 
 ```
 Tab: Cost Analysis [bg: #b77a46]
@@ -598,7 +608,7 @@ Tab: Cost Analysis [bg: #b77a46]
 ├── Section: Cost Breakdown [bg: #b77a46]
 │   └── (<id>)
 └── Section: Insights [icon: fas fa-lightbulb, bg: #b77a46]   ← dedicated section
-    └── AI Summary (Peers)                                     ← analyzes all peer sections
+    └── AI Summary (template scope: Peers)                     ← analyzes all peer sections
 ```
 
 **Section JSON:**
@@ -620,27 +630,34 @@ Tab: Cost Analysis [bg: #b77a46]
   "isWidget": true,
   "sortOrder": 1,
   "parent": { "id": "<insights-section-id>", "path": "<tab>->Insights" },
-  "widgetTemplate": null,
+  "widgetTemplate": { "id": "<ai-summary-widget-template-id>" },
   "widgetType": { "id": 3, "name": "AI Summary" },
-  "widgetSize": { "id": 5, "name": "100%" },
-  "aiSummaryContext": { "id": 0, "name": "Peers" }
+  "widgetSize": { "id": 5, "name": "100%" }
 }
 ```
 
 **Key fields:**
-- `widgetTemplate` — must be `null` (AI Summary has no template)
+- `widgetTemplate` — an AI Summary widget template; a template of another type is refused
 - `widgetType` — `{ "id": 3, "name": "AI Summary" }`
 - `widgetSize` — always `100%` (full width)
-- `aiSummaryContext` — `Peers` (id: 0) analyzes widgets in sibling sections at the same level; `Descendants` (id: 1) analyzes all widgets in child sections below
 
 **Design rules:**
 - Always place in a dedicated "Insights" section — not mixed in with other widgets
 - Use `fas fa-lightbulb` icon for the section
 - Match the section's `backgroundColor` to the tab's other sections
-- Set context to `Peers` (default) — this summarizes all widgets across the sibling sections in the tab
+- At most one AI Summary per section
 - Place the Insights section last (highest `sortOrder`) within the tab
 
 ### Validating a Dashboard
+
+Before saving, lint the file: it reports exactly what save would refuse, each error with its code, including the checks against the tenant's data (widget templates, org structures, default site). `create` and `save` run the same lint and send nothing it refuses.
+
+```bash
+# What save would refuse, with codes (exit 2 when there are errors)
+cap templates dashboard-templates lint --file dashboard.json
+# A saved dashboard, as it is stored
+cap templates dashboard-templates lint --id <id>
+```
 
 After creating or updating a dashboard, verify the structure matches your design:
 
@@ -705,8 +722,7 @@ DashboardTemplateTreeItemDTO extends TreeNodeDTO:
   WidgetType: EnumDTO?            ← { "id": 2, "name": "XYChart" }
   WidgetSize: EnumDTO?            ← { "id": 2, "name": "50%" }
   SortOrder: int
-  AISummaryContext: EnumDTO?      ← { "id": 0, "name": "Peers" }
-  NodeLayout: DashboardTemplateNodeLayoutDTO?           ← structural nodes only (layoutMode Tabs is rejected; use useTabSheet; layoutMode Column = a column group, see the dashboard design system)
+  NodeLayout: DashboardTemplateNodeLayoutDTO?           ← structural nodes only (layoutMode Tabs is rejected; use useTabSheet; nested sections may take a width to sit in the parent's row, see the dashboard design system)
   NodeStyle: DashboardTemplateNodeStyleDTO?             ← structural nodes only
   PlacementLayout: DashboardTemplatePlacementLayoutDTO? ← widget/narrative placements only (layout only; widget chrome lives on the widget template's styleConfiguration)
   Callout: DashboardTemplateCalloutDTO?                 ← structural nodes and Narrative placements only
@@ -817,8 +833,7 @@ There are three kinds of widgets:
 
 | Widget Kind | Has `widgetTemplate`? | Has `widgetType`? | Extra fields |
 |-------------|----------------------|-------------------|-------------|
-| **Regular widget** (InfoCard, PieChart, XYChart, Table) | Yes — `{ "id": "<id>" }` | Yes — REQUIRED | `widgetSize` |
-| **AI Summary** | No — omit entirely | Yes — `{ "id": 3, "name": "AISummary" }` | `aiSummaryContext`, `widgetSize` |
+| **Regular widget** (InfoCard, PieChart, XYChart, Table, TextBlock, AISummary) | Yes — `{ "id": "<id>" }` of a template of that type | Yes — REQUIRED | `widgetSize` |
 | **Narrative** | No — use `narrative` instead | Yes — `{ "id": 5, "name": "Narrative" }` | `narrative`, `widgetSize` |
 
 > **Common errors:**
@@ -849,13 +864,6 @@ There are three kinds of widgets:
 | `AI Summary` | `{"id": 3, "name": "AISummary"}` |
 | `Table` | `{"id": 4, "name": "Table"}` |
 | `Narrative` | `{"id": 5, "name": "Narrative"}` |
-
-**AI Summary Context** (`AISummaryContext` EnumDTO):
-
-| Display | EnumDTO |
-|---------|---------|
-| `Peers` | `{"id": 0, "name": "Peers"}` |
-| `Descendants` | `{"id": 1, "name": "Descendants"}` |
 
 #### Workflow: Modify an Existing Dashboard
 

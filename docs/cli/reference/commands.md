@@ -163,7 +163,7 @@ map when checking whether a command family exists.
 | `security users` | `download-excel`, `get`, `upload-excel` |
 | `system tenants` | `ai-config get`, `ai-config models`, `ai-config remove-key`, `ai-config set`, `ai-config test`, `ai-config usage`, `bootstrap-local`, `create`, `delete`, `delete-status`, `delete-watch`, `fiscal-config update`, `get`, `list`, `sample`, `save`, `schema`, `teardown` |
 | `templates capture-templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `resolve-content`, `sample`, `save`, `schema`, `upload-excel` |
-| `templates dashboard-templates` | `audit`, `create`, `delete`, `download-excel`, `get`, `list`, `rename`, `sample`, `save`, `schema`, `upload-excel` |
+| `templates dashboard-templates` | `audit`, `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `rename`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates lookups` | `get` |
 | `templates org-node-templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates report-templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `resolve-content`, `sample`, `save`, `schema`, `upload-excel` |
@@ -212,7 +212,7 @@ cap <domain> <entity> list [--json]
 | Org Node Templates | `cap templates org-node-templates list` | Alternate org views |
 | Input Values | `cap data input-values list --template <id> --data-interval week --periods "..."` | Requires template + data-interval + periods |
 | Narrative Values | `cap data narrative-values list --capture-interval quarter --periods "..."` | Text capture/validation rows |
-| Change Requests | `cap data change-requests list --data-interval quarter --periods "..."` | Governed input and narrative edit requests |
+| Change Requests | `cap data change-requests list --search "<metric, person or CR number>"` | Governed input and narrative edit requests |
 | Data Locks | `cap data data-lock lock --data-interval quarter --periods "Q1 FY 25" --org-nodes <id> --discipline-nodes <id>` | Lock/unlock scoped data periods |
 
 ### Get Single Item
@@ -373,6 +373,30 @@ cap templates widget-templates upload-excel -f widget-templates.xlsx --json
 cap templates dashboard-templates upload-excel -f dashboard-templates.xlsx --json
 ```
 
+### Clearing A Tree-Node Attribute
+
+Org nodes, disciplines and frameworks keep an attribute value until you clear it:
+
+- **Save or create:** send the attribute with nothing selected. Key the entry by
+  `id` or by `attributeTypeId`, the field `get --json` prints. An entry with
+  neither is refused before anything is sent.
+
+  ```json
+  "attributeValues": [{ "attributeTypeId": "<attribute-type-id>", "selectedValues": [] }]
+  ```
+
+- **Attributes you leave out** of `attributeValues` keep their values, so
+  `"attributeValues": []` changes nothing.
+- **Excel upload:** a blank attribute cell clears that row's value. A workbook
+  without the attribute column keeps every value. An invalid value is reported as
+  an upload error, and the row keeps its stored value.
+
+An attribute type cannot be deleted, and a save or Excel upload cannot drop one
+of its values, while records still use it. The API answers `409` with a summary
+that counts the uses per kind, and the CLI prints every use under `uses:` (the
+value or type, the kind of record, and that record's name or path). Clear those
+first.
+
 ### Backup and Restore
 
 Back up and restore a tenant's model configuration (masterdata, model, templates) with the same
@@ -424,7 +448,7 @@ cap <domain> lookups get <name> [--json]
 | Domain | Available Lookups |
 |--------|-------------------|
 | `model` | `metric-types`, `time-period-types`, `time-period-aggregation-methods`, `org-structure-aggregation-methods`, `calculation-phases` |
-| `templates` | `widget-sizes`, `widget-types`, `data-grouping-types`, `data-range-modes`, `metric-selection-modes`, `metric-partitioning-modes`, `partitioning-rank-modes`, `org-node-row-selection-modes`, `org-node-template-types`, `org-node-template-visibility-modes`, `pie-chart-types`, `xy-chart-data-item-types`, `ai-summary-contexts` |
+| `templates` | `widget-sizes`, `widget-types`, `data-grouping-types`, `data-range-modes`, `metric-selection-modes`, `metric-partitioning-modes`, `partitioning-rank-modes`, `org-node-row-selection-modes`, `org-node-template-types`, `org-node-template-visibility-modes`, `pie-chart-types`, `xy-chart-data-item-types` |
 | `data` | `change-request-reasons`, `change-request-status-types`, `change-request-validation-levels` |
 | `meta` | `color-tokens` |
 
@@ -467,7 +491,12 @@ cap reporting computed-values query --metrics <metric-id>[,<metric-id>] --data-i
 
 # Computed values audit for post-build verification and CI smoke checks
 cap reporting computed-values audit --metrics <metric-id>[,<metric-id>] --data-interval month --periods "Jan 25" --target-model-version <version> --strict --json
+
+# The report view as PDF or Word
+cap reporting computed-values download-document --template <report-template-id> --data-interval month --periods "Oct 2025,Nov 2025" [--org-nodes <id>] [--format pdf|word] [-o report.pdf]
 ```
+
+`download-document` refuses a report too large to build in time with HTTP 400 and a message saying what to narrow, for example `Failed to download document: HTTP 400 This report prints more than 50,000 rows with its calculations expanded, too many for a PDF. Download it as Word or Excel, or choose fewer sites or filters.` The default limits are 50,000 printed rows or 650,000 cells for PDF, and 150,000 rows or 2,000,000 cells for Word. Printed rows include every expanded calculation child and group heading, so they can far exceed the grid's row count. Choose fewer `--org-nodes`, fewer periods or a coarser interval, or use `download-excel`, which has no such limit.
 
 | Flag | Description | Required |
 |------|-------------|----------|
@@ -546,6 +575,8 @@ cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --peri
 cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --data-interval month --periods "FY 26" [--json]
 cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --data-interval match-selected --periods "FY 26" [--json]
 cap reporting dashboards get-insights <dashboard-template-id> <layout-node-id> --org-node <id> --periods "FY 26" [--json]
+# Prints the summary's title, then each insight's type, severity (Good, Watch, Bad) and text. --json returns
+# {title, subtitle, footnote, styleConfiguration, insights[]} as the dashboard shows it.
 
 # Dashboard header resolved for a selection (eyebrow, title, subtitle, badge + token warnings)
 cap reporting dashboards header <dashboard-template-id> --org-node <id> --periods "Q1 FY 26, Q2 FY 26" [--data-interval quarter] [--json]
@@ -573,11 +604,14 @@ Dashboard template commands understand the same layout metadata contract across 
 cap templates dashboard-templates schema --json
 cap templates dashboard-templates sample --json
 cap templates dashboard-templates get <id> --json
+cap templates dashboard-templates lint --file dashboard.json      # or --id <id>: what save would refuse, with codes
 cap templates dashboard-templates save --file dashboard.json --json
 cap templates dashboard-templates audit <id> --strict --json
 cap templates dashboard-templates download-excel -o dashboards.xlsx
 cap templates dashboard-templates upload-excel -f dashboards.xlsx --json
 ```
+
+`lint` checks a file or a saved template (`--id`) against the server's rules without saving. Each error prints as `Error   [Code] field: message`, and the command exits 2 when save would refuse it. `create` and `save` lint first and send nothing lint refuses. `audit` reports the same lint codes, plus a `NO_WIDGETS` warning. Codes include `UnsafeText` (header or callout text holding `<`, `>`, `{`, `}`, `;`, `javascript:`, `expression(` or `url(`; words such as "description" are fine), `OutOfBounds`, `WidgetTemplateNotFound`, `UnknownOrgStructure`, `DefaultOrgNodeOutsideStructure`, and the site limit codes `SiteLimitRequiresFixedStructure`, `DefaultOutsideLimit` and `SiteNotInStructure` (`orgNodes`, the sites viewers may pick). Excel upload errors carry the same codes, at the column that holds the setting.
 
 The JSON contract adds `showDataIntervalFilter` (default `false`) and `defaultDataInterval` (`{ "id": 2, "name": "Month" }`, omit for Match selected periods) at the template root. For the org structure it has `orgNodeTemplate` (`{id}`, null = physical): the default structure. Set `showOrgNodeTemplateFilter: true` to let viewers switch between `orgNodeTemplates` (`[{id}]`; empty = every structure the viewer can access) plus the physical structure when `allowPhysicalStructure` is true (default). The default must be one of them ("The default org structure must be one of the allowed org structures."), and a switchable structure needs `showOrgNodeFilter: true` ("Viewers who can switch the org structure need the Sites filter."). `defaultOrgNode` belongs to the default structure and applies there only. Excel carries the same settings in the "Show Org Node Template Filter", "Org Node Templates" (semicolon-separated names) and "Allow Physical Structure" columns. The template root also has `dashboardStyle` and the following optional groups on `treeItems`:
 
@@ -1083,6 +1117,17 @@ with a `Measure…` code (for example `MeasureRequiresMetricsInRows`). A selecti
 (item × site × period) is refused with "Too many values to count. Narrow the
 sites or the period."
 
+A completion template may set `showWhoIsNext: true` (HB-618): each row then
+names who acts next on its outstanding values (`whoIsNext` on each row and
+`next` on each cell, with `users` and `validationLevels` naming the ids), by the
+reminder rules: capturers of a blank, the open level's validators, or whoever
+saved a rejected value. A Value template refuses it
+(`MeasureRequiredForWhoIsNext`). In the template Excel workbook it is the
+`Show Who Is Next` column; a missing column means false. Table widget
+templates take the same `measure` and `showWhoIsNext` (Excel columns `Measure`
+and `Show Who Is Next`); a progress table also refuses `valueSelectionConfig`
+(`MeasureExcludesValueSelection`).
+
 A completion template may set `completionBands`: bands as a metric's `bands`
 (`lowerBoundValue`, `upperBoundValue`, `backgroundColor`, `foregroundColor`)
 over the share done, 0 to 100, for example
@@ -1295,11 +1340,11 @@ echo '{
   "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
   "styleConfiguration": {
     "panel": { "borderRadius": 8, "borderColor": "border", "borderWidth": 1, "backgroundColor": "surface", "fontFamily": "theme" },
-    "title": { "foregroundColor": "text-primary", "fontWeight": "Semibold", "fontSize": 14, "borderWidth": 0 },
+    "title": { "foregroundColor": "text-primary", "fontWeight": "Bold", "fontSize": 14, "borderWidth": 0 },
     "value": { "foregroundColor": "text-primary", "fontWeight": "Bold", "fontSize": 32 },
     "trend": {
       "accentColor": "neutral",
-      "fontWeight": "Medium",
+      "fontWeight": "Normal",
       "showLabel": false,
       "up": { "color": "success", "icon": "arrow-up" },
       "down": { "color": "danger", "icon": "arrow-down" },
@@ -1354,12 +1399,12 @@ echo '{
   "timePeriodAggregationMethod": { "id": 1, "name": "Sum" },
   "styleConfiguration": {
     "panel": { "backgroundColor": "surface", "borderColor": "border", "borderWidth": 1, "borderRadius": 8, "padding": 20 },
-    "title": { "foregroundColor": "text-primary", "fontWeight": "Semibold", "fontSize": 18 },
+    "title": { "foregroundColor": "text-primary", "fontWeight": "Bold", "fontSize": 18 },
     "chartArea": { "backgroundColor": "surface", "padding": 8 },
     "slices": { "opacity": 0.9 },
     "sliceBorders": { "borderColor": "surface", "borderWidth": 2 },
     "ticks": { "borderColor": "border", "borderWidth": 1, "opacity": 0.75 },
-    "legendValues": { "foregroundColor": "text-secondary", "fontWeight": "Semibold", "fontSize": 13 },
+    "legendValues": { "foregroundColor": "text-secondary", "fontWeight": "Bold", "fontSize": 13 },
     "donutCenter": { "foregroundColor": "text-primary", "fontWeight": "Bold", "fontSize": 28 },
     "stateMessages": { "foregroundColor": "warning" }
   },
@@ -1375,7 +1420,7 @@ echo '{
       "sortOrder": 1,
       "presentation": {
         "slice": { "backgroundColor": "#4a90d9" },
-        "legendValue": { "fontWeight": "Semibold", "foregroundColor": "text-secondary" },
+        "legendValue": { "fontWeight": "Bold", "foregroundColor": "text-secondary" },
         "tooltip": { "fontSize": 12, "foregroundColor": "text-primary" },
         "sliceLabels": { "fontSize": 12, "foregroundColor": "text-primary" }
       },
@@ -1722,12 +1767,15 @@ Table templates use the same shared WidgetTemplate API and CLI command surface a
 
 TextBlock templates use the same shared WidgetTemplate API, CLI command surface, and widget-template Excel download/upload workflow. Manage them with `cap templates widget-templates list|get|get-bulk|create|save|delete|download-excel|upload-excel`, set the widget type to `{ "id": 6, "name": "TextBlock" }`, and render live data with `cap reporting widgets text-block ...`. TextBlock discovers metrics and narratives from explicit tokens in `title`, `subtitle`, `description`, and `footnote` (for example `"description": "{<narrative-id>}|-1|"`); do not create hidden `dataItems[]` rows for those references. Excel roundtrips `Subtitle` and `Text Block Style` columns alongside the existing title/description/footnote fields.
 
+AI Summary templates use the same shared WidgetTemplate API and CLI command surface. Set the widget type to `{ "id": 3, "name": "AISummary" }`; `cap templates widget-templates sample --widget-type ai-summary --json` emits a save-ready one. `scope` is `Peers` (0, the widgets beside its placement), `Descendants` (1, its section and below) or `PickedMetrics` (2, the metrics in `dataItems`, each with the same `metricPartitioningMode`: `None`, `Children` or `Descendants`). A section scope keeps no `dataItems`. `leaveOutWidgetTypes` drops widget types from a section scope; `maxInsights` is 1 to 8 (`AISummaryMaxInsightsOutOfRange`); `insightTypes` needs at least one kind (`AISummaryInsightTypesRequired`); `insightOrder` is `AsWritten` or `SeverityFirst`. A dashboard placement points at the template like any other widget. Excel roundtrips the AI Summary columns (Scope, Leave Out, Max Insights, Insight Types, Order, AI Summary Style).
+
 **Widget Types:**
 | ID | Name | Use Case |
 |----|------|----------|
 | 0 | InfoCard | Single KPI value |
 | 1 | PieChart | Part-to-whole breakdown |
 | 2 | XYChart | Time series / trends |
+| 3 | AISummary | Checked AI insights about a section's widgets or picked metrics |
 | 4 | Table | Dashboard grid/table render |
 | 6 | TextBlock | Metric-aware dashboard text |
 
@@ -1774,9 +1822,9 @@ cap model inputs delete --ids "$(cat input-ids.txt)" --json     # one ID per lin
 - All IDs go into one delete operation: one preview, one start, one wait, and one model change. Calculations that use each other can be deleted together; one-at-a-time deletes are blocked unless the dependent is deleted first.
 - The API takes at most 5000 IDs per delete and rejects more with `ExplicitIdsLimitExceeded`. A single `--ids` value is also limited by the shell: about 3,000 IDs on Linux and about 800 on Windows. Split longer lists into several commands.
 - An ID that is not a GUID, or is all zeros, fails with exit code `2` before anything is sent.
-- IDs that do not exist or are the wrong metric type (an input ID passed to `calculations delete`) are rejected by the preview; nothing is started for them. Calculations or inputs still used by a formula, band or unit conversion outside the set are blocked and kept.
+- IDs that do not exist or are the wrong metric type (an input ID passed to `calculations delete`) are rejected by the preview; nothing is started for them. Calculations or inputs still used outside the set are kept, not deleted: a formula, band or unit conversion, a widget, capture or report template, a dashboard, or a narrative. Nothing is removed from those records. The text output prints `Kept, still in use:` with every use as `<record>: <kind>: <name>`; remove those uses first, then delete again.
 - Exit codes: `0` when every ID was deleted; `6` (partial result) when some were deleted and others were rejected or blocked; `2` when nothing was deleted; `4` when the operation failed; `5` on timeout. In `--json` output, `success` is `true` when at least one ID was deleted, so a partial delete has `success: true` and exit code `6`.
-- `--json` returns `entityIds` (the distinct IDs sent), `entityId` (only for a single ID), `operationId`, `status`, the `deletedCount`, `blockedCount`, `rejectedCount` and `warningCount` counts, and `resultSummary` with the first 10 reasons per group. The API reports counts and reasons, not a per-ID outcome list.
+- `--json` returns `entityIds` (the distinct IDs sent), `entityId` (only for a single ID), `operationId`, `status`, the `deletedCount`, `blockedCount`, `rejectedCount` and `warningCount` counts, and `resultSummary` with the first 10 reasons per group, plus `inUse` (every use of the kept records, as `item`, `kind`, `name`) and `inUseSummary`. The API reports counts and reasons, not a per-ID outcome list.
 - The operation keeps running on the server after `--timeout-seconds` (default 600). Check it with:
 
 ```bash
@@ -1785,14 +1833,11 @@ cap model metrics delete-status <operation-id> [--json]
 
 `delete-status` reports the operation's state only: exit `4` when it failed, otherwise `0`, including while it is still running or when some IDs were blocked. Read `status` and the counts to tell a full delete from a partial one.
 
-**Metrics and narratives used by templates.** Widget and spreadsheet template use never blocks deleting a metric (input or calculation) or a narrative.
-- The delete preview lists the templates under "Used by templates (removed from them on delete)" (API: `warnings` on the preview response; UI: a warning in the delete dialog).
-- The delete then removes the item from those templates. Deleted:
-  - widget data items and spreadsheet rows for the metric
-  - widget and spreadsheet bands bounded by it
-  - Table widget and spreadsheet capture template narrative selections
-- Text tokens (`[metric-guid]`, `{narrative-guid}`), pie centre metrics and value selections keep the id and render as "Unavailable". The widget template editor warns about them without blocking save.
-- A metric is still blocked when a calculation formula, another metric's band, an org-node override's band (`Band override on: <metric> @ <org node path>`), or a unit conversion factor uses it.
+**Metrics and narratives in use are kept.** A delete never removes a metric (input or calculation) or a narrative from the records that use it.
+- A metric is kept while a calculation formula, another metric's band, an org-node override's band, a unit conversion factor, a widget or spreadsheet template (data item, row, band, pie centre or `[metric-guid]` text token), a dashboard header token or a narrative's metric link uses it.
+- A narrative is kept while a table widget, a spreadsheet capture template, a `{narrative-guid}` text token, a dashboard header token or a narrative placed on a dashboard uses it.
+- The delete preview lists the kept records and every use (API: `keptCount`, `deletableCount`, `inUse` and `inUseSummary` on the preview response; UI: a "kept" panel with "See every use" in the delete dialog). The delete removes only the others.
+- The delete checks again just before it removes anything, so a use added after the preview keeps that record too. A kept record keeps its values.
 
 ### Delete Tenant
 
@@ -1951,6 +1996,8 @@ An approval is recorded even when the value stays `Validation In Progress`, for 
 `change-requests validate` decides each pending value of the request on its own: the values you can decide now at your level are approved or rejected, and the rest are skipped. A reject needs `--comments`; the CLI refuses it without one. The output summarises what the decision did, for example `Change request <id>: approved 4, moved on 0, rejected 0, skipped 2 (clash 2)`. When you approve at a Consensus level that still needs other approvers, the value stays at that level and the summary adds `recorded <n> (waiting on more approvals)`; its `outcome` is `Recorded`. A value is skipped as `clash` when another pending change request targets the same value, as `no permission` when you can't approve its discipline, and as `already decided` when you already decided it at every level you hold. With `--json`, `decisions` carries each value's `outcome`, `valueStatus` and `awaitingLevelName`, plus the `summary`. When no value could be decided, the command fails with the reason. A request whose values were decided both ways ends as `Partly Approved`.
 
 `change-requests get` lists each value after the request's fields: item, period, value, `Status`, `Waiting On` (the level a pending value waits on) and `Last Decision` (outcome, level, decider, date and comment). With `--json`, each input and narrative value carries `validationStatus` (the status number), `awaitingLevelName` and `decisions`. `change-requests list --status` accepts `draft`, `validation-required`, `validation-in-progress`, `approved`, `rejected` and `partly-approved`.
+
+`change-requests list --search <text>` finds requests by CR number (`157` or `CR-0157`), or by text matched, case-insensitively and in part, against input and narrative names and friendly names and the name of the person who raised the request. All-digit text is always a CR number, and a number search replaces `--number`. `--data-interval` is needed only with `--periods`, to match the period names; it is not an interval filter, and without `--periods` the list covers every period and interval. Besides number, status, reason, org node, interval and dates, each row shows `Items` (the inputs and narratives in the request), `Requested By`, `Raised`, `Waiting On` (each level that holds pending values, with how many, for example `Level 1 (2), Level 2 (1)`), `Clashes` (the numbers of other pending requests on the same value; `hidden` means a clashing request outside your access) and `Last Rejection` (level, decider, date and comment, with the item first when the request holds several values). With `--json`, each row also carries `requestedByName`, `raisedAt`, `itemNames`, `valueCount`, `levels`, `clashWith`, `hiddenClash` and `lastRejection`; a field with no value (`note`, `single`, `lastRejection`) is left out, while empty lists such as `levels: []` stay.
 
 ### Bulk Validation
 
@@ -2215,22 +2262,24 @@ prints one line per issue as `Error   [Code] field: message`, then a count
 line. The exit code is `2` when there is at least one error and `0`
 otherwise. `--json` prints the API result unchanged, with the next five
 sends under `counts.nextRuns` (`[{ fireAtUtc, periodName }]`; `periodName` is null except
-for period-end rules). The next sends are empty for an event rule and
-while the When section has an error. It needs `MasterData.View`.
+for period-end rules). The next sends are empty for an event rule that sends each time, and
+while the When section has an error; a summary rule lists its next sends. It needs `MasterData.View`.
 
 | Code | Meaning |
 |------|---------|
-| `Required`, `TooLong`, `DuplicateName` | A name, trigger type, template, channel or priority is missing, a name is longer than 250 characters or `digestGroup` longer than 200, or another rule has the name |
+| `Required`, `TooLong`, `DuplicateName` | A name, trigger type, template, channel or Send (`priority`) is missing, a name is longer than 250 characters, or another rule has the name |
 | `TriggerBothRetired` | Trigger type Both is retired; use Scheduled |
 | `TemplateNotFound` | The template does not exist |
-| `TemplateNeedsEvent`, `TemplateNeedsDigest` | An Event Driven rule needs an event template; a Scheduled rule needs a digest |
+| `TemplateNeedsEvent`, `TemplateNeedsSummary`, `TemplateNeedsDigest` | An Event Driven rule that sends each time needs an event template, one that sends a summary needs that event's summary template; a Scheduled rule needs a digest |
+| `SummaryNotOffered` | Send = Summary on an AI key event, which always sends each time (reported on `priority`) |
+| `SummaryGap` | A summary must send at least every 120 days, the time events are kept |
 | `DataFeedChangesNeedsSchedule` | A Data Feed Changes rule must be Scheduled |
 | `AiEventScoped` | An AI key rule cannot have an org node or discipline (reported on `orgNode`, or on `disciplineNode` when only a discipline is set) |
-| `ScheduleRequired`, `ScheduleCronAndOffsets` | A scheduled rule needs a `cronExpression` or period-end offsets, not both |
+| `ScheduleRequired`, `ScheduleCronAndOffsets` | A scheduled rule or a summary needs a `cronExpression` or period-end offsets, not both |
 | `CronInvalid`, `CronNeverRuns` | The CRON expression does not parse, or never runs again |
-| `OffsetsNeedSchedule`, `OffsetOutOfRange`, `OffsetRepeated` | Offsets only on a scheduled rule, between -31 and 31 days, no repeats |
+| `OffsetsNeedSchedule`, `OffsetOutOfRange`, `OffsetRepeated` | Offsets only on a scheduled rule or a summary, between -31 and 31 days, no repeats |
 | `PeriodTypeRequired`, `FireTimeRequired`, `FireTimeNeedsOffsets` | Offsets need Month, Quarter or Year and a `fireTime` (`HH:mm`); a `fireTime` without offsets is refused |
-| `TimeZoneRequired`, `TimeZoneInvalid` | A scheduled rule needs a valid `timeZoneId` |
+| `TimeZoneRequired`, `TimeZoneInvalid` | A scheduled rule or a summary needs a valid `timeZoneId` |
 | `DataFeedChangesGap` | A Data Feed Changes rule must send at least every 120 days |
 
 #### A rule's runs
@@ -2335,8 +2384,9 @@ Shows one user in the current tenant as the web user editor does: roles, the
 capture, report, dashboard and org node templates selected for them, the
 number of their own data permissions in this tenant, and the nine **Authorize all** scopes. Each scope
 has its `code` (for example `nxgn.capstone.templates.capture.unrestricted`),
-whether the user holds it (`isSelected`) and whether that comes through a role
-(`isInheritedFromRole`). An email is looked up with one call to the users list,
+whether the user holds it (`isSelected`), whether that comes through a role
+(`isInheritedFromRole`) and whether the user also holds it as their own grant
+(`isDirect`, kept when the role is removed). An email is looked up with one call to the users list,
 ignoring case; like the web users list, that call needs Identity to be
 reachable. `--json` returns `{ tenant, user }`, with the full user including
 `dataPermissions`. It needs `Security.View`.

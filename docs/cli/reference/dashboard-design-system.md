@@ -315,46 +315,53 @@ All three share `horizontalAlignment: Stretch`, `verticalAlignment: Start`.
 > full-width role. Using `Fill` on a KPI card destroys the 4-column snapshot
 > row.
 
-### Column group — short widgets beside a tall one
+### Sections side by side — a section's width
 
-A section with `nodeLayout.layoutMode: Column` (`{ "id": 5, "name": "Column" }`)
-is a **column group**. It sits in its parent section's widget row as one cell
-and stacks its own widgets top to bottom, each at its own height. Use it for a
-card next to a tall chart, or for two or three cards stacked beside one chart.
+A nested section can sit in its parent section's widget row instead of
+starting a new row. Give it `nodeLayout.width`, a widget size:
+`{ "id": 0, "name": "QuarterScreen" }`, `1` ThirdScreen, `2` HalfScreen,
+`3` TwoThirdScreen or `4` ThreeQuarterScreen. Leave it out (null) for a full
+row, the default: the section starts a new row below the widgets before it.
 
-- **Width:** one column of the parent when the parent is a Grid with
-  `responsive.columns`; otherwise the default widget width (half the row).
-  Widget size inside the group is ignored — every widget is full group width.
-- **Order:** the group shares `sortOrder` with the widgets of its row (chart 1,
-  group 2 puts the group on the right).
-- **No header:** the group never draws a title or collapse control, whatever
-  `headerBehavior` says; its name is only an authoring label.
-- **Alignment:** the group's own `verticalAlignment` — unset or `Start` keeps
-  each widget at its own height at the top; `Center` / `End` move the stack;
-  `Stretch` shares the cell height between the widgets. Its
-  `horizontalAlignment` is ignored. Word/PDF export always draws `Start`.
-- **Breakpoints:** below the parent's `stackBelow` the group goes full width
-  like any cell, its widgets still stacked.
-- **Root or tab:** a Column section with no parent row renders as a headerless
-  single column of full-width widgets.
-- **Word/PDF:** the group is one cell of its row with its widgets stacked
-  inside. A table in a group follows the row at full width, as tables always
-  do. Word sizes the other widgets by `widgetSize`, so a group beside a 100%
-  chart moves to its own line there; pair it with a 50% chart.
-- **AI Summary scope:** a group is a node. A `Peers` summary in the parent no
-  longer reads the group's widgets, and a summary inside a group does not read
-  the widgets beside it. Put a section-wide summary outside any group, with
-  `Descendants` scope.
+- **Width:** the section takes that share of its parent's row, exactly as a
+  widget of that size does: the same width outside a grid, and the same number
+  of columns in a Grid parent (`HalfScreen` takes 2 of 4). Its own widgets'
+  sizes are shares of the section, not of the page.
+- **Order:** the section sits where its `sortOrder` puts it among its
+  parent's children, widgets and sections alike.
+- **Stacked:** set `layoutMode` to Column (`{ "id": 5, "name": "Column" }`) to
+  stack its widgets top to bottom, each at its own height and the section's
+  full width. Use it for small cards beside a tall chart. Without Column the
+  section lays its widgets out in its own mode (a row, or a Grid).
+- **Header:** the section's heading shows as any section's does; hide it with
+  `headerBehavior` Hidden (`{ "id": 2, "name": "Hidden" }`).
+- **Top level:** a top-level section fills the page (or is a tab) and takes no
+  width; `save` and `lint` refuse one with `WidthOnlyBelowTopLevel`. Put the
+  sections side by side inside a top-level section. FullScreen is not a
+  section width: leave `width` out for a full row.
+- **Inside a stacked section** everything takes the stack's full width, so a
+  width there does nothing.
+- **Word/PDF:** the section is one cell of its row at its width, its heading
+  at the top of the cell and its widgets stacked inside, whatever its layout
+  mode. A table in it follows the row at full width, as tables always do, with
+  the heading above it. PowerPoint places each of its widgets on a line of its
+  own at the section's width.
+- **AI Summary scope:** the section is a node. A `Peers` summary in the parent
+  does not read its widgets, and a summary inside it does not read the widgets
+  beside it. Put a section-wide summary outside it, with `Descendants` scope.
 
 ```json
 [
   { "name": "02 Risk snapshot", "path": "02 Risk snapshot", "isWidget": false,
-    "nodeLayout": { "layoutMode": { "id": 2, "name": "Grid" }, "responsive": { "columns": 2 } } },
+    "nodeLayout": { "layoutMode": { "id": 2, "name": "Grid" }, "responsive": { "columns": 4 } } },
   { "path": "02 Risk snapshot->Residual rating", "parent": { "path": "02 Risk snapshot" }, "isWidget": true,
-    "sortOrder": 1, "widgetSize": { "id": 2, "name": "50%" } },
+    "sortOrder": 1, "widgetSize": { "id": 4, "name": "75%" } },
   { "name": "Snapshot cards", "path": "02 Risk snapshot->Snapshot cards", "parent": { "path": "02 Risk snapshot" },
     "isWidget": false, "sortOrder": 2,
-    "nodeLayout": { "layoutMode": { "id": 5, "name": "Column" }, "verticalAlignment": { "id": 1, "name": "Start" } } },
+    "nodeLayout": {
+      "width": { "id": 0, "name": "QuarterScreen" },
+      "layoutMode": { "id": 5, "name": "Column" },
+      "headerBehavior": { "id": 2, "name": "Hidden" } } },
   { "path": "02 Risk snapshot->Snapshot cards->Highest residual risks", "parent": { "path": "02 Risk snapshot->Snapshot cards" },
     "isWidget": true, "sortOrder": 1 },
   { "path": "02 Risk snapshot->Snapshot cards->Mitigation progress", "parent": { "path": "02 Risk snapshot->Snapshot cards" },
@@ -364,6 +371,13 @@ card next to a tall chart, or for two or three cards stacked beside one chart.
 
 Widget template and type fields are left out of the example for brevity; set
 them as for any placement.
+
+**Column groups saved without a width** (`layoutMode` Column, no `width`)
+keep rendering as before: one column of a Grid parent, otherwise half the
+row, stacked, with no heading whatever `headerBehavior` says. The group's own
+`verticalAlignment` places its stack (`Stretch` shares the cell height); Word
+and PDF draw it at the top. Give such a group a `width` to control its width
+and heading.
 
 ---
 
@@ -388,12 +402,12 @@ All font sizes on a dashboard come from this ramp — no other sizes:
 | **30 Bold** | KPI value (`value` slot, Info Card) |
 | **26 Bold** | Donut center value |
 | **20 Bold** | TextBlock title |
-| **16 Semibold** | Chart / table / donut title |
-| **14 Semibold** | Info Card title (`text-secondary`) |
+| **16 Bold** | Chart / table / donut title |
+| **14 Bold** | Info Card title (`text-secondary`) |
 | **14 Normal / 1.5 line-height** | TextBlock body |
 | **13** | Table cells, legend labels/values |
 | **12** | Axis labels, footnotes, descriptions, grid headers |
-| **12 Semibold + Uppercase + letterSpacing 1** | Grid headers, TextBlock subtitles (the "label" treatment) |
+| **12 Bold + Uppercase + letterSpacing 1** | Grid headers, TextBlock subtitles (the "label" treatment) |
 
 ### Description insets (charts)
 
@@ -427,7 +441,7 @@ titles, and the marked brand slots.
     "borderRadius": 8,
     "padding": 20, "gap": 8
   },
-  "title":    { "foregroundColor": "text-secondary", "fontFamily": "theme", "fontWeight": "Semibold", "fontSize": 14 },
+  "title":    { "foregroundColor": "text-secondary", "fontFamily": "theme", "fontWeight": "Bold", "fontSize": 14 },
   "value":    { "foregroundColor": "text-primary",  "fontFamily": "theme", "fontWeight": "Bold",     "fontSize": 30 },
   "footnote": { "foregroundColor": "text-muted",    "fontFamily": "theme", "fontSize": 12 },
   "stateMessages": { "foregroundColor": "warning" }
@@ -464,14 +478,14 @@ color alone, the icon and value carry the signal too.
   "panel": { "backgroundColor": "surface", "borderColor": "border", "borderWidth": 1,
              "borderRadius": 8, "fontFamily": "theme", "foregroundColor": "text-primary",
              "gap": 8, "padding": 18 },
-  "title":        { "fontFamily": "theme", "fontSize": 16, "fontWeight": "Semibold", "foregroundColor": "text-primary" },
+  "title":        { "fontFamily": "theme", "fontSize": 16, "fontWeight": "Bold", "foregroundColor": "text-primary" },
   "chartArea":    { "backgroundColor": "surface", "padding": 8 },
   "donutCenter":  { "fontFamily": "theme", "fontSize": 26, "fontWeight": "Bold", "foregroundColor": "text-primary" },
   "legend":       { "backgroundColor": "surface", "gap": 8 },
   "legendLabels": { "fontFamily": "theme", "fontSize": 13, "foregroundColor": "text-primary" },
-  "legendValues": { "fontFamily": "theme", "fontSize": 13, "fontWeight": "Semibold", "foregroundColor": "text-secondary" },
+  "legendValues": { "fontFamily": "theme", "fontSize": 13, "fontWeight": "Bold", "foregroundColor": "text-secondary" },
   "sliceBorders": { "borderColor": "surface", "borderWidth": 2 },
-  "sliceLabels":  { "fontFamily": "theme", "fontSize": 12, "fontWeight": "Medium", "foregroundColor": "text-primary" },
+  "sliceLabels":  { "fontFamily": "theme", "fontSize": 12, "fontWeight": "Normal", "foregroundColor": "text-primary" },
   "tooltip":      { "backgroundColor": "surface", "fontSize": 12, "foregroundColor": "text-primary" },
   "stateMessages": { "foregroundColor": "warning" }
 }
@@ -498,13 +512,13 @@ uses (their status colors, their spreadsheet conventions).
   "version": "1",
   "panel": { "backgroundColor": "surface", "borderColor": "border", "borderWidth": 1,
              "borderRadius": 8, "foregroundColor": "text-primary", "gap": 8, "padding": 18 },
-  "title":     { "fontFamily": "theme", "fontSize": 16, "fontWeight": "Semibold", "foregroundColor": "text-primary" },
+  "title":     { "fontFamily": "theme", "fontSize": 16, "fontWeight": "Bold", "foregroundColor": "text-primary" },
   "axisLabel": { "fontSize": 12, "foregroundColor": "text-secondary" },
   "axisTitle": { "fontFamily": "theme", "fontSize": 12, "fontWeight": "Normal", "foregroundColor": "text-muted" },
   "categoryAxis": { "labelDensity": "Compact", "labelRotation": 0, "minLabelGap": 20 },
   "dataLabel": { "displayMode": "Always", "foregroundColor": "surface" },
   "series":    { "color": "primary", "opacity": 0.95, "strokeWidth": 2 },
-  "tooltip":   { "backgroundColor": "⟨brand-accent⟩", "borderRadius": 6, "fontWeight": "Semibold",
+  "tooltip":   { "backgroundColor": "⟨brand-accent⟩", "borderRadius": 6, "fontWeight": "Bold",
                  "foregroundColor": "surface", "padding": 8 },
   "numberFormat": {
     "axisValue": { "precision": 0 },
@@ -540,7 +554,7 @@ data item — axis label text is the axis `name` (put the unit there:
   "panel": { "backgroundColor": "surface", "borderColor": "border", "borderWidth": 1,
              "borderRadius": 8, "padding": 16 },
   "gridHeader": { "backgroundColor": "surface", "fontFamily": "theme", "fontSize": 12,
-                  "fontWeight": "Semibold", "foregroundColor": "text-secondary",
+                  "fontWeight": "Bold", "foregroundColor": "text-secondary",
                   "letterSpacing": 1, "textTransform": "Uppercase" },
   "rowLabels":  { "fontFamily": "theme", "fontSize": 13, "foregroundColor": "text-primary" },
   "valueCells": { "fontFamily": "theme", "fontSize": 13, "foregroundColor": "text-secondary",
@@ -595,7 +609,7 @@ a bar chart and keep the exact values in a report template.
              "gap": 10, "padding": 20 },
   "title":    { "fontFamily": "theme", "fontSize": 20, "fontWeight": "Bold",
                 "foregroundColor": "text-primary", "lineHeight": 1.2 },
-  "subtitle": { "fontFamily": "theme", "fontSize": 12, "fontWeight": "Semibold",
+  "subtitle": { "fontFamily": "theme", "fontSize": 12, "fontWeight": "Bold",
                 "foregroundColor": "text-secondary", "letterSpacing": 1,
                 "lineHeight": 1.4, "textTransform": "Uppercase" },
   "description": { "fontFamily": "theme", "fontSize": 14, "fontWeight": "Normal",
