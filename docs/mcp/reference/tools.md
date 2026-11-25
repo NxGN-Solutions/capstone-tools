@@ -68,7 +68,7 @@ No parameters.
 
 ---
 
-## Model Read (11 tools)
+## Model Read (12 tools)
 
 ### `model_metrics_list`
 
@@ -176,7 +176,7 @@ List input overrides. One row is an input metric at an org node.
 | `disciplineId` | string (ID) | No | Only overrides in this discipline |
 | `limit` | int | No | Maximum rows (default: 200) |
 
-**Returns:** Text rows with id, discipline, unit, precision, validation, capture, and bands (`Metric bands`, `None (formatting off)`, or a count). `GET` is not used; the call is `POST Model/InputOverrides/GetTreeGridList`.
+**Returns:** Text rows with id, site, discipline, unit, precision, validation, capture, and bands (`Metric bands`, `None (formatting off)`, or a count), and the total when more rows match. With no `orgNodeId`, every org node's overrides are listed. The search runs on the server, so a match past the first `limit` rows is still found. `GET` is not used; the call is `POST Model/InputOverrides/GetGridList`.
 
 ### `model_inputOverrides_get`
 
@@ -197,7 +197,7 @@ List calculation overrides. Same shape as input overrides, without validation an
 | `disciplineId` | string (ID) | No | Only overrides in this discipline |
 | `limit` | int | No | Maximum rows (default: 200) |
 
-**Returns:** Text rows. `POST Model/CalculationOverrides/GetTreeGridList`.
+**Returns:** Text rows with the site, as for input overrides. `POST Model/CalculationOverrides/GetGridList`.
 
 ### `model_calculationOverrides_get`
 
@@ -281,6 +281,26 @@ List reporting frameworks (GRI, SASB, CDP, TCFD, etc.) configured in the tenant.
 
 ---
 
+### `model_metricFrameworkNodes_list`
+
+List one page of metrics (inputs and calculations) with whether each is linked to a framework item, sorted by name,
+with the total. The same list as the Metric Framework Assignments screen; it shows only the metrics you may view.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `frameworkNodeId` | string | No | Framework item ID from `model_frameworks_list`; omit to flag metrics linked to any framework item |
+| `search` | string | No | Metric name contains (case-insensitive, on the server) |
+| `metricType` | string | No | `input` or `calculation` |
+| `disciplineId` | string | No | Discipline ID |
+| `linkedOnly` | bool | No | Only the linked metrics (to `frameworkNodeId`, or to any framework item when it is omitted) |
+| `limit` | int | No | Page size, capped at the platform maximum (default: 100) |
+| `offset` | int | No | Metrics to skip, for the next page (default: 0) |
+
+**Returns:** `Name | Linked | Discipline | ID` rows, a "Metrics 1–100 of N (L linked on this page)" header, a
+"T metrics in all, K linked." line, and the offset for the next page when more match.
+
+---
+
 ### `model_disciplines_list`
 
 List disciplines (metric categories like Environmental, Social, Governance).
@@ -294,7 +314,7 @@ List disciplines (metric categories like Environmental, Social, Governance).
 
 ---
 
-## Data Operations (6 tools)
+## Data Operations (7 tools)
 
 ### `data_timePeriods_list`
 
@@ -572,6 +592,12 @@ This bypasses the template discovery workflow — no need to list templates, gue
 
 ---
 
+### `data_narrative_aggregation_status`
+
+**Narrative roll-up status.** Whether the workspace's rolled-up narrative text has caught up with narrative changes: the narrative version, how far the roll-ups have caught up, and how many narratives wait, failed or have waited past the stuck time. No parameters. Read-only; the log and Retry waiting are in the web app and the CLI (`cap data narrative-aggregation log`).
+
+**Returns:** A short status: up to date at a version, or catching up with the waiting, failed and stuck counts.
+
 ## Reporting (2 tools)
 
 ### `reporting_dashboards_getData`
@@ -623,8 +649,8 @@ List dashboard templates (name + ID). Use the ID with: `reporting_dashboards_get
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `search` | string | No | Filter by name (case-insensitive substring match) |
-| `limit` | int | No | Maximum results to return (default: 100) |
+| `search` | string | No | Filter by name on the server (case-insensitive substring match) |
+| `limit` | int | No | Maximum results to return (default: 100); the header gives the total that match |
 
 **Returns:** Grid of dashboard templates with name, description, and ID.
 
@@ -646,8 +672,8 @@ List widget templates (name + ID + type). Widget names encode their content: 'Su
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `search` | string | No | Filter by name (case-insensitive substring match) |
-| `limit` | int | No | Maximum results to return (default: 100) |
+| `search` | string | No | Filter by name on the server (case-insensitive substring match) |
+| `limit` | int | No | Maximum results to return (default: 100); the header gives the total that match |
 
 **Returns:** Grid of widget templates with name, widget type (InfoCard/PieChart/XYChart/Table), and ID.
 
@@ -680,8 +706,8 @@ List available report templates (define which metrics appear in computed value q
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `search` | string | No | Filter by name (case-insensitive substring match) |
-| `limit` | int | No | Maximum results to return (default: 100) |
+| `search` | string | No | Filter by name on the server (case-insensitive substring match) |
+| `limit` | int | No | Maximum results to return (default: 100); the header gives the total that match |
 
 **Returns:** Grid of report templates with name, description, and ID.
 
@@ -693,8 +719,8 @@ List available capture templates (define which metrics appear in data entry form
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `search` | string | No | Filter by name (case-insensitive substring match) |
-| `limit` | int | No | Maximum results to return (default: 100) |
+| `search` | string | No | Filter by name on the server (case-insensitive substring match) |
+| `limit` | int | No | Maximum results to return (default: 100); the header gives the total that match |
 
 **Returns:** Grid of capture templates with name, description, and ID.
 
@@ -827,7 +853,7 @@ Render a bar/line/area chart as interactive HTML (Chart.js). Shows trends, time 
 | `endDate` | string | Yes | End date (ISO format) |
 | `timePeriodType` | string | No | Period type (default: `month`) |
 
-**Returns:** HTML with Chart.js bar/line/column chart.
+**Returns:** HTML with Chart.js bar/line/column chart. An axis with a major step labels every step, as the dashboard does, when that gives at most 50 steps; Chart.js draws no minor ticks between them.
 
 ---
 
@@ -1342,8 +1368,9 @@ Change a tenant's AI settings: turn AI on or off, choose whose key calls use, th
 | `keySource` | string | No | `nxgn` (the NxGN default) or `client` |
 | `provider` | string | No | The client's provider: `anthropic` or `deepseek`. Changing it removes the stored key |
 | `model` | string | No | Model ID of the provider in use, or `default` to follow the default |
+| `summariseInAllLanguages` | boolean | No | Write narrative AI summaries in every language a narrative has text in (`true`), or the default language only (`false`) |
 
-Pass at least one of `enabled`, `keySource`, `provider` or `model`.
+Pass at least one of `enabled`, `keySource`, `provider`, `model` or `summariseInAllLanguages`.
 
 **Returns:** The saved settings (`POST System/Tenants`, the tenant as read with its `aiSettings`), or the guidance above.
 

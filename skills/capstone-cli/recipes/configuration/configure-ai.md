@@ -79,6 +79,17 @@ cap system tenants ai-config test --tenant-id <tenant-id> --provider anthropic -
 
 Without a key, `test` tests the key the tenant uses now. A passing test of a failing stored key restores AI at once. `test` exits 1 when the test fails. Tests are limited to 10 a minute per person.
 
+### Step 6b: Narrative summaries in every language
+
+Narrative AI summaries (summary narratives, set with `summarisedNarrative`) are written in the default language only. To write one per
+language that has text as well, which costs an AI call per language:
+
+```bash
+cap system tenants ai-config set --tenant-id <tenant-id> --all-languages on
+```
+
+`--all-languages off` goes back to the default language only. `ai-config get` shows the setting.
+
 ### Step 7: Remove the client's key
 
 ```bash
@@ -95,6 +106,8 @@ cap system tenants ai-config usage --tenant-id <tenant-id> --from 2026-09-01 --t
 ```
 
 Group by `feature`, `model` or `day`. Usage lists requests, tokens and failures; no prompt, response or key is recorded.
+The features are `DashboardSummary` (dashboard AI Summary), `NarrativeSummary` (narrative AI summaries) and
+`ConnectionTest`.
 
 ---
 

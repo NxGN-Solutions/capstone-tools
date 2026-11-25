@@ -125,14 +125,15 @@ map when checking whether a command family exists.
 | `data lookups` | `get` |
 | `data narrative-values` | `get`, `get-by-context`, `get-by-metric-context`, `history`, `list`, `save`, `submit`, `validate` |
 | `data recalculation` | `status`, `wait` |
+| `data narrative-aggregation` | `status`, `wait`, `log` |
 | `data time-periods` | `diagnose`, `list` |
 | `masterdata data-sources` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `masterdata discipline-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `masterdata disciplines` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel`, `upload-status` |
+| `masterdata disciplines` | `create`, `delete`, `download-excel`, `get`, `list`, `move`, `save`, `upload-excel`, `upload-status` |
 | `masterdata framework-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `masterdata frameworks` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel`, `upload-status` |
+| `masterdata frameworks` | `create`, `delete`, `download-excel`, `get`, `list`, `move`, `save`, `upload-excel`, `upload-status` |
 | `masterdata org-node-attribute-types` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `masterdata org-nodes` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel`, `upload-status` |
+| `masterdata org-nodes` | `create`, `delete`, `download-excel`, `get`, `list`, `move`, `save`, `upload-excel`, `upload-status` |
 | `masterdata units` | `create`, `delete`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
 | `meta lookups` | `get`, `list` |
 | `model calculation-overrides` | `copy`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
@@ -150,7 +151,7 @@ map when checking whether a command family exists.
 | `model narrative-attribute-types` | `create`, `delete`, `download-excel`, `get`, `get-all`, `list`, `lookup`, `save`, `upload-excel` |
 | `model narrative-org-node-exclusions` | `copy`, `download-excel`, `list`, `save`, `upload-excel` |
 | `model narrative-overrides` | `copy`, `create`, `download-excel`, `get`, `list`, `save`, `upload-excel` |
-| `model narratives` | `create`, `delete`, `delete-preview`, `delete-start`, `delete-status`, `distinct-values`, `download-excel`, `get`, `list`, `lookup`, `save`, `upload-excel`, `upload-status` |
+| `model narratives` | `ai-status`, `create`, `delete`, `delete-preview`, `delete-start`, `delete-status`, `distinct-values`, `download-excel`, `get`, `list`, `lookup`, `regenerate-ai`, `save`, `upload-excel`, `upload-status` |
 | `model org-nodes` | `list` |
 | `notifications delivery-log` | `list` |
 | `notifications rules` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `recipients`, `runs`, `save`, `upload-excel` |
@@ -170,6 +171,8 @@ map when checking whether a command family exists.
 | `templates widget-templates` | `create`, `delete`, `download-excel`, `get`, `get-bulk`, `lint`, `list`, `preview`, `resolve-content`, `sample`, `save`, `schema`, `upload-excel` |
 | `update` | `check` |
 | `workflows` | `list`, `show` |
+
+The three override `list` commands page on the server: `--limit` and `--offset` pick the page and `pagination.total` counts every match. `--org-nodes` and `--discipline-nodes` narrow the list (disciplines match exactly, not their sub-disciplines); with no `--org-nodes`, every org node's overrides are listed, each row with its `orgNode`. Overrides of a metric excluded at an org node are listed too. `copy` without `--ids` copies every override at the source org node.
 
 ---
 
@@ -191,9 +194,10 @@ cap <domain> <entity> list [--json]
 | Narrative Definitions | `cap model narratives list` | Text narrative definitions |
 | Narrative Attribute Types | `cap model narrative-attribute-types list` | Custom narrative attributes |
 | Narrative Overrides | `cap model narrative-overrides list` | Org-node narrative customizations |
-| Narrative Exclusions | `cap model narrative-org-node-exclusions list --org-nodes <id>` | Narratives included or excluded at one org node |
+| Narrative Exclusions | `cap model narrative-org-node-exclusions list --org-nodes <id> [--excluded-only]` | Narratives included or excluded at one org node; `--excluded-only` lists only the excluded ones; JSON `counts` and the footer give both totals (`all`, `excluded`) |
+| Metric Exclusions | `cap model metric-org-node-exclusions list --org-nodes <id> [--excluded-only]` | Metrics included or excluded at the org node(s); `--excluded-only` (exactly one org node) lists only the excluded ones; JSON `counts` and the footer give both totals (`all`, `excluded`) |
 | Metric Attribute Types | `cap model metric-attribute-types list` | Custom metric attributes |
-| Metric Framework Nodes | `cap model metric-framework-nodes list` | Metric-to-framework associations |
+| Metric Framework Nodes | `cap model metric-framework-nodes list --framework-nodes <id> [--search "<name>"] [--linked-only]` | One page of metrics with `isSelected` = linked to the framework node(s), or to any framework node when none is given; `--search` matches names on the server; `--linked-only` lists only the linked metrics; the footer and `pagination.total` give the real total, and JSON `counts` gives both totals (`all`, `linked`); rows carry `disciplineName` and `disciplinePath` |
 | Model Org Nodes | `cap model org-nodes list` | Model exploration alias for org structure |
 | Model Disciplines | `cap model disciplines list` | Model exploration alias for discipline tree |
 | Model Frameworks | `cap model frameworks list` | Model exploration alias for framework tree |
@@ -215,6 +219,8 @@ cap <domain> <entity> list [--json]
 | Change Requests | `cap data change-requests list --search "<metric, person or CR number>"` | Governed input and narrative edit requests |
 | Data Locks | `cap data data-lock lock --data-interval quarter --periods "Q1 FY 25" --org-nodes <id> --discipline-nodes <id>` | Lock/unlock scoped data periods |
 
+> Template `list` commands return every template by default (up to 1000); `--limit` and `--offset` page on the server, and `--search` (widget and dashboard templates) filters names on the server. `--name` keeps only the exact name, ignoring case.
+
 ### Get Single Item
 
 ```bash
@@ -230,6 +236,15 @@ org-node-template attribute filters:
 ```bash
 cap masterdata org-node-attribute-types get <attribute-type-id> --json
 cap masterdata org-node-attribute-types list --json
+```
+
+The five attribute type `list` commands (org node, discipline, framework, metric, narrative) page and search on the
+server: `--search` (`-s`) keeps the types whose name contains the text, `--limit` (`-l`, 1–1000, default 100) and
+`--offset` (`-o`) pick the page, and the footer and `pagination.total` count every match. `--search` matches names
+only; to find a type by one of its values, list without `--search` and read `values`.
+
+```bash
+cap model metric-attribute-types list --search param --limit 20 --offset 20 --json
 ```
 
 **Example:**
@@ -373,6 +388,23 @@ cap templates widget-templates upload-excel -f widget-templates.xlsx --json
 cap templates dashboard-templates upload-excel -f dashboard-templates.xlsx --json
 ```
 
+### Moving Tree Nodes
+
+`move` puts org nodes, disciplines or framework nodes, each with everything under it, under a new parent or at the
+top level. The nodes move together in one save: if one is refused, none moves. A node listed under another listed
+node moves with it.
+
+```bash
+cap masterdata org-nodes move --ids <id>,<id> --parent <new-parent-id> --json
+cap masterdata disciplines move --ids <id> --top-level --json
+cap masterdata frameworks move --ids <id> --parent <new-parent-id>
+```
+
+Give exactly one of `--parent` and `--top-level`. A refused move exits non-zero with the reason, for example
+`HTTP 422 A tree node cannot be moved under itself or one of its descendants.` or a 409 when the new parent already
+has a node with that name. Moving a site recalculates totals and narrative roll-ups for the whole workspace, and
+access granted on a site follows the sites moved under it.
+
 ### Clearing A Tree-Node Attribute
 
 Org nodes, disciplines and frameworks keep an attribute value until you clear it:
@@ -496,7 +528,7 @@ cap reporting computed-values audit --metrics <metric-id>[,<metric-id>] --data-i
 cap reporting computed-values download-document --template <report-template-id> --data-interval month --periods "Oct 2025,Nov 2025" [--org-nodes <id>] [--format pdf|word] [-o report.pdf]
 ```
 
-`download-document` refuses a report too large to build in time with HTTP 400 and a message saying what to narrow, for example `Failed to download document: HTTP 400 This report prints more than 50,000 rows with its calculations expanded, too many for a PDF. Download it as Word or Excel, or choose fewer sites or filters.` The default limits are 50,000 printed rows or 650,000 cells for PDF, and 150,000 rows or 2,000,000 cells for Word. Printed rows include every expanded calculation child and group heading, so they can far exceed the grid's row count. Choose fewer `--org-nodes`, fewer periods or a coarser interval, or use `download-excel`, which has no such limit.
+`download-document` refuses a report too large to build in time with HTTP 400 and a message saying what to narrow, for example `Failed to download document: HTTP 400 This report prints more than 50,000 rows with its calculations expanded, too many for a PDF. Download it as Word or Excel, or choose fewer sites or filters.` The default limits are 50,000 printed rows or 650,000 cells for PDF, and 150,000 rows or 2,000,000 cells for Word. Printed rows include every expanded calculation child and group heading, so they can far exceed the grid's row count. Choose fewer `--org-nodes`, fewer periods or a coarser interval. `download-excel` builds the same rows and has Word's limits (150,000 rows, 2,000,000 cells) plus Excel's own 16,384 columns; a PDF too large is refused with advice to download Word or Excel instead.
 
 | Flag | Description | Required |
 |------|-------------|----------|
@@ -1150,9 +1182,8 @@ figures keyed by its path (levels joined with ` -> `; `""` is the total).
 `metricValue` is null. States: 0 Not captured, 1 Captured, 2 Awaiting
 validation, 3 In validation, 4 Validated, 5 Rejected. Use `--json`: the table
 output shows no completion figures. `download-document` prints the figures
-with a Total row and column; `download-excel` writes a **Values** sheet (one
-row per due value with its State, filterable to "Not captured") and a
-**Summary** sheet of group figures. A value counts in the column that holds
+with a Total row and column, and `download-excel` writes the same layout as
+one sheet. For a list of values to filter, use a template laid out down to the item. A value counts in the column that holds
 its period's end (a quarterly input in the quarter-end month); a period is
 due once its last day is before today's UTC date.
 Each of the site, discipline and framework filters has two lists.
@@ -1904,7 +1935,8 @@ Exit codes:
 cap system tenants ai-config get        [--tenant-id <id>] [--json]
 cap system tenants ai-config set        [--tenant-id <id>] [--ai on|off] [--key-source nxgn|client]
                                         [--provider anthropic|deepseek] [--model <id>|default]
-                                        [--api-key-stdin] [--acknowledge-data-location] [--json]
+                                        [--api-key-stdin] [--acknowledge-data-location]
+                                        [--all-languages on|off] [--json]
 cap system tenants ai-config test       [--tenant-id <id>] [--provider anthropic|deepseek] [--model <id>]
                                         [--api-key-stdin] [--json]
 cap system tenants ai-config remove-key [--tenant-id <id>] [--json]
@@ -1917,6 +1949,7 @@ cap system tenants ai-config usage      [--tenant-id <id>] [--from yyyy-MM-dd] [
 - `set` changes only the options given. `--model default` follows the provider's default model. `set` and `remove-key` save the tenant (`POST System/Tenants`) with only its AI settings changed, as the tenant page does.
 - The client's key is never an option value: `--api-key-stdin` reads it from standard input, or a hidden prompt on a terminal. It is tested before it is stored and never printed; `get` shows only its last four characters.
 - `--acknowledge-data-location` records that the tenant accepts DeepSeek's data location (People's Republic of China) and prints the notice to stderr first.
+- `--all-languages on` also writes narrative AI summaries in every language a narrative has text in; `off` (the default) writes the default language only.
 - `test` without a key tests the key in use; it exits 1 when the test fails. Key tests are limited to 10 a minute per person.
 - `remove-key` forgets the stored client key and leaves AI as it is. It is refused while AI uses the client's key: turn AI off or switch to `--key-source nxgn` first. Revoke the key at the provider too.
 
@@ -1989,7 +2022,7 @@ cap data narrative-values validate <id> --result <approve|reject> [--comments ".
 | Result | Description |
 |--------|-------------|
 | approve | Approve the value (moves to next validation level or complete) |
-| reject | Reject the value (requires --comments explaining reason) |
+| reject | Reject the value. A reject needs `--comments` explaining the reason; the CLI and the API refuse it without one, for `input-values`, `narrative-values` and `change-requests` alike |
 
 An approval is recorded even when the value stays `Validation In Progress`, for example on a Consensus level that still needs another approver. Each item in `results` then carries `awaitingLevelName`, the level the value still waits for, and `repeatedOwnDecision`, which is `true` when the approval only repeated your own earlier one and so counted nothing new. The single-value text output says the same: `Input value <id> validation status: Validation In Progress. Waiting for the Manager level.` The `--ids` table adds `Awaiting Level` and `Repeat` columns.
 
@@ -2041,8 +2074,9 @@ cap data bulk-validation validate \
 ### Narrative Workflow
 
 `cap model narratives get <id> --json` includes the narrative's data feeds
-(`narrativeDataFeeds`). Imported narrative text shows "Data feed" as the author
-in `history`.
+(`narrativeDataFeeds`) and the narrative its AI summary reads
+(`summarisedNarrative`). Imported narrative text shows "Data feed" as the author
+in `history`, and text an AI summary wrote shows "AI" (`changedByAi`).
 
 ```bash
 cap model narratives lookup --capture-interval quarter --org-nodes <id> --discipline-nodes <id> --json
@@ -2051,7 +2085,15 @@ cap data narrative-values submit <value-id> --json
 cap data narrative-values validate <value-id> --result approve --comments "Approved" --json
 cap data narrative-values get-by-context --narrative <id> --org-node <id> --period-type quarter --start-date 2026-01-01 --json
 cap data narrative-values history <value-id> --json
+cap data narrative-values use-ai-version <value-id> --json
 ```
+
+On a summary narrative, `get` shows `isAiGenerated` (the AI wrote the text and
+nobody has approved it yet) and `aiNewVersion` (the AI's newer text by language,
+kept because a person changed the value). `use-ai-version` replaces the text
+with that version in every language, as your capture save; it is refused when
+there is no new version or the period is locked. `list` shows both in its `AI`
+column.
 
 For locked periods, apply the data lock first, then use the unified change
 request workflow. Change requests can carry narrative edits in the same
@@ -2073,6 +2115,7 @@ field errors for a name another narrative has (`NameNotUnique`), a missing
 field, braces, a discipline, framework node, attribute value or site the
 workspace doesn't have, a data feed rule or an unusable metric link (`name`,
 `discipline`, `frameworkNodes`, `attributeValues`, `captureInterval`,
+`orgRollUpMethod`, `finerPeriodMethod`, `coarserPeriodMethod`,
 `orgNodeExclusions`, `siteOverrides`, `narrativeDataFeeds`, `metricIds`). A 409
 means another save got there first: `NarrativeNameConflict` (it took the name)
 or `NarrativeConcurrentSave` (it changed the same narrative; save again).
@@ -2082,6 +2125,14 @@ the id, so a new narrative named like another is refused; only a request
 without an id (`create`, Excel rows) updates the narrative of that name.
 Saving a narrative with a different capture interval deletes its values at
 every other interval, locked and approved values included.
+
+A `save` file must carry `orgRollUpMethod` (Across Sites), `finerPeriodMethod`
+(Finer Periods) and `coarserPeriodMethod` (Coarser Periods); `create` fills the
+ones left out with None, Inherit and Latest. `list` and `get` show them, and
+`distinct-values` takes `org-roll-up-method`, `finer-period-method` and
+`coarser-period-method` next to `reference`, `capture-interval`,
+`require-data-capture` and `require-validation`. See
+[Create Narrative Definition](./model-building.md#across-sites-finer-periods-and-coarser-periods).
 
 ```bash
 cap model narratives lint (--file narrative.json | --id <id> | --all [--details]) [--json]
@@ -2153,7 +2204,7 @@ type's digest, which scheduled rules send. The values are:
 |-------------------|-------------|
 | `DataCapture` | Pending capture digest, Input Value Captured, Data Lock Applied |
 | `Validation` | Pending validation digest, Validation Completed |
-| `ChangeRequest` | Pending change requests digest, Change Request Validated |
+| `ChangeRequest` | Pending change requests digest, Change Request Validated, Change Request Awaiting Decision |
 | `DataFeedChanges` | Data feed changes digest |
 | `AiProvider` | AI Key Failing, AI Key Recovered (no digest) |
 
@@ -2183,7 +2234,8 @@ for a token that holds HTML (the digest tables and `{{ActionLink}}`), which
 the subject cannot use. Filter with `-t`/`--type` (`DataCapture`,
 `Validation`, `ChangeRequest`, `DataFeedChanges`, `AiProvider`) and
 `-e`/`--event` (`InputValueCaptured`, `DataLockApplied`, `ValidationCompleted`,
-`ChangeRequestValidated`, `AiKeyFailing`, `AiKeyRecovered`). A type alone
+`ChangeRequestValidated`, `ChangeRequestAwaitingDecision`, `AiKeyFailing`,
+`AiKeyRecovered`). A type alone
 returns its digest and its events; there is no digest-only filter. `--json`
 prints the API result: `{ "contents": [{ notificationType, eventType,
 writtenFor, hint, tokens: [{ key, group, description, sample, bodyOnly }] }] }`.
@@ -2208,8 +2260,10 @@ decision or a capturer's rejected values, so a single approval would fail;
 saved template, read and checked as stored). **Errors** are exactly what
 `save` would refuse; **warnings** never block a save. Each issue has a
 `code`, a `message`, a `field` (`name`, `subject`, `body`, `eventType`,
-`notificationType` or `translations`) and the stage `template`; a token issue
-carries its position in `params`. Text output prints one line per issue as
+`notificationType` or `translations`) and a `stage`, the editor section that
+shows that field: `definition` for `name`, `description`, `notificationType`,
+`eventType` and `isActive`, and `message` for `subject`, `body` and
+`translations`. A token issue carries its position in `params`. Text output prints one line per issue as
 `Error   [Code] field: message`, then a count line. The exit code is `2` when
 there is at least one error and `0` otherwise. `--json` prints the API result
 unchanged: `{ "errors": [...], "warnings": [...], "notes": [...] }`. It needs
@@ -2485,6 +2539,30 @@ Node Exclusions", with only `Org Node Path` and `Narrative` columns. Each row
 excludes the named narrative at that one org node. Upload is upsert-only, the
 same as metrics. Unknown or ambiguous paths, GUID-like values and unknown
 narratives are rejected per row; valid rows still save.
+
+---
+
+## Narrative Roll-up Status (HB-652)
+
+Rolled-up narrative text (parent sites, longer periods, summary narratives) is worked out in the background after a
+narrative changes. These commands read whether it has caught up, the way `data recalculation` does for calculations.
+They never wait on calculations, and `data recalculation wait` never waits on narratives.
+
+```bash
+cap data narrative-aggregation status --json        # narrativeVersion, caughtUpTo, waiting, failed, stuck, settled
+cap data narrative-aggregation wait --json          # wait for the current narrative version (default target)
+cap data narrative-aggregation wait 124 --timeout-seconds 120 --stall-seconds 60 --json
+cap data narrative-aggregation log --failed --json  # failed roll-ups, newest attempt first
+cap data narrative-aggregation log --narrative "Water" --limit 20
+```
+
+- `wait` is settled when `caughtUpTo >= target`. A summary narrative fed by a change carries the same number, so the
+  wait ends only once the summaries are stored too.
+- `wait` exits 5 (Timeout) on its timeout, or as `stalled` when `caughtUpTo` does not move for `--stall-seconds`. A
+  stalled wait names the next step: open System > Narrative Aggregation Log and press Retry waiting.
+- `log` pages, filters and sorts on the server; `--failed` and `--narrative` are server filters. A failure that repeats
+  is one row with its attempts.
+- Status and log need System view; Retry waiting (web only) needs System manage.
 
 ---
 

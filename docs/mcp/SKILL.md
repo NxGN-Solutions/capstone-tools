@@ -25,6 +25,7 @@ Capstone is a **data management platform** for organizations that need to consol
 | Formula-based value, derived metric | Calculation | `model_metrics_list` (includeInputs: false) | Computed from formulas |
 | Category, type, topic | Discipline | `model_disciplines_list` | E.g., Environmental, Social, Governance |
 | Reporting standard, disclosure framework | Framework | `model_frameworks_list` | GRI, SASB, CDP, TCFD, etc. |
+| Metrics linked to a disclosure, framework mapping | Metric framework link | `model_metricFrameworkNodes_list` | One page of metrics with a linked flag and the total |
 | Unit, measurement, UoM | Unit of Measure | Via `model_metrics_list` / `model_metrics_get` | kWh, tonnes CO2e, litres, count |
 | Time period, date range, interval | Time Period | `data_timePeriods_list` | Day, Week, Month, Quarter, Year |
 | Raw data, submitted value | Input Value | `data_inputValues_list` | Actual captured data points |
@@ -141,8 +142,8 @@ When the user's request matches a prompt, use it. Prompts encode best-practice w
 | Category | Tools | Purpose |
 |----------|-------|---------|
 | **Auth** (6) | `auth_login`, `auth_logout`, `auth_whoami`, `auth_tenants_list`, `auth_switchTenant`, `auth_languages_list` | Identity OIDC (PKCE) + API key + tenant switching |
-| **Model** (11) | `model_metrics_list`, `model_metrics_get`, `model_orgNodes_list`, `model_frameworks_list`, `model_disciplines_list`, `model_inputOverrides_list`, `model_inputOverrides_get`, `model_calculationOverrides_list`, `model_calculationOverrides_get`, `model_inputs_lint`, `model_calculations_lint` | Read model structure and org-node overrides; check an input or calculation before saving it |
-| **Data** (6) | `data_timePeriods_list`, `data_availability`, `data_inputValues_list`, `data_inputValues_save`, `data_computedValues_list`, `data_computedValues_query` | Query and save data |
+| **Model** (12) | `model_metrics_list`, `model_metrics_get`, `model_orgNodes_list`, `model_frameworks_list`, `model_metricFrameworkNodes_list`, `model_disciplines_list`, `model_inputOverrides_list`, `model_inputOverrides_get`, `model_calculationOverrides_list`, `model_calculationOverrides_get`, `model_inputs_lint`, `model_calculations_lint` | Read model structure and org-node overrides; check an input or calculation before saving it |
+| **Data** (7) | `data_timePeriods_list`, `data_availability`, `data_inputValues_list`, `data_inputValues_save`, `data_computedValues_list`, `data_computedValues_query`, `data_narrative_aggregation_status` | Query and save data; whether rolled-up narrative text has caught up |
 | **Reporting** (2) | `reporting_dashboards_getData`, `reporting_widgets_getData` | Dashboard/widget data as CSV |
 | **Templates** (7) | `templates_dashboards_list`, `templates_widgets_list`, `templates_reports_list`, `templates_captures_list`, `templates_reports_get`, `templates_reports_resolve_content`, `templates_captures_get` | Discover and inspect templates |
 | **Template CRUD** (13) | `templates_widgets_get/create/save/delete/lint/preview`, `templates_reports_create/save/delete`, `templates_dashboards_get/create/save/delete` | Create, update, and delete widget/report/dashboard templates |
@@ -293,6 +294,7 @@ When analyzing retrieved data, use these techniques based on the user's question
 | Model read (Metrics, Org Nodes, Disciplines, Frameworks) | Yes | Read-only |
 | Data read (Time Periods, Availability, Input Values, Computed Values) | Yes | Full query support |
 | Data write (Input Values save) | Yes | Business-key upsert |
+| Narrative roll-up status | Yes | `data_narrative_aggregation_status`; the log and Retry waiting are web and CLI only |
 | Reporting (Dashboard data, Widget data) | Yes | CSV + visualization |
 | MCP Apps (Dashboard render, Widget charts, AI Summary) | Yes | Interactive HTML in conversation |
 | Templates (List + Get for all template types) | Yes | Read-only |

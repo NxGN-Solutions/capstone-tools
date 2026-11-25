@@ -314,6 +314,8 @@ cap templates capture-templates list --json
 cap templates capture-templates get <id> --json
 ```
 
+Template `list` commands return every template by default (up to 1000); `--limit` and `--offset` page on the server, and `--search` (widget and dashboard templates) filters names on the server.
+
 
 ---
 
@@ -441,8 +443,8 @@ cap templates org-node-templates get <id> --json
 
 **CLI:**
 ```bash
-cap model input-overrides list --org-node <id> --json
-cap model calculation-overrides list --org-node <id> --json
+cap model input-overrides list --org-nodes <id> --json
+cap model calculation-overrides list --org-nodes <id> --json
 ```
 
 

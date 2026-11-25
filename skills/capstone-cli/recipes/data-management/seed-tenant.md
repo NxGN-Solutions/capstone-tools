@@ -154,6 +154,8 @@ cap templates dashboard-templates list --json --limit 5
 cap templates capture-templates list --json --limit 5
 ```
 
+`--limit 5` shows the first five by name; without it, template `list` returns every template (up to 1000), paged on the server.
+
 ---
 
 ### Step 5: Upload Notification Templates and Rules

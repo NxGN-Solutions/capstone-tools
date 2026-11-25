@@ -192,7 +192,7 @@ cap reporting computed-values list \
 | `--metric-types input` | Show only input metrics |
 | `--metric-types calculation` | Show only calculated metrics |
 
-**Download as Excel:**
+**Download as Excel:** this gives the report view as the viewer's Download → Excel does: one sheet with the title and header lines, then the report's own rows, group headings and columns, values as numbers. A capture or validation progress template downloads the same way, with its figures and totals.
 ```bash
 cap reporting computed-values download-excel \
   --template <report-template-id> \

@@ -311,6 +311,7 @@ that kind of element.
 ```
 
 > Always access `.data` to get the items array from list commands.
+> Template `list` commands return every template by default (up to 1000); `--limit` and `--offset` page on the server, and `--search` (widget and dashboard templates) filters names on the server.
 > Text output truncates IDs (e.g., `<id>`). Use `--json` for full UUIDs.
 
 ## Reporting Data — Period Formats

@@ -83,8 +83,8 @@ Claude uses the `/discover-structure` prompt to explore your tenant. If you see 
 | Category | Tools | Purpose |
 |----------|-------|---------|
 | Auth (6) | `auth_login`, `auth_logout`, `auth_whoami`, `auth_tenants_list`, `auth_switchTenant`, `auth_languages_list` | Authentication and tenant management |
-| Model (11) | `model_metrics_list`, `model_metrics_get`, `model_orgNodes_list`, `model_frameworks_list`, `model_disciplines_list`, `model_inputOverrides_list`, `model_inputOverrides_get`, `model_calculationOverrides_list`, `model_calculationOverrides_get`, `model_inputs_lint`, `model_calculations_lint` | Inspect model structure and org-node overrides; check an input or calculation before saving it, or audit them all |
-| Data (6) | `data_timePeriods_list`, `data_availability`, `data_inputValues_list`, `data_inputValues_save`, `data_computedValues_list`, `data_computedValues_query` | Query and save data |
+| Model (12) | `model_metrics_list`, `model_metrics_get`, `model_orgNodes_list`, `model_frameworks_list`, `model_metricFrameworkNodes_list`, `model_disciplines_list`, `model_inputOverrides_list`, `model_inputOverrides_get`, `model_calculationOverrides_list`, `model_calculationOverrides_get`, `model_inputs_lint`, `model_calculations_lint` | Inspect model structure and org-node overrides; check an input or calculation before saving it, or audit them all |
+| Data (7) | `data_timePeriods_list`, `data_availability`, `data_inputValues_list`, `data_inputValues_save`, `data_computedValues_list`, `data_computedValues_query`, `data_narrative_aggregation_status` | Query and save data |
 | Reporting (2) | `reporting_dashboards_getData`, `reporting_widgets_getData` | Dashboard/widget data as CSV |
 | Templates (7) | `templates_dashboards_list`, `templates_widgets_list`, `templates_reports_list`, `templates_captures_list`, `templates_reports_get`, `templates_reports_resolve_content`, `templates_captures_get` | Discover templates |
 | Template CRUD (13) | `templates_widgets_get/create/save/delete/lint/preview`, `templates_reports_create/save/delete`, `templates_dashboards_get/create/save/delete` | Create, update, delete and lint templates |

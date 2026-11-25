@@ -31,6 +31,8 @@ Use TextBlock widget templates for dashboard text areas, status notes, alerts, a
 
 ## End-to-End Flows
 
+Template `list` commands return every template by default (up to 1000); `--limit` and `--offset` page on the server, and `--search` (widget and dashboard templates) filters names on the server.
+
 ### 1. Data Entry Flow (Capture Templates)
 
 Use when users must submit raw `InputValues`.

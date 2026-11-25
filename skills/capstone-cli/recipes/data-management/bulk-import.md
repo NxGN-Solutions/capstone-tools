@@ -71,19 +71,28 @@ cap data input-values download-excel \
 ```
 Template downloaded: template.xlsx
 
-Structure (one row per org node and input, one column per period):
-┌───────────────┬───────────┬─────────────┬─────┬───────────────┬──────────┬────────────────┐
-│ Org Node Path │ Cell Type │ Input       │ ... │ Data Interval │ Jan 2025 │ Feb 2025       │
-├───────────────┼───────────┼─────────────┼─────┼───────────────┼──────────┼────────────────┤
-│ Group->Site A │ Metric    │ Electricity │     │ Month         │ 1500     │ 1620           │
-│ Group->Site A │ Comment   │ Electricity │     │ Month         │          │ Meter replaced │
-│ Group->Site B │ Metric    │ Electricity │     │ Month         │ 900      │                │
-└───────────────┴───────────┴─────────────┴─────┴───────────────┴──────────┴────────────────┘
+The sheet looks like the capture screen for that template: the same group rows,
+input order, labels and column headers. A template grouped by site, then discipline:
+┌───────────────────────┬──────────┬──────────┐
+│ Name                  │ Jan 2025 │ Feb 2025 │
+├───────────────────────┼──────────┼──────────┤
+│ Group->Site A         │          │          │   group row
+│   Energy              │          │          │   group row
+│     Electricity       │ 1500     │ 1620 ◤   │   ◤ = a cell comment
+│     Diesel            │ 41.2     │          │
+│ Group->Site B         │          │          │
+│   ...                 │          │          │
+└───────────────────────┴──────────┴──────────┘
 
-• Fixed columns: Org Node Path, Cell Type, Input, Friendly Name, Unit of Measure, Data Interval
-• Period columns: one per period in the download range
-• Metric rows: numeric values only
-• Comment rows: the comment for each period of the Metric row above
+• Templates with inputs as columns, columns grouped by site or discipline, or
+  periods as rows download in that shape too.
+• Key columns after the table and key rows above the headers (grey italics: site path,
+  cell type, input, unit, period) tell the
+  upload which value each cell holds. Leave them as they are.
+• Comments are Excel cell comments on the value cell.
+• N/A cells: the input does not apply there; leave them.
+• An input under two framework nodes shows twice; the second copy is linked to
+  the first, so edit the first.
 ```
 
 ---
@@ -113,16 +122,20 @@ Structure (one row per org node and input, one column per period):
    ✅ 1500, 1500.5, 0
    ❌ "1,500", "N/A", blank (leave empty if no data)
 
-4. ROWS - One row per input at one org node
-   Each period column holds that input's value for the period
+4. CELLS - Type values only into the cells the download filled in or left blank
+   A value in a group row, an added row or column, or an N/A cell is skipped
+   with a warning naming the cell. To add a row, fill in its Org Node Path, Cell Type
+   and Input key cells and type the values under their periods; leave the other key cells as they are.
 
-5. COMMENTS - A "Comment" row under the Metric row
-   Same Org Node Path, Input and Data Interval; Cell Type "Comment"
-   A comment is saved with the value in the same column. A comment for a
-   period whose value cell is blank keeps the stored value, or saves the
-   comment on its own when there is none. A blank comment cell keeps the
-   stored comment; Excel cannot clear a comment.
+5. COMMENTS - An Excel cell comment on the value cell
+   A comment on a blank value cell keeps the stored value, or saves the comment
+   on its own when there is none. Removing a comment keeps the stored comment;
+   Excel cannot clear a comment.
    Use this to explain values in a band that requires a comment.
+
+6. OLDER FILES - Files downloaded before the sheet followed the screen (one row
+   per org node and input, with Org Node Path, Cell Type, Input, Unit of Measure
+   and Data Interval columns, and "Comment" rows) still upload unchanged.
 ```
 
 ---
@@ -251,16 +264,14 @@ cap data input-values download-excel \
   -o energy-template.xlsx
 ```
 
-Here's the expected structure:
-```
-│ Period     │ Org Node   │ Electricity (kWh) │ Gas (m³) │ Diesel (L) │
-│ Jan 2025   │ Site A     │ [numeric value]   │ ...      │ ...        │
-```
+The file is laid out like the capture screen for that template: its group rows,
+input order and period columns. Fill in the value cells; leave the grey key cells,
+group rows and N/A cells as they are.
 
 Key requirements:
-- Period names must match exactly (use `cap data time-periods list --data-interval month` to see valid names)
-- Org Node names must match exactly
 - Values must be numeric
+- Type only into value cells; anything else is skipped with a warning naming the cell
+- To bring in data from another layout, copy the numbers into the downloaded file
 
 **User:** "My file is ready at /path/to/energy-data.xlsx"
 
@@ -312,6 +323,9 @@ If user is re-uploading fixed data:
 | "Period not found" | Period name doesn't match | Use exact name from `time-periods list` |
 | "Org node not found" | Location name doesn't match | Use exact name from `org-nodes list` |
 | "Period is locked" | Data entry locked for that period | Use Change Request workflow |
+| "... the upload cannot tell which site, input and period this value is for" (warning) | A value typed in a group row, or in an added row whose key cells are empty | Fill in the row's Org Node Path, Cell Type and Input key cells, or move the value into the cell for that input and period |
+| "... has different values in F12 and K12" | An input shown under two framework nodes was edited in its linked copy | Edit the first copy and leave the other linked |
+| "The sheet's layout key rows are missing" | Key rows were deleted from a downloaded sheet | Download again and copy the values in |
 | "Permission denied" | No access to that location/discipline | Contact administrator |
 | "Invalid value" | Non-numeric or malformed value | Use numbers only, no commas |
 | "Missing column" | Required column not in file | Check column headers match template |
