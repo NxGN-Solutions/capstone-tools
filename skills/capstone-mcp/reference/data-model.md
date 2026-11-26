@@ -71,10 +71,12 @@ How metric values combine across time periods:
 
 | ID | Name | Description |
 |----|------|-------------|
-| 0 | Draft | Value entered, not yet submitted |
-| 1 | Pending | Submitted, awaiting approval |
-| 2 | Approved | Validated and accepted |
-| 3 | Rejected | Reviewed and rejected |
+| 0 | Validation Required | Captured or changed; waits for validation |
+| 1 | Rejected | Rejected during validation; the capturer must fix it |
+| 2 | Approved | Completed every required validation level |
+| 3 | Validation In Progress | Moving through the validation levels |
+
+`data_inputValues_list` shows a row's most urgent status: Rejected, then Validation Required, then Validation In Progress, then Approved. A row with any locked value shows Locked.
 
 ---
 
@@ -229,7 +231,7 @@ When you retrieve computed values, the response contains:
 
 When you retrieve input values, each cell has:
 - **value** — The numeric data point (absent when no data entered)
-- **validationStatus** — Draft (0), Pending (1), Approved (2), Rejected (3)
+- **validationStatus** — Validation Required (0), Rejected (1), Approved (2), Validation In Progress (3)
 - **isLocked** — Whether the period is locked for editing
 - **id** — Zero ID means no value exists; a real ID means data was entered
 

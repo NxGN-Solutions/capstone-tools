@@ -62,7 +62,7 @@ For widget templates, set this at both the widget default and data-item override
 | 0 | Validation Required |
 | 1 | Rejected |
 | 2 | Approved |
-| 3 | In Progress |
+| 3 | Validation In Progress |
 
 ### Narrative Across Sites (`orgRollUpMethod`)
 

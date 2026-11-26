@@ -207,10 +207,10 @@ Would you like to create a Change Request instead?
 ```
 ⚠️ Value saved but requires validation
 
-The value has been saved with status "Pending Validation".
+The value has been saved with status "Validation Required".
 An approver must validate this entry before it's final.
 
-Current validation level: Level 1 (Pending)
+Current validation level: Level 1 (Validation Required)
 ```
 
 #### Permission Denied

@@ -158,6 +158,7 @@ map when checking whether a command family exists.
 | `notifications templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `save`, `tokens`, `upload-excel` |
 | `perf` | `memory-throughput` |
 | `reporting computed-values` | `audit`, `download-document`, `download-excel`, `list`, `query` |
+| `reporting completion` | `follow-ups` |
 | `reporting dashboards` | `download-document`, `get-data`, `get-insights`, `header` |
 | `reporting widgets` | `get-data`, `info-card`, `pie-chart`, `table`, `text-block`, `textblock`, `xy-chart` |
 | `root` | `concepts`, `schema`, `status`, `version` |
@@ -2563,6 +2564,23 @@ cap data narrative-aggregation log --narrative "Water" --limit 20
 - `log` pages, filters and sorts on the server; `--failed` and `--narrative` are server filters. A failure that repeats
   is one row with its attempts.
 - Status and log need System view; Retry waiting (web only) needs System manage.
+
+---
+
+## People to Follow Up (HB-675)
+
+Who is late with data capture or validation across the workspace, most late values first: the list the home page shows
+administrators. Late means a value not captured or not validated for a month that ended within the last 12 months,
+counted as the progress reports count (a locked late value still counts; a value counts for each person who must act).
+
+```bash
+cap reporting completion follow-ups                 # top 10: person, to capture, to validate per level, rejected, sites, late since
+cap reporting completion follow-ups --limit 50
+cap reporting completion follow-ups --json          # everyone: available, windowStart, windowEnd, people[]
+```
+
+- "Nobody assigned" is late work no capturer or validator can act on (no grant at that site).
+- Needs Data Validation manage and access to every site and discipline; anyone else gets `available: false`.
 
 ---
 

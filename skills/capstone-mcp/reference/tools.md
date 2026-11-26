@@ -598,7 +598,18 @@ This bypasses the template discovery workflow — no need to list templates, gue
 
 **Returns:** A short status: up to date at a version, or catching up with the waiting, failed and stuck counts.
 
-## Reporting (2 tools)
+## Reporting (3 tools)
+
+### `reporting_completion_followUps`
+
+**People to follow up.** Who is late with data capture or validation across the workspace, most late values first:
+each person's values to capture, to validate per level and rejected values to fix, their sites and the oldest late
+month. Late means not captured or not validated for a month that ended within the last 12 months, counted as the
+progress reports count. "Nobody assigned" is late work nobody can act on. No parameters. Read-only.
+
+**Needs:** Data Validation manage and access to every site and discipline; otherwise it says the list is not available.
+
+**Returns:** How many people are late, then one line per person.
 
 ### `reporting_dashboards_getData`
 

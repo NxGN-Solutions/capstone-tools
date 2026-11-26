@@ -144,7 +144,7 @@ When the user's request matches a prompt, use it. Prompts encode best-practice w
 | **Auth** (6) | `auth_login`, `auth_logout`, `auth_whoami`, `auth_tenants_list`, `auth_switchTenant`, `auth_languages_list` | Identity OIDC (PKCE) + API key + tenant switching |
 | **Model** (12) | `model_metrics_list`, `model_metrics_get`, `model_orgNodes_list`, `model_frameworks_list`, `model_metricFrameworkNodes_list`, `model_disciplines_list`, `model_inputOverrides_list`, `model_inputOverrides_get`, `model_calculationOverrides_list`, `model_calculationOverrides_get`, `model_inputs_lint`, `model_calculations_lint` | Read model structure and org-node overrides; check an input or calculation before saving it |
 | **Data** (7) | `data_timePeriods_list`, `data_availability`, `data_inputValues_list`, `data_inputValues_save`, `data_computedValues_list`, `data_computedValues_query`, `data_narrative_aggregation_status` | Query and save data; whether rolled-up narrative text has caught up |
-| **Reporting** (2) | `reporting_dashboards_getData`, `reporting_widgets_getData` | Dashboard/widget data as CSV |
+| **Reporting** (3) | `reporting_dashboards_getData`, `reporting_widgets_getData`, `reporting_completion_followUps` | Dashboard/widget data as CSV; who is late with capture or validation |
 | **Templates** (7) | `templates_dashboards_list`, `templates_widgets_list`, `templates_reports_list`, `templates_captures_list`, `templates_reports_get`, `templates_reports_resolve_content`, `templates_captures_get` | Discover and inspect templates |
 | **Template CRUD** (13) | `templates_widgets_get/create/save/delete/lint/preview`, `templates_reports_create/save/delete`, `templates_dashboards_get/create/save/delete` | Create, update, and delete widget/report/dashboard templates |
 | **Apps** (7) | `apps_dashboard_render`, `apps_widget_infoCard`, `apps_widget_pieChart`, `apps_widget_xyChart`, `apps_widget_table`, `apps_widget_aiSummary`, `apps_chart_render` | Visual widgets rendered in conversation |
@@ -296,6 +296,7 @@ When analyzing retrieved data, use these techniques based on the user's question
 | Data write (Input Values save) | Yes | Business-key upsert |
 | Narrative roll-up status | Yes | `data_narrative_aggregation_status`; the log and Retry waiting are web and CLI only |
 | Reporting (Dashboard data, Widget data) | Yes | CSV + visualization |
+| People to follow up | Yes | `reporting_completion_followUps`: who is late with capture or validation |
 | MCP Apps (Dashboard render, Widget charts, AI Summary) | Yes | Interactive HTML in conversation |
 | Templates (List + Get for all template types) | Yes | Read-only |
 | Resources (6 auto-loaded contexts) | Yes | Cached model + data availability |
