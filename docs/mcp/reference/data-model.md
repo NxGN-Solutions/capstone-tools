@@ -31,6 +31,7 @@
 | 1 | PieChart | Part-to-whole relationships, breakdowns |
 | 2 | XYChart | Time series, trends, multi-metric comparison |
 | 4 | Table | Metric-backed dashboard table/grid |
+| 7 | Gauge | One metric at one site on a dial of its ranges |
 
 ### Calculation Phases
 

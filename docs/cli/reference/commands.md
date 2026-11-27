@@ -123,6 +123,7 @@ map when checking whether a command family exists.
 | `data input-values` | `create`, `download-excel`, `get`, `history`, `list`, `save`, `upload-excel`, `upload-status`, `validate` |
 | `data input-values attachments` | `download`, `upload` |
 | `data lookups` | `get` |
+| `data my-work` | `list` |
 | `data narrative-values` | `get`, `get-by-context`, `get-by-metric-context`, `history`, `list`, `save`, `submit`, `validate` |
 | `data recalculation` | `status`, `wait` |
 | `data narrative-aggregation` | `status`, `wait`, `log` |
@@ -160,9 +161,10 @@ map when checking whether a command family exists.
 | `reporting computed-values` | `audit`, `download-document`, `download-excel`, `list`, `query` |
 | `reporting completion` | `follow-ups` |
 | `reporting dashboards` | `download-document`, `get-data`, `get-insights`, `header` |
-| `reporting widgets` | `get-data`, `info-card`, `pie-chart`, `table`, `text-block`, `textblock`, `xy-chart` |
+| `reporting widgets` | `gauge`, `get-data`, `info-card`, `pie-chart`, `table`, `text-block`, `textblock`, `xy-chart` |
 | `root` | `concepts`, `schema`, `status`, `version` |
 | `security users` | `download-excel`, `get`, `upload-excel` |
+| `system configuration-history` | `list` |
 | `system tenants` | `ai-config get`, `ai-config models`, `ai-config remove-key`, `ai-config set`, `ai-config test`, `ai-config usage`, `bootstrap-local`, `create`, `delete`, `delete-status`, `delete-watch`, `fiscal-config update`, `get`, `list`, `sample`, `save`, `schema`, `teardown` |
 | `templates capture-templates` | `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `resolve-content`, `sample`, `save`, `schema`, `upload-excel` |
 | `templates dashboard-templates` | `audit`, `create`, `delete`, `download-excel`, `get`, `lint`, `list`, `rename`, `sample`, `save`, `schema`, `upload-excel` |
@@ -217,7 +219,8 @@ cap <domain> <entity> list [--json]
 | Org Node Templates | `cap templates org-node-templates list` | Alternate org views |
 | Input Values | `cap data input-values list --template <id> --data-interval week --periods "..."` | Requires template + data-interval + periods |
 | Narrative Values | `cap data narrative-values list --capture-interval quarter --periods "..."` | Text capture/validation rows |
-| Change Requests | `cap data change-requests list --search "<metric, person or CR number>"` | Governed input and narrative edit requests |
+| Change Requests | `cap data change-requests list --search "<metric, person or CR number>"` | Governed input and narrative edit requests; `--view waiting-on-me --counts` for what waits for you |
+| My Work | `cap data my-work list` | Sheets waiting for you in the capture, validation and approval galleries |
 | Data Locks | `cap data data-lock lock --data-interval quarter --periods "Q1 FY 25" --org-nodes <id> --discipline-nodes <id>` | Lock/unlock scoped data periods |
 
 > Template `list` commands return every template by default (up to 1000); `--limit` and `--offset` page on the server, and `--search` (widget and dashboard templates) filters names on the server. `--name` keeps only the exact name, ignoring case.
@@ -599,6 +602,10 @@ cap reporting widgets pie-chart <widget-template-id> --org-nodes <id> --data-int
 cap reporting widgets xy-chart <widget-template-id> --org-nodes <id> --data-interval match-selected --periods "FY 26" [--json]
 cap reporting widgets table <widget-template-id> --org-nodes <id> --data-interval quarter --periods "Q1 FY 25" [--json]
 cap reporting widgets text-block <widget-template-id> --org-nodes <id> --data-interval month --periods "Jan 25" [--json]
+# A gauge reads at ONE site: name one org node (the server refuses more with a 400, "A gauge shows one site").
+# Text prints the value (marked "off the scale" past a set end), range name, distance to the nearest range edge,
+# shape, scale settings and the ranges' arcs; --json returns value, arcs[], edges[], distance, offScale and the scale.
+cap reporting widgets gauge <widget-template-id> --org-nodes <id> --periods "Mar 2026" [--json]
 
 # Widget data (legacy CSV compatibility payload, not dashboard Table render JSON)
 cap reporting widgets get-data <widget-template-id> --org-node <id> --periods "FY 24, FY 25" [--json]
@@ -625,7 +632,7 @@ cap reporting dashboards get-data <dashboard-template-id> --org-node <id> --org-
 cap templates dashboard-templates audit <dashboard-template-id> --strict --json
 ```
 
-> **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`, `text-block`) use `--org-nodes` (plural). `--data-interval` is the request grain (`day|week|month|quarter|year|match-selected`). Names prefer that grain, then other types. Omit `--data-interval` to match selected periods (a widget that fixes its interval ignores the request interval, and a following widget's interval is only the default; a table or pie that follows the dashboard, `showDataIntervalFilter: true`, reads at `--data-interval` and uses its own interval only when it is omitted). `dashboards get-data` omit `--data-interval` uses the template `defaultDataInterval`, else match-selected. Its CSV is a **union of columns** across widgets — pinned or Static-range widgets can add extra period columns; use typed widget commands to inspect one widget. CSV `widgets get-data` uses `--org-node` (singular) and returns the legacy CSV envelope. Prefer `reporting computed-values` or typed widget commands for automation-safe checks.
+> **Note:** Type-specific widget commands (`info-card`, `pie-chart`, `xy-chart`, `table`, `text-block`, `gauge`) use `--org-nodes` (plural); `gauge` takes exactly one. `--data-interval` is the request grain (`day|week|month|quarter|year|match-selected`). Names prefer that grain, then other types. Omit `--data-interval` to match selected periods (a widget that fixes its interval ignores the request interval, and a following widget's interval is only the default; a table or pie that follows the dashboard, `showDataIntervalFilter: true`, reads at `--data-interval` and uses its own interval only when it is omitted). `dashboards get-data` omit `--data-interval` uses the template `defaultDataInterval`, else match-selected. Its CSV is a **union of columns** across widgets — pinned or Static-range widgets can add extra period columns; use typed widget commands to inspect one widget. CSV `widgets get-data` uses `--org-node` (singular) and returns the legacy CSV envelope. Prefer `reporting computed-values` or typed widget commands for automation-safe checks.
 
 `--org-node-template <id|physical>` on `dashboards get-data`, `get-insights`, `header` and `download-document` picks the org structure for a dashboard with `showOrgNodeTemplateFilter: true`. Omit it for the dashboard's default structure. The key must be one of the dashboard's allowed structures (`orgNodeTemplates`, or every structure you can access when that list is empty, plus `physical` when `allowPhysicalStructure` is true), else the API answers 403. A fixed dashboard only accepts its own structure. Pass an `--org-node` of the chosen structure. A node of a structure you have no grant for is refused (403), whatever key you name: on dashboard, widget and header requests alike.
 
@@ -681,6 +688,22 @@ Allowed enum/token values are:
 Use safe color values only: registry design tokens from `cap meta lookups get color-tokens`, `#rgb`, `#rrggbb`, or `#rrggbbaa`. Invalid identifiers, `rgb(...)`/`rgba(...)`, `var(...)`, raw CSS, HTML, scripts, callbacks, and URL values are rejected on strict save. Dashboard and widget Excel uploads warn at the cell level and ignore invalid color cells instead of failing the row. Use safe icon tokens containing letters, numbers, underscores, or hyphens.
 
 Structured lengths are JSON objects, not CSS strings. Use a single `value` or side-specific `top`, `right`, `bottom`, and `left` numbers with `unit: { "id": 0, "name": "Px" }` or `unit: { "id": 1, "name": "Rem" }`. Free-text CSS shorthands such as `"1rem 2rem"` are rejected.
+
+A widget placement can open a detail dashboard or report when a reader clicks it. Set at most one target on the
+placement's tree item:
+
+| Field | Meaning |
+|-------|---------|
+| `linkedDashboardTemplate` | `{ "id": "<dashboard template id>" }`. The dashboard the widget opens. |
+| `linkedTabId` | Optional. The id of one of that dashboard's top-level sections, which opens as its tab. A section that no longer exists opens the first tab, and lint warns `LinkedTabMissing`. |
+| `linkedReportTemplate` | `{ "id": "<report template id>" }`. The report the widget opens. |
+| `linkedTargetCanOpen` | Read only. It says whether the caller may open the target. Save ignores it. |
+
+The target opens on the reader's site, periods and interval. Lint refuses a placement with both targets
+(`LinkHasTwoTargets`), or with a target that is unknown, deleted, or in another workspace (`LinkedTargetNotFound`).
+You can't delete a dashboard or report that a placement links to. The delete answers 409 and lists the linking
+dashboards under `uses`. In the Excel workbook the link is in the `Linked Dashboard`, `Linked Tab` and `Linked Report`
+columns, by name. One upload can create a dashboard and link to it.
 
 Excel dashboard-template workbooks include `Dashboard Style JSON` on the dashboard row and row-level metadata columns named `nodeLayoutJson`, `nodeStyleJson`, `placementLayoutJson`, and `calloutJson`. These cells contain the same JSON objects used by `save`.
 
@@ -774,8 +797,10 @@ runs first, so a malformed payload is reported the same way) or `--id` (a saved
 template, read first and checked as stored). **Errors** are exactly what `save`
 would reject; **warnings** and **notes** never block a save. Each issue has a
 stable `code`, a `message`, the top-level `field` it belongs to and an editor
-`stage` (`data`, `layout`, `look` or `style`; empty for the name and the
-discipline); some also carry `params`. Text output prints one line per issue,
+`stage` (`template` for the name, description and discipline, then `data`,
+`layout`, `look` or `style`); some also carry `params`. The discipline is
+optional: it files the widget in the widget list, and an unfiled widget is
+listed under "No discipline". Text output prints one line per issue,
 errors first, as `Error   [Code] field: message`, then a count line. The exit
 code is `2` when there is at least one error and `0` otherwise. `--json` prints
 the API result unchanged: `{ "errors": [...], "warnings": [...], "notes": [...] }`.
@@ -785,7 +810,7 @@ Table templates report, among others, `NameRequired`, `NameDuplicate` (another
 template in the tenant has the name), `MetricsRequired` (Static selection with
 filters but no metrics listed), `NarrativesRequired`, `FrameworkGroupingNeedsMatching`,
 `OrgNodeAttributeFilterIncomplete` and `UnknownMetrics` (a metric that does not
-exist in the tenant). Info card templates (stages `data`, `look` and `style`)
+exist in the tenant). Info card templates (stages `template`, `data`, `look` and `style`)
 report, among others, `DataItemDuplicate` (the same metric twice with the same
 period, sites and combining), `UnknownMetrics` and `MetricNotViewable` on a row,
 `StyleSlotValueInvalid` and `StyleSlotPropertyUnsupported` (with `path` and
@@ -794,7 +819,7 @@ and `TrendIconWithoutLabel`, and the notes `OverrideFieldsCleared` and
 `TrendRangesGiveNoVerdict` (a `#trend` coloured by direction because its
 metric's ranges give no verdict); see
 [Create Widget Template](../recipes/configuration/create-widget-template.md#infocard-lint).
-Pie templates (stages `data`, `layout`, `look` and `style`) report, among
+Pie templates (stages `template`, `data`, `layout`, `look` and `style`) report, among
 others, `PieChartTypeRequired`, the center codes (`PieCenterNeedsDonut`,
 `PieCenterModeReserved`, `PieCenterFieldsNeedMode`, `PieCenterTextRequired`,
 `PieCenterFieldNotForMode`, `PieCenterMetricRequired`, `PieCenterMetricNotInPie`,
@@ -841,7 +866,7 @@ Error: Failed to save widget template: 1 lint error(s).
 Without lint (an older server), a save the server rejects lists each field's
 messages under `errors` instead.
 
-#### Preview a draft table, info card, text block, pie chart or XY chart widget template
+#### Preview a draft table, info card, text block, pie chart, XY chart or gauge widget template
 
 ```bash
 cap templates widget-templates preview --file widget.json --org-nodes <guid> --periods "Jan 2026,Feb 2026" [--data-interval day|week|month|quarter|year] [--json]
@@ -855,7 +880,7 @@ interval keeps it, and one that follows reads at `--data-interval`, else at its 
 table fixes its interval and `--data-interval` asks for another one, the JSON has `fixedDataInterval`. The preview shows every
 row: the CLI pages through the preview 1000 rows at a time until `totalCount` (the Preview API alone returns only the
 table's first page, `pageSize` rows, to a request without `take`). Text mode prints the same grid as `cap reporting widgets table`; `--json`
-prints the same table render contract. Table, info card, text block, pie chart and XY chart templates preview
+prints the same table render contract. Table, info card, text block, pie chart, XY chart and gauge templates preview
 (the CLI reads the type from `widgetType` in the file); any other type is
 refused (HTTP 400). A draft wider than the report grid's cell
 limit is refused with code `WideGridCellLimit`. It needs `Templates.Manage` and
@@ -881,6 +906,15 @@ footnote and any warnings; `--json` prints the text block render contract, where
 each value span carries the `periodName` it was read at. A text block that would
 not render (no text at all, no period window) is refused with HTTP 400, each
 message under its field.
+
+A gauge previews in one request at the one org node you name (more is refused
+with HTTP 400, "A gauge shows one site") and renders exactly as
+`cap reporting widgets gauge` renders it once saved: the value, marked
+`(off the scale)` when it is past a set minimum or maximum, the range it reads in,
+the distance to the nearest range edge, the shape, the scale settings and the
+ranges' arcs. `--json` prints the gauge render contract. For the gauge's fields
+and style, see
+[Configure Gauge Styles](../recipes/configuration/configure-gauge-styles.md).
 
 A pie previews in one request and renders exactly as
 `cap reporting widgets pie-chart` renders it once saved. Text mode prints the
@@ -1237,6 +1271,26 @@ rows grouped without Org Node, or a grouping viewers can change, need
 at their root. Notifications always use the default structure. Dashboards have
 their own org structure switch (see `reporting dashboards` above).
 
+`filedUnder` (optional, `{ "id": "<discipline-id>" }`) files a capture, report
+or dashboard template under a discipline in its template list. It doesn't
+limit the template's metrics or rows (the Limit to disciplines do that).
+`save` replaces it, so omit it or send `null` to leave the template unfiled;
+`get --json | save` keeps it. `get` and `list` print it as `Filed Under`, and
+the Excel workbooks carry it in a `Filed Under` column (the discipline's path).
+
+`icon`, `backgroundColor` and `image` (optional) are the template's gallery card
+look, set as on a site: an icon class (`fa-solid fa-leaf`), a palette colour or
+a hex (`success`, `#6172F3`), and `{ "type", "fileName", "data" }` with the
+image as base64. A new image must be a PNG, JPEG, GIF or WebP of 24 KB or less;
+a colour or image saved before that rule keeps saving unchanged. An image with
+empty `data` but its `fileName` keeps the stored image. `save` replaces the
+look, so `get --json | save` keeps it and leaving the fields out clears them.
+`get` prints it as `Card` (icon, colour and image file name). The Excel
+workbooks carry it in the `Card Icon`, `Card Background Color`, `Card Image
+Type`, `Card Image File Name` and `Card Image Data` columns; a workbook without
+them clears the look and warns. Sites, disciplines and framework nodes follow
+the same image and colour rule, and `get --json` now includes their `image`.
+
 #### Lint a capture or report template
 
 ```bash
@@ -1252,7 +1306,8 @@ listed; one that lists narratives ignores the narrative attribute filters. `lint
 clear what is ignored. **Errors** are exactly what `save` would reject; **warnings**
 never block a save. Each issue has a stable `code`, a `message`, the top-level
 `field` it belongs to (camelCase, empty when not tied to one field) and an
-editor `stage` (`data`, `layout` or `look`). An issue whose
+editor `stage` (`template` for the name, description and `filedUnder`, then
+`data`, `layout` or `look`). An issue whose
 message carries values (a limit, a range, narrative names) also has `params`,
 by camelCase name, which `--json` passes through; the text output keeps
 printing `message`. The exit code
@@ -1571,6 +1626,7 @@ cap templates widget-templates schema --widget-type pie --json
 cap templates widget-templates schema --widget-type xy --json
 cap templates widget-templates schema --widget-type table --json
 cap templates widget-templates schema --widget-type textblock --json
+cap templates widget-templates schema --widget-type gauge --json
 cap templates widget-templates sample --widget-type pie --json
 ```
 
@@ -1799,6 +1855,8 @@ Table templates use the same shared WidgetTemplate API and CLI command surface a
 
 TextBlock templates use the same shared WidgetTemplate API, CLI command surface, and widget-template Excel download/upload workflow. Manage them with `cap templates widget-templates list|get|get-bulk|create|save|delete|download-excel|upload-excel`, set the widget type to `{ "id": 6, "name": "TextBlock" }`, and render live data with `cap reporting widgets text-block ...`. TextBlock discovers metrics and narratives from explicit tokens in `title`, `subtitle`, `description`, and `footnote` (for example `"description": "{<narrative-id>}|-1|"`); do not create hidden `dataItems[]` rows for those references. Excel roundtrips `Subtitle` and `Text Block Style` columns alongside the existing title/description/footnote fields.
 
+Gauge templates use the same shared WidgetTemplate API and CLI command surface. Set the widget type to `{ "id": 7, "name": "Gauge" }`; `cap templates widget-templates sample --widget-type gauge --json` emits a save-ready one. A gauge shows one metric (`dataItems` holds one row, `GaugeOneMetricOnly` otherwise) at one site. `gaugeShape` is Half Dial (0), Arc Dial (1) or Solid (2). The scale fields (`gaugeStartAtZero`, `gaugeMinimum`, `gaugeMaximum`, `gaugeMajorStep`, `gaugeMinorTicksPerStep`, `gaugeLogarithmic`) mean what an XY chart's value-axis fields mean; `gaugeShowRangeName` and `gaugeShowDistance` default to true. The style's `rangeColours` (`strong` or `asSet`) and `rangeRoomPercent` (0 to 50, default 10) set how inherited ranges are drawn and the room past an open outer range. Render live data with `cap reporting widgets gauge ...`; see [Configure Gauge Styles](../recipes/configuration/configure-gauge-styles.md).
+
 AI Summary templates use the same shared WidgetTemplate API and CLI command surface. Set the widget type to `{ "id": 3, "name": "AISummary" }`; `cap templates widget-templates sample --widget-type ai-summary --json` emits a save-ready one. `scope` is `Peers` (0, the widgets beside its placement), `Descendants` (1, its section and below) or `PickedMetrics` (2, the metrics in `dataItems`, each with the same `metricPartitioningMode`: `None`, `Children` or `Descendants`). A section scope keeps no `dataItems`. `leaveOutWidgetTypes` drops widget types from a section scope; `maxInsights` is 1 to 8 (`AISummaryMaxInsightsOutOfRange`); `insightTypes` needs at least one kind (`AISummaryInsightTypesRequired`); `insightOrder` is `AsWritten` or `SeverityFirst`. A dashboard placement points at the template like any other widget. Excel roundtrips the AI Summary columns (Scope, Leave Out, Max Insights, Insight Types, Order, AI Summary Style).
 
 **Widget Types:**
@@ -1810,6 +1868,7 @@ AI Summary templates use the same shared WidgetTemplate API and CLI command surf
 | 3 | AISummary | Checked AI insights about a section's widgets or picked metrics |
 | 4 | Table | Dashboard grid/table render |
 | 6 | TextBlock | Metric-aware dashboard text |
+| 7 | Gauge | One metric at one site on a dial of its ranges |
 
 **Table validation highlights:**
 | Area | Rule |
@@ -2095,6 +2154,11 @@ kept because a person changed the value). `use-ai-version` replaces the text
 with that version in every language, as your capture save; it is refused when
 there is no new version or the period is locked. `list` shows both in its `AI`
 column.
+
+To clear a narrative value, save its business key with `"text": ""`. Leaving
+`text` out keeps the stored text. A value with no text, comment or file left is
+deleted and listed in `deletedNarrativeValueIds`. See
+[Clear a Narrative Value](./model-building.md#clear-a-narrative-value).
 
 For locked periods, apply the data lock first, then use the unified change
 request workflow. Change requests can carry narrative edits in the same
@@ -2563,7 +2627,29 @@ cap data narrative-aggregation log --narrative "Water" --limit 20
   stalled wait names the next step: open System > Narrative Aggregation Log and press Retry waiting.
 - `log` pages, filters and sorts on the server; `--failed` and `--narrative` are server filters. A failure that repeats
   is one row with its attempts.
-- Status and log need System view; Retry waiting (web only) needs System manage.
+- Status needs any page's view permission (the header shows it to everyone, HB-678); the log needs System view; Retry
+  waiting (web only) needs System manage.
+
+---
+
+## Configuration History (HB-488)
+
+Who changed which input, calculation, site, discipline, framework node, spreadsheet, report, widget or dashboard
+template, when, how, and the value before and after, as System > Configuration History shows it. Read-only.
+
+```bash
+cap system configuration-history list --json                        # newest first
+cap system configuration-history list --type Input --since 2026-11-01
+cap system configuration-history list --item <input-id> --json      # one item's changes
+cap system configuration-history list --user someone@example.com --until 2026-11-30
+```
+
+- `--type` is one of `Input`, `Calculation`, `OrgNode`, `DisciplineNode`, `FrameworkNode`, `SpreadsheetCaptureTemplate`,
+  `SpreadsheetReportTemplate`, `WidgetTemplate`, `DashboardTemplate`.
+- `--user` takes the email shown in the history, or the user's id. `--since` and `--until` are UTC days, both included.
+- Each row is one changed field, or one row for a whole item created or deleted. `How` is `Web`, `ExcelUpload` (with
+  the file name), `Cli`, `ApiKey` or `Integration`.
+- Filters and paging run on the server. Needs the Configuration History view permission (the Auditor role has it).
 
 ---
 
@@ -2581,6 +2667,28 @@ cap reporting completion follow-ups --json          # everyone: available, windo
 
 - "Nobody assigned" is late work no capturer or validator can act on (no grant at that site).
 - Needs Data Validation manage and access to every site and discipline; anyone else gets `available: false`.
+
+---
+
+## My Work and Change Request Views (HB-678)
+
+What waits for the signed-in person: the numbers the home page and the galleries' My work tab show.
+
+```bash
+cap data my-work list                               # capture, validation and approval: totals, then sheets busiest first
+cap data my-work list --gallery validation          # one gallery: capture, validation or approval
+cap data my-work list --json                        # tenant, galleries[]: gallery, totals, sheets[]
+cap data change-requests list --view waiting-on-me --counts
+cap data change-requests list --view raised-by-me --counts --json   # rows, view and counts
+```
+
+- Capture counts values to capture plus rejected values to fix; validation the values waiting for your level; approval
+  the change request values you can decide now. Only your own sites, disciplines and levels count.
+- A sheet holding the gallery's whole total (a catch-all sheet) is listed after the others, as on the home page.
+- `--view` is `waiting-on-me`, `raised-by-me`, `rejected` or `all`. Without it the list shows all requests in its usual
+  order. `--status` works only with `--view all` (the other views choose their own requests). `--counts` adds the tab
+  counts (first page only): requests and values waiting on me, requests raised by me.
+- `cap data recalculation status` and `cap data narrative-aggregation status` work for anyone who can open a page.
 
 ---
 

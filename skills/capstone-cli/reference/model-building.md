@@ -106,6 +106,7 @@ For widget templates, set this at both the widget default and data-item override
 | 3 | AI Summary | AI-generated insights from sibling/descendant widgets |
 | 4 | Table | Metric-backed dashboard table/grid |
 | 6 | TextBlock | Metric-aware dashboard text with title, subtitle, description, and footnote |
+| 7 | Gauge | One metric at one site on a dial of its ranges (Half Dial, Arc Dial or Solid) |
 
 ### Widget Sizes
 
@@ -985,6 +986,42 @@ Null rows can be mixed with value rows in one batch. Clearing follows the same
 rules as any save: a value in a locked period is rejected until the period is
 unlocked. Wait for recalculation (`cap data recalculation wait <version>`)
 before checking computed values.
+
+### Clear a Narrative Value
+
+Narrative values clear the same way. Save the cell's business key (`narrative`
++ `orgNode` + `timePeriodType` + `startDate`) with `"text": ""`. The save clears
+the text in the request's language and leaves the other languages alone.
+
+Leaving `text` out (or sending `null`) keeps the stored text. A save that only
+changes the comment or the files therefore clears nothing.
+
+```bash
+cat <<'EOF' | cap data narrative-values save
+{
+  "narrativeValues": [
+    {
+      "text": "",
+      "narrative": { "id": "<narrative-id>" },
+      "orgNode": { "id": "<org-node-id>" },
+      "timePeriodType": { "id": 3, "name": "Quarter" },
+      "startDate": "2026-01-01T00:00:00Z"
+    }
+  ]
+}
+EOF
+```
+
+The output reads `Saved 0 and cleared 1 narrative value(s).`. With `--json`,
+`deletedNarrativeValueIds` lists the deleted values.
+
+The comment and file rules match input values:
+
+- When no text, comment or file is left, the value is deleted.
+- A stored comment or file keeps the record. A second empty-text save removes
+  the comment, and the files stay until you remove them.
+- A locked period rejects the clear until it is unlocked.
+- Each clear appears in the cell's history.
 
 ### Selectable Period Validation and Diagnostics
 

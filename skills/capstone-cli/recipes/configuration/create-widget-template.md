@@ -1,6 +1,6 @@
 # Recipe: Create Widget Template
 
-> Guided workflow for creating widget templates (InfoCard, PieChart, XYChart, TextBlock, Table).
+> Guided workflow for creating widget templates (InfoCard, PieChart, XYChart, TextBlock, Table, Gauge).
 >
 > **Visual standard:** when styling any widget, take the `styleConfiguration`
 > variant from the
@@ -23,9 +23,9 @@
 ## Required Context
 
 Before starting, Claude should know:
-- [ ] What type of widget (InfoCard, PieChart, XYChart, TextBlock, Table)
+- [ ] What type of widget (InfoCard, PieChart, XYChart, TextBlock, Table, Gauge)
 - [ ] Which metric(s) to display
-- [ ] Which discipline to categorize under
+- [ ] Which discipline to file it under (optional)
 
 **If missing:** Claude will ask clarifying questions.
 
@@ -44,6 +44,7 @@ Before starting, Claude should know:
 | **XYChart** (id: 2) | Time series, comparisons | "Monthly Energy Consumption (Jan-Dec)" |
 | **Table** (id: 4) | Metric-backed dashboard tables/grids | "Portfolio KPI matrix by company and period" |
 | **TextBlock** (id: 6) | Metric-aware dashboard text with title, subtitle, description, and footnote | "Portfolio summary for Q1 with metric values and trend text" |
+| **Gauge** (id: 7) | One KPI at one site against its ranges, on a dial | "TRIFR 2.03: 2.00 and above, 0.03 above 2.00" |
 
 **Ask if not provided:**
 - "What kind of visualization do you need?"
@@ -51,9 +52,12 @@ Before starting, Claude should know:
 
 ---
 
-### Step 2: Select the Discipline
+### Step 2: Select the Discipline (optional)
 
-**Purpose:** Categorize the widget for organization and permissions.
+**Purpose:** File the widget under a discipline so it groups with its neighbours in the widget list. The web editor
+calls it **Filed under**, on the widget's **Template** stage. It is optional: leave `discipline` out (or send `null`) and
+the widget is listed under **No discipline**. It is never filled in from the widget's metrics, and it doesn't limit which
+metrics or rows the widget shows. An update that leaves `discipline` out clears it, so `get --json | save` keeps it.
 
 **Command:**
 ```bash
@@ -62,7 +66,7 @@ cap masterdata disciplines list --json
 
 **Get discipline ID** for the widget's discipline field.
 
-**Discipline Assignment Rules:**
+**Discipline Assignment Rules** (when you file it):
 
 1. **Match the primary metric's discipline.** If the widget shows "Total Cost", assign it to the same discipline as the Total Cost metric (e.g., `Finance->Cost`).
 2. **Cross-discipline widgets use the perspective's discipline.** A widget showing OEE + Profit together belongs to `Finance` (the financial perspective), not `Production`.
@@ -107,8 +111,8 @@ cap model metrics list --json
 - `name` - Internal name for the template (follows naming convention, not shown to users)
 - `title` - Displayed to dashboard users as the widget heading
 - `description` - Optional text shown to dashboard users below the widget content (see User-Facing Fields rules below)
-- `widgetType` - { id: 0|1|2|4|6, name: "InfoCard"|"PieChart"|"XYChart"|"Table"|"TextBlock" }
-- `discipline` - { id: "<id>" }
+- `widgetType` - { id: 0|1|2|4|6|7, name: "InfoCard"|"PieChart"|"XYChart"|"Table"|"TextBlock"|"Gauge" }
+- `discipline` - optional, { id: "<id>" }: where the widget is filed in the widget list (Filed under). Omitted or `null` leaves it unfiled
 - `dataRangeMode` - { id: 1, name: "Static" } or { id: 0, name: "Dynamic" }. XY charts and tables also take { id: 2, name: "SelectedYear" }: the periods of the tenant's year that holds the viewer's last selected period, from the year's start up to that period (FY 27 picked on a quarterly chart: Q1 to Q4; Q2 FY 27 picked: Q1 and Q2). XY charts also take { id: 3, name: "SelectedYearToLatestData" }, which ends at the latest period in which a series has a value; rows with the Reference line role don't count. Neither uses `dataPeriodStart` or `dataPeriodEnd`. Other widget types refuse them (`DataRangeModeNotSupported`). The window only picks periods: every value is the stored computed value of its period. For one year-so-far figure, read the metric at the Year interval or model a to-date calculation such as `SUM([Metric]|YEARSTART():NOW()|)`
 - `dataInterval` - { id: 2, name: "Month" }, { id: 3, name: "Quarter" }, etc.
 - `showDataIntervalFilter` (every widget type) - `true` follows the dashboard's interval, with `dataInterval` as the default when the dashboard sends none; `false` fixes `dataInterval` (lint error `IntervalFixedNeedsInterval` without one). Left out on create, the widget follows exactly when it has no `dataInterval`; left out on update, it keeps its saved value (clearing `dataInterval` makes it follow). Every period offset of a following widget counts in the interval the dashboard shows: the widget's window, each data item's (`dataItems[].dataPeriodStart`/`dataPeriodEnd`, an XY series' comparison shift included) and text-token offsets. A following card with a `Quarter` default on a Month dashboard reads `-1` as the previous month. When an offset must mean a fixed span of time ("a year earlier"), fix the interval. Excel column: `Table Show Data Interval Filter`, on every widget type's rows
@@ -176,6 +180,12 @@ Do not author `includedDataTypes` or `orgNodeTemplateId` for new Table templates
 - `showDataIntervalFilter` (optional) - as for InfoCard: `true` follows the dashboard's interval with `dataInterval` as the default, `false` fixes `dataInterval`. Left out on create, a text block follows exactly when it has no `dataInterval`
 
 TextBlock does not support `dataItems`; metrics and narratives are discovered only from explicit text tokens. `styleConfiguration` is optional and uses bounded TextBlock slots for `panel`, `title`, `subtitle`, `description`, `footnote`, `trend`, and `stateMessages`. TextBlock style colors accept registry tokens from `cap meta lookups get color-tokens` or `#RGB`/`#RRGGBB`/`#RRGGBBAA` hex values, font family uses the shared `theme`/`sans`/`serif`/`mono`/`nunito`/`roboto`/`poppins`/`arial` catalogue, and font weight is `Normal` or `Bold` (Save stores `Medium` as `Normal` and `Semibold` as `Bold`, as the app's fonts draw them).
+
+**Required fields for Gauge widgets:**
+- `dataItems` - exactly one row, the metric the gauge shows (error `GaugeOneMetricOnly` otherwise), with `metric`, `metricPartitioningMode` and the row's `timePeriodAggregationMethod`. A gauge has nothing to rank or filter, so it takes no `valueSelectionConfig`
+- `gaugeShape` - { id: 0, name: "Half Dial" }, { id: 1, name: "Arc Dial" } or { id: 2, name: "Solid" } (a three-quarter arc filled to the value, without a needle)
+
+A gauge reads at **one site**: `reporting widgets gauge` and `widget-templates preview` send the org nodes you name, and the server refuses more than one with a 400, "A gauge shows one site". Its scale fields mean what an XY chart's value-axis fields mean: `gaugeStartAtZero` (default `true`; a negative value or range edge still widens the scale below 0), `gaugeMinimum` and `gaugeMaximum` (`null` for Auto, which takes the value and every range edge; a set end holds, and a value past it pins the needle there and shows "Off the scale"), `gaugeMajorStep` (above 0, not on a log scale), `gaugeMinorTicksPerStep` (0 to 9) and `gaugeLogarithmic`. `gaugeShowRangeName` and `gaugeShowDistance` (both default `true`) show the range the value reads in and the distance to the nearest range edge. `dataItems[0].bands` gives the gauge its own ranges, drawn as chosen; left `null`, it takes the metric's or the site's ranges, drawn per the style's `rangeColours` (`strong`, the default, or `asSet`). An automatic end past an open outer range leaves room: the style's `rangeRoomPercent`, 0 to 50, 10 by default. See [Configure Gauge Styles](./configure-gauge-styles.md) for the style slots and examples.
 
 **Data Interval Reference:**
 | ID | Name |
@@ -567,6 +577,7 @@ Besides the shared codes (`NameRequired`, `DataItemsRequired`, `MetricFiltersReq
 - **Line shapes.** A Line or Area series takes `"lineShape": { "id": 1, "name": "Smooth" }` or `{ "id": 2, "name": "Step" }`; Straight (0) is the default.
 - **Height.** `heightMode` Fit (0, default: fills the dashboard placement, at least 400 px), Grow (1: a horizontal chart gets about 28 px per bar, 240–1,200 px) or Fixed (2, with `height` 240–1,200 px, `XyHeightInvalid`). The plot never gets shorter than the placement.
 - **Leaving these out keeps them.** A payload without `role`, an axis without `logarithmic` or `side`, or a chart without `heightMode` keeps the stored settings, so older payloads and workbooks don't reset them. An axis without `logarithmic` keeps each of `minimum`, `maximum`, `majorStep` and `minorTicksPerStep` that it leaves out; an axis that sends `logarithmic` sends its scale in full, so one without `majorStep` clears the step.
+- **Bridge charts.** `"chartKind": { "id": 1, "name": "Bridge" }` draws a bridge from one total to another. It has one row with `"role": { "id": 2, "name": "BridgeFrom" }` and one with `"role": { "id": 3, "name": "BridgeTo" }`, each a metric totalled over its window with the widget's `timePeriodAggregationMethod` (left out, the last value), on one axis, upright, unstacked. `bridgeExplainedBy` makes the steps: `0` Sites (one step per child site), `1` FormulaParts (one per part of the To calculation's plain-sum formula; both bars the same calculation, for example two years apart with the last N periods), `2` ChosenMetrics (rows with `"role": { "id": 4, "name": "BridgeStep" }`; a step with `"bridgeFromMetric": { "id": "…" }` is its metric minus that one, without it the metric is used as captured) or `3` Periods (one step per period). Lint notes each way whose steps can't add up, with the reason, and refuses the chosen one. `bridgeDecreaseIs` `0` Neither, `1` Good, `2` Bad colours the steps; `bridgeStepLimit` (2–40, default 8) pools the smallest steps. Step rows carry no window. Excel columns: `XY Chart Kind`, `XY Bridge Explained By`, `XY Bridge Decrease Is`, `XY Bridge Step Limit` and, per row, `Bridge From Metric` (a metric name).
 - **Dashes are presets.** `series.dashArray` takes `Solid`, `Dash`, `Dot`, `DashDot` or `LongDash`. A raw `strokeDashArray` (chart-wide or per series) is still accepted: Save replaces it with the preset of the same pattern (`[6,4]` Dash, `[2,4]` Dot, `[6,4,2,4]` DashDot, `[12,6]` LongDash), otherwise DashDot when its dashes differ in length, otherwise the preset with the nearest dash length (Dot 2, Dash 6, LongDash 12; a tie takes Dash), with the note `XyDashPatternMapped`.
 
 ```json
@@ -996,13 +1007,13 @@ Note    [SettingRetiredCleared] orgNodeTemplateId: The web editor doesn't offer 
 
 Errors are exactly what `create` and `save` would reject (exit code `2`); fix them and lint again. Warnings and notes never block a save. Use `--id <guid>` instead of `--file` to check a saved template as it is stored, and `--json` for the raw `{ "errors", "warnings", "notes" }` result. `create` and `save` run the same check first: a template with errors is not sent, and the warnings print after saving. Against an older server without lint they save without it.
 
-**Preview a draft table, info card, text block or pie chart (nothing is saved):**
+**Preview a draft table, info card, text block, pie chart or gauge (nothing is saved):**
 ```bash
 cap templates widget-templates resolve-content --file widget.json
 cap templates widget-templates preview --file widget.json --org-nodes <org-node-id> --periods "Jan 2026,Feb 2026"
 ```
 
-`resolve-content` lists the metrics and narratives the table resolves to. `preview` renders every row for the org node and the named periods, with the same options and the same grid as `cap reporting widgets table`; add `--data-interval month` (or another interval) to set the request interval and `--json` for the full render contract. Table, info card and pie chart templates preview and resolve; an info card previews in one request and prints its items. A text block previews in one request and prints its resolved title, subtitle, description and footnote; metric names in its text resolve as `save` stores them, and `--json` returns the text block render contract, each value span with the `periodName` it was read at. A pie previews in one request and prints what `cap reporting widgets pie-chart` prints once it is saved: the center, the slices (a negative one marked `(not drawn)`) and its data warnings; `--json` returns the pie render contract the server returned, without the CLI's `noData` hint. A filtered pie whose filters match no metric is refused with HTTP 400 "No metrics match this widget's filters." `resolve-content` lists a pie's slice metrics (picked, or matched by its filters), not its center metric. `resolve-content` does not take text blocks: their references are the tokens in their text.
+`resolve-content` lists the metrics and narratives the table resolves to. `preview` renders every row for the org node and the named periods, with the same options and the same grid as `cap reporting widgets table`; add `--data-interval month` (or another interval) to set the request interval and `--json` for the full render contract. Table, info card and pie chart templates preview and resolve; an info card previews in one request and prints its items. A text block previews in one request and prints its resolved title, subtitle, description and footnote; metric names in its text resolve as `save` stores them, and `--json` returns the text block render contract, each value span with the `periodName` it was read at. A pie previews in one request and prints what `cap reporting widgets pie-chart` prints once it is saved: the center, the slices (a negative one marked `(not drawn)`) and its data warnings; `--json` returns the pie render contract the server returned, without the CLI's `noData` hint. A filtered pie whose filters match no metric is refused with HTTP 400 "No metrics match this widget's filters." `resolve-content` lists a pie's slice metrics (picked, or matched by its filters), not its center metric. `resolve-content` does not take text blocks: their references are the tokens in their text. A gauge previews in one request at the one org node you name and prints what `cap reporting widgets gauge` prints once it is saved: the value (marked `(off the scale)` when it is past a set end), the range name, the distance to the nearest range edge, the shape, the scale settings and the ranges' arcs; `--json` returns the gauge render contract.
 
 **Command (auto-wrapped JSON):**
 ```bash

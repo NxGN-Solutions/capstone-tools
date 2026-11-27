@@ -203,7 +203,7 @@ SUM([A], [B], [C])                Sum of values
 
 **Capstone Term:** Widget
 
-**Definition:** A visual representation of data. Four data widget types exist:
+**Definition:** A visual representation of data. Five data widget types exist:
 
 | Type | Best For | MCP Tool |
 |------|----------|----------|
@@ -211,6 +211,7 @@ SUM([A], [B], [C])                Sum of values
 | PieChart | Part-to-whole breakdown | `apps_widget_pieChart` |
 | XYChart | Time series, trends, multi-metric comparison | `apps_widget_xyChart` |
 | Table | Tabular metric rows and formatted values | `apps_widget_table` |
+| Gauge | One KPI at one site against its ranges, on a dial | `apps_widget_gauge` |
 
 **MCP Apps:** Use `apps_widget_*` tools to render interactive visualizations directly in the conversation.
 
@@ -314,6 +315,7 @@ SUM([A], [B], [C])                Sum of values
 | 0 | InfoCard | Single KPI value with optional comparison |
 | 1 | PieChart | Part-to-whole relationships, breakdowns |
 | 2 | XYChart | Time series, trends, multi-metric comparison |
+| 7 | Gauge | One metric at one site on a dial of its ranges |
 
 **MCP Tools:**
 - `templates_widgets_list` — List widget templates

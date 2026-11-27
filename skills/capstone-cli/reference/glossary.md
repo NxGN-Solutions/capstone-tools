@@ -254,7 +254,7 @@ cap reporting computed-values list --template <completion-template-id> --data-in
 
 **Capstone Term:** Widget
 
-**Definition:** A visual representation of data (Info Card, Pie Chart, XY Chart, Table, TextBlock). Widgets display computed values based on their template configuration.
+**Definition:** A visual representation of data (Info Card, Pie Chart, XY Chart, Table, TextBlock, Gauge). Widgets display computed values based on their template configuration.
 
 **CLI:**
 ```bash
@@ -368,9 +368,10 @@ cap templates report-templates get <id> --json
 | 2 | XYChart | Time series, trends, multi-metric comparison |
 | 4 | Table | Metric-backed dashboard table/grid |
 | 6 | TextBlock | Metric- and narrative-aware dashboard text slots |
+| 7 | Gauge | One metric at one site on a dial of its ranges |
 
 **Key Properties:**
-- `widgetType` - Visualization type (InfoCard, PieChart, XYChart, Table, TextBlock)
+- `widgetType` - Visualization type (InfoCard, PieChart, XYChart, Table, TextBlock, Gauge)
 - `discipline` - Categorization for organization and permissions
 - `dataItems` - Array of metrics to display for metric-set widgets; TextBlock does not support data items and discovers metrics and narratives from text tokens (`[metric-guid]`, `{narrative-guid}`)
 - `dataRangeMode` - Static (a fixed window of period offsets), Dynamic (the viewer's periods), SelectedYear (the viewer's year up to their period; XY charts and tables) or SelectedYearToLatestData (the same, ending at the latest period with data; XY charts)
@@ -386,6 +387,7 @@ cap templates report-templates get <id> --json
 - `narrativeSelectionMode`, `narrativeScopeConfigured`, `narratives`, and narrative scope filters - Table dynamic/static narrative row controls
 - `styleConfiguration` - Table semantic-HTML style contract for slots, row/column overrides, conditional formatting, and categorical color tags
 - `subtitle`, TextBlock `styleConfiguration` - TextBlock-only secondary heading and bounded text-slot style contract
+- `gaugeShape`, `gaugeStartAtZero`, `gaugeMinimum`, `gaugeMaximum`, `gaugeMajorStep`, `gaugeMinorTicksPerStep`, `gaugeLogarithmic`, `gaugeShowRangeName`, `gaugeShowDistance` - Gauge-only: a Half Dial, Arc Dial or Solid dial whose scale fields mean what an XY chart's value-axis fields mean; a gauge shows one metric (one `dataItems` row) at one site, with the range it reads in and the distance to the nearest range edge under the value. Its style's `rangeColours` (`strong` or `asSet`) and `rangeRoomPercent` (0 to 50, default 10) set how the metric's ranges are drawn and the room past an open outer range
 
 **CLI:**
 ```bash

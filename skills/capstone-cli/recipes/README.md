@@ -72,8 +72,9 @@ Each recipe includes:
 |--------|-------------|--------|
 | [Create Metric Wizard](./configuration/create-metric.md) | Guided metric creation | ✅ Available |
 | [Create Calculation](./configuration/create-calculation.md) | Formula-based derived metrics | ✅ Available |
-| [Create Widget Template](./configuration/create-widget-template.md) | Create InfoCard, PieChart, XYChart, TextBlock, and Table widgets | ✅ Available |
+| [Create Widget Template](./configuration/create-widget-template.md) | Create InfoCard, PieChart, XYChart, TextBlock, Table, and Gauge widgets | ✅ Available |
 | [Configure Info Card Styles](./configuration/configure-info-card-styles.md) | Style KPI, comparison, alert, tinted, accent, and full-bleed Info Cards | ✅ Available |
+| [Configure Gauge Styles](./configuration/configure-gauge-styles.md) | One KPI at one site on a dial of its ranges: shape, scale, range colours and room | ✅ Available |
 | [Build Dashboard](./configuration/build-dashboard.md) | Assemble widgets into a dashboard | ✅ Available |
 | [Export to Excel](./configuration/export-to-excel.md) | Bulk export/import via Excel | ✅ Available |
 | [Set Up Data Source](./configuration/set-up-data-source.md) | Configure external data integrations | ✅ Available |
@@ -118,9 +119,10 @@ Each recipe includes:
 | "I need to create a metric for..." | Create Metric Wizard |
 | "Create a calculation for..." | Create Calculation |
 | "Create a chart/widget for..." | Create Widget Template |
-| "Add an InfoCard/PieChart/XYChart/TextBlock/Table..." | Create Widget Template |
+| "Add an InfoCard/PieChart/XYChart/TextBlock/Table/Gauge..." | Create Widget Template |
 | "Style/customize an Info Card..." | Configure Info Card Styles |
 | "Make a warning/tinted/accent KPI card..." | Configure Info Card Styles |
+| "Show a KPI against its ranges on a dial..." | Configure Gauge Styles |
 | "Build a dashboard for..." | Build Dashboard |
 | "Export metrics to Excel..." | Export to Excel |
 | "Connect to our database or ERP..." | Set Up Data Source |
@@ -177,6 +179,7 @@ recipes/
 │   └── generate-narrative.md
 ├── configuration/
 │   ├── build-dashboard.md
+│   ├── configure-gauge-styles.md
 │   ├── configure-info-card-styles.md
 │   ├── create-calculation.md
 │   ├── create-metric.md

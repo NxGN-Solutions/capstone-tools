@@ -150,6 +150,7 @@ cat <<'EOF' | cap templates dashboard-templates create --json
   "id": "<empty-id>",
   "name": "Executive Energy Dashboard",
   "description": "Monthly energy KPIs, trends, and breakdowns",
+  "filedUnder": { "id": "<energy-discipline-id>" },
   "useTabSheet": false,
   "showOrgNodeFilter": true,
   "showDataIntervalFilter": false,
@@ -281,6 +282,8 @@ EOF
 - Widgets (`isWidget: true`) reference a section via `parent: { "id": "<section-id>", "path": "<section-path>" }`
 - Every item carries its `path`: its name for a top-level section, else its parent's path, `->`, and its name (`Overview->Total Energy`). An item with a `parent` but no `path` needs `parent.path`; without either the API refuses it (`parent.path is required when a parent object is supplied without an explicit item path`)
 - `sortOrder` controls display order within each section
+- `filedUnder` (optional, `{ "id": "<discipline-id>" }`) files the dashboard under a discipline in the dashboard list (the web editor's **Filed under**, on its Template stage). It doesn't limit what the dashboard shows. Omit it or send `null` to leave the dashboard unfiled; `save` replaces it, so `get --json | save` keeps it. Excel column: `Filed Under` (the discipline's path)
+- `icon`, `backgroundColor`, `image` (optional) give the dashboard's gallery card a look, as on a site: an icon class, a palette colour or hex, and `{ "type", "fileName", "data" }` (base64; a new image is a PNG, JPEG, GIF or WebP of 24 KB or less). `save` replaces them, so `get --json | save` keeps them. Excel columns: `Card Icon`, `Card Background Color`, `Card Image Type`, `Card Image File Name`, `Card Image Data`
 - Use sequential zero IDs for `id` on create — the API assigns real IDs
 - `orgNodeTemplate` on the dashboard is its default org structure, supplied to all widgets. Set `showOrgNodeTemplateFilter: true` with `orgNodeTemplates` (and `allowPhysicalStructure`) to let viewers switch structures; every widget then runs on the selected one. Do not hardcode table widget org-node-template context unless maintaining a legacy template.
 - `showOrgNodeFilter` defaults to `true`. Set it to `false` and supply `defaultOrgNode` (`id` / `name` / `path`) for a dedicated dashboard that always renders one org node. Hidden without `defaultOrgNode` is rejected. While the Sites filter is shown, `orgNodes` (a list of `id` / `name` / `path`) limits the sites viewers can pick, as on report templates; empty means every site. A limit needs a fixed org structure (`SiteLimitRequiresFixedStructure`), its sites must belong to that structure (`SiteNotInStructure`), and `defaultOrgNode` must be one of them (`DefaultOutsideLimit`). A hidden Sites filter stores no limit. Time periods still have no template default. The data interval now does: `showDataIntervalFilter` (default `false`) and `defaultDataInterval` (`{ "id": 2, "name": "Month" }`, omit for Match selected periods). `allowConditionalFormattingToggle` (default `true`) shows the dashboard-wide formatting toggle. `showConditionalFormatting` and `showChangeRequests` set the dashboard-wide value: `true`, `false`, or omitted for each widget's own setting. While the toggle is shown it starts on that value; while hidden the value applies.
@@ -775,12 +778,29 @@ cap reporting dashboards header <dashboard-template-id> --org-node <id> --period
 # Badge: Q1–Q3 FY 26
 ```
 
-**Filter region** (dashboard-level, not a tree item) styles the org-node/time-period selector container and positions it Above or Below the content:
+**Filter region** (dashboard-level, not a tree item) styles the filter area, the filter bar inside it and the filter buttons on the bar, and positions it Above or Below the content:
+
+| Field | Styles | Unset |
+|-------|--------|-------|
+| `style.backgroundColor`, `style.borderColor`, `style.borderWidth`, `style.borderRadius`, `style.shadow` | The filter region's box | No box |
+| `style.foregroundColor` | Words on the bar (the reset link and the fixed-filter note), when `bar.backgroundColor` is set | Default colors |
+| `style.fontFamily` | The region and every word in the bar and its buttons | Inherited |
+| `bar.backgroundColor` | The bar behind the filter buttons | Toolbar grey |
+| `bar.borderColor`, `bar.borderWidth` | The line under the bar (single-value width, border-width bounds; 0 hides it) | 1px grey line |
+| `controls.backgroundColor`, `controls.borderColor` | The filter buttons (site, period, interval, switches) | White, grey outline |
+| `controls.foregroundColor` | Every word and icon in the filter buttons | Default text colors |
+| `spacing.padding`, `spacing.margin` | Space around the bar | 1rem 1.5rem padding |
+| `style.fontSize`, `style.fontWeight`, `style.typography`, `style.contentBackgroundColor`, `style.headerBackgroundColor`, `style.titleColor`, `style.accentColor`, `style.accentWidth` | Nothing: ignored with a save warning (the bar and its buttons keep their own text size and weight) | — |
+
+The download button keeps its accent. Open, changed and missing-choice highlights on the filter buttons always show.
+Pick bar and button colours with readable contrast (WCAG AA); the editor preview shows them as you set them.
 
 ```json
 "filterRegion": {
   "position": { "id": 1, "name": "Below" },
-  "style": { "backgroundColor": "surface-muted", "borderRadius": { "value": 8, "unit": { "id": 0, "name": "Px" } } }
+  "style": { "backgroundColor": "surface-muted", "borderRadius": { "value": 8, "unit": { "id": 0, "name": "Px" } } },
+  "bar": { "backgroundColor": "surface-muted", "borderWidth": { "value": 0, "unit": { "id": 0, "name": "Px" } } },
+  "controls": { "foregroundColor": "text-primary", "borderColor": "#DDDDDE" }
 }
 ```
 

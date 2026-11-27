@@ -200,6 +200,11 @@ The header has no accent unless the user asks for one.
 
 ### Filter region — quiet, never boxed
 
+Keep the bar and the filter buttons on their defaults unless the user asks for a branded filter area. To blend
+the bar into the canvas, set `bar.backgroundColor` to the canvas colour and `bar.borderWidth` to 0; on a dark
+filter area, set `controls.foregroundColor` and `style.foregroundColor` to a readable light colour. Field table:
+[Build a dashboard](../recipes/configuration/build-dashboard.md).
+
 ```json
 {
   "position": { "id": 0, "name": "Above" },
@@ -334,7 +339,9 @@ row, the default: the section starts a new row below the widgets before it.
   full width. Use it for small cards beside a tall chart. Without Column the
   section lays its widgets out in its own mode (a row, or a Grid).
 - **Header:** the section's heading shows as any section's does; hide it with
-  `headerBehavior` Hidden (`{ "id": 2, "name": "Hidden" }`).
+  `headerBehavior` Hidden (`{ "id": 2, "name": "Hidden" }`). A Hidden section
+  has no collapse button and never collapses; use Collapsible for one viewers
+  can fold.
 - **Top level:** a top-level section fills the page (or is a tab) and takes no
   width; `save` and `lint` refuse one with `WidthOnlyBelowTopLevel`. Put the
   sections side by side inside a top-level section. FullScreen is not a

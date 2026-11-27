@@ -1,25 +1,25 @@
 {
-  "version": "0.4.126",
-  "latestVersion": "0.4.126",
+  "version": "0.4.127",
+  "latestVersion": "0.4.127",
   "channel": "stable",
-  "createdUtc": "2026-11-26T06:28:27Z",
+  "createdUtc": "2026-11-27T14:04:17Z",
   "tools": {
     "cli": {
       "artifacts": [
         {
           "rid": "linux-x64",
           "fileName": "capstone-cli-linux-x64.zip",
-          "sha256": "3a6c5ff656c95eaa65debb8293c9d91c03cd30456945c8110edc746057343cf0"
+          "sha256": "ba3e96644f3224899d0d49e74ef700422a1da80a97fcea5e41b71c65e2f478a2"
         },
         {
           "rid": "osx-arm64",
           "fileName": "capstone-cli-osx-arm64.zip",
-          "sha256": "e65c2271aad7722a2fb6a32d8fc7a1177659b86f2b2eb866b8a8434e390860ce"
+          "sha256": "e80131ac460c9819921fa9fa90ed1ce43eba16c82fc0113f499e3fe52f86eb72"
         },
         {
           "rid": "win-x64",
           "fileName": "capstone-cli-win-x64.zip",
-          "sha256": "2833ee91ec25fa89abe5a5ad0dc045f7b7781fe50f7f0fc5aa1a88daafa92ad6"
+          "sha256": "f6621a6f8be7c8f2fa0279100e54614b02a8ab83701398bdf2c859bbe2a68cca"
         }
       ]
     },
@@ -28,17 +28,17 @@
         {
           "rid": "linux-x64",
           "fileName": "capstone-mcp-linux-x64.zip",
-          "sha256": "722257e85e87c6de5e1fd0988098c162b0e73b116623cc59e4512d57a95e2609"
+          "sha256": "8de3c4a922b0eeaae5338732d192f1fc23bbd60c102abc0f99c8df452c7f453b"
         },
         {
           "rid": "osx-arm64",
           "fileName": "capstone-mcp-osx-arm64.zip",
-          "sha256": "0c79526e6b7d1de0a076a832bc003b3537700b8b4b1fcff235780f8cfb9bc2de"
+          "sha256": "07a2531345338c628e7caf655f9b007d8ab1edd514ff47ead7eebca7b3914947"
         },
         {
           "rid": "win-x64",
           "fileName": "capstone-mcp-win-x64.zip",
-          "sha256": "562100e5b40f1f16ab63f2cc304a78852297480c2cd3f1d7ca94dee5da9d2cc5"
+          "sha256": "5ce2cb4727dcaad97f3f7487e8c82d7231e4de9489361226d19101fbd08d3955"
         }
       ]
     }
@@ -48,40 +48,40 @@
       "tool": "cli",
       "rid": "linux-x64",
       "fileName": "capstone-cli-linux-x64.zip",
-      "sha256": "3a6c5ff656c95eaa65debb8293c9d91c03cd30456945c8110edc746057343cf0"
+      "sha256": "ba3e96644f3224899d0d49e74ef700422a1da80a97fcea5e41b71c65e2f478a2"
     },
     {
       "tool": "cli",
       "rid": "osx-arm64",
       "fileName": "capstone-cli-osx-arm64.zip",
-      "sha256": "e65c2271aad7722a2fb6a32d8fc7a1177659b86f2b2eb866b8a8434e390860ce"
+      "sha256": "e80131ac460c9819921fa9fa90ed1ce43eba16c82fc0113f499e3fe52f86eb72"
     },
     {
       "tool": "cli",
       "rid": "win-x64",
       "fileName": "capstone-cli-win-x64.zip",
-      "sha256": "2833ee91ec25fa89abe5a5ad0dc045f7b7781fe50f7f0fc5aa1a88daafa92ad6"
+      "sha256": "f6621a6f8be7c8f2fa0279100e54614b02a8ab83701398bdf2c859bbe2a68cca"
     },
     {
       "tool": "mcp",
       "rid": "linux-x64",
       "fileName": "capstone-mcp-linux-x64.zip",
-      "sha256": "722257e85e87c6de5e1fd0988098c162b0e73b116623cc59e4512d57a95e2609"
+      "sha256": "8de3c4a922b0eeaae5338732d192f1fc23bbd60c102abc0f99c8df452c7f453b"
     },
     {
       "tool": "mcp",
       "rid": "osx-arm64",
       "fileName": "capstone-mcp-osx-arm64.zip",
-      "sha256": "0c79526e6b7d1de0a076a832bc003b3537700b8b4b1fcff235780f8cfb9bc2de"
+      "sha256": "07a2531345338c628e7caf655f9b007d8ab1edd514ff47ead7eebca7b3914947"
     },
     {
       "tool": "mcp",
       "rid": "win-x64",
       "fileName": "capstone-mcp-win-x64.zip",
-      "sha256": "562100e5b40f1f16ab63f2cc304a78852297480c2cd3f1d7ca94dee5da9d2cc5"
+      "sha256": "5ce2cb4727dcaad97f3f7487e8c82d7231e4de9489361226d19101fbd08d3955"
     }
   ],
-  "releaseUrl": "https://github.com/NxGN-Solutions/capstone-tools/releases/tag/demo-v0.4.126",
+  "releaseUrl": "https://github.com/NxGN-Solutions/capstone-tools/releases/tag/demo-v0.4.127",
   "manifestUrl": "https://raw.githubusercontent.com/NxGN-Solutions/capstone-tools/main/environments/demo/manifest.json",
   "environment": {
     "name": "Demo",

@@ -314,7 +314,7 @@ List disciplines (metric categories like Environmental, Social, Governance).
 
 ---
 
-## Data Operations (7 tools)
+## Data Operations (10 tools)
 
 ### `data_timePeriods_list`
 
@@ -598,6 +598,42 @@ This bypasses the template discovery workflow — no need to list templates, gue
 
 **Returns:** A short status: up to date at a version, or catching up with the waiting, failed and stuck counts.
 
+**Needs:** any page's view permission, as the header (HB-678).
+
+---
+
+### `data_recalculation_status`
+
+**Calculation status.** Whether calculated values have caught up with the model, in the header's words: not run yet,
+running (calculated up to version N of M), failed (each failing metric and its message), or up to date at a model
+version. No parameters. Read-only. Needs any page's view permission.
+
+---
+
+### `data_myWork`
+
+**What waits for me.** Per data gallery (capture, validation, change request approval): the gallery totals and the
+sheets with waiting work, busiest first; a sheet that holds the gallery's whole total comes last. Capture counts values
+to capture and rejected values to fix, validation the values waiting for your level, approval the change request values
+you can decide now. Counts only your own sites, disciplines and levels: the same numbers as your home page and the
+galleries' My work tab. A gallery you cannot open shows "nothing waiting".
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `gallery` | string | Optional: `capture`, `validation` or `approval`. Empty = all three. |
+
+---
+
+### `data_changeRequests_list`
+
+**Change requests.** The tab counts (requests and values waiting on me, raised by me), then the requests in one view:
+number, status, site, inputs and narratives, who raised it and when, values and how many are yours to decide. Read-only.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `view` | string | Optional: `waiting-on-me`, `raised-by-me`, `rejected` or `all`. Empty = the web's choice (Waiting on me for approvers, Raised by me for everyone else). |
+| `limit` | int | Requests to show, 1–100 (default 20). |
+
 ## Reporting (3 tools)
 
 ### `reporting_completion_followUps`
@@ -637,7 +673,7 @@ Get one widget's data as CSV. Use a widget template ID (from `templates_widgets_
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `widgetTemplateId` | string (ID) | Conditional | Widget template ID (from `templates_widgets_list`). Optional if `templateJson` is provided. |
-| `templateJson` | string (JSON) | Conditional | Inline widget template JSON (alternative to `widgetTemplateId`). Required fields: `name`, `discipline` (`{"id":"ID"}`), `widgetType` (`{"id":0}` InfoCard, 1 PieChart, 2 XYChart, 4 Table), `dataRangeMode` (`{"id":0}`), `metricSelectionMode` (`{"id":0}`), `dataItems` array. Table templates use `dataGrouping` (`0` None, `1` OrgNode, `2` Discipline, `3` Framework), optional `additionalDataGrouping`, `dataItems` (metrics) or the metric scope filters, optional `narratives`, `showMetricValue`, `showMetricsInColumns`, `metricPropertyColumns`, `metricAttributeTypeIds` and `missingValuePlaceholder`. Get metric/discipline IDs from `model_metrics_list` and `model_disciplines_list`. An inline template is capped at 1,000 rows (org nodes × metrics) and at the report grid's cell limit (rows × periods); a larger one is refused with a 400 naming the count. |
+| `templateJson` | string (JSON) | Conditional | Inline widget template JSON (alternative to `widgetTemplateId`). Required fields: `name`, `widgetType` (`{"id":0}` InfoCard, 1 PieChart, 2 XYChart, 4 Table), `dataRangeMode` (`{"id":0}`), `metricSelectionMode` (`{"id":0}`), `dataItems` array. Table templates use `dataGrouping` (`0` None, `1` OrgNode, `2` Discipline, `3` Framework), optional `additionalDataGrouping`, `dataItems` (metrics) or the metric scope filters, optional `narratives`, `showMetricValue`, `showMetricsInColumns`, `metricPropertyColumns`, `metricAttributeTypeIds` and `missingValuePlaceholder`. Optional `discipline` (`{"id":"ID"}`) only files the widget in the widget list. Get metric/discipline IDs from `model_metrics_list` and `model_disciplines_list`. An inline template is capped at 1,000 rows (org nodes × metrics) and at the report grid's cell limit (rows × periods); a larger one is refused with a 400 naming the count. |
 | `orgNodeId` | string (ID) | No | Organization node ID (from `model_orgNodes_list`) |
 | `timePeriodNames` | string | No | Comma-separated period names (e.g., `Q1 FY 25,Q2 FY 25`) |
 | `periodType` | string | No | `month`, `quarter`, or `year` — alternative to `timePeriodNames` |
@@ -649,6 +685,21 @@ Get one widget's data as CSV. Use a widget template ID (from `templates_widgets_
 The table render endpoint behind `apps_widget_table` (`Reporting/Widgets/GetTableData`) no longer accepts an inline template; it renders saved templates only. Draft table templates render through `POST Templates/WidgetTemplates/Preview`, which pages like a dashboard table. A `GetTableData` request without `take` returns every row (the response's `pageSize` names the table's Rows per page, else 50, its `maxHeightPx` the grid's on-screen maximum height, `null` when the table fits its rows, and its `defaultExpandedLevels` how many levels of row groups a dashboard viewer starts with open, `null` for every group open); `apps_dashboard_render` and `apps_widget_table` page through every row 1000 at a time (`apps_widget_table` stops at `limit` when one is given), as `cap reporting widgets table` does without `--take`.
 
 `apps_widget_table` renders a table with periods as rows one row per row and period, with a Period column before the metric columns, as the dashboard does. Column headers name their column groups first when a level is on columns.
+
+---
+
+## Notifications (1 tool)
+
+### `notifications_deliveryLog_summary`
+
+**Failed emails.** Notifications sent since a date and how many failed (the home page's count), then the latest 10
+failures: when (UTC), which rule, and the recipient and error where you may see them. Read-only.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `days` | int | Days back, today included (UTC), 1–90 (default 7). |
+
+**Needs:** Master data view; recipients and errors need Master data manage.
 
 ---
 
@@ -745,7 +796,7 @@ Get detailed configuration of a specific report template.
 |-----------|------|----------|-------------|
 | `id` | string (ID) | Yes | Report template ID |
 
-**Returns:** Template configuration including filters (discipline, framework, metric type), the Limit to lists (`Org Nodes (Limit to)`, `Disciplines (Limit to)`, `Frameworks (Limit to)`) and the Default lists (`Default Org Nodes`, `Default Disciplines`, `Default Frameworks`), included metrics, plus `showOnlyRowsWithValues` and `showRowsWithValuesFilter` (viewers can switch between all rows and rows with values), and the allowed grouping levels with `showDataGroupingFilter` (viewers can regroup by those levels in any order; `data_computedValues_list` always uses the default grouping), and `Column Levels`: the grouping levels placed on columns (`-` when every level is on rows). It also prints the `Org Structure` (the default structure; physical when none is set) and `showOrgNodeTemplateFilter` (Fixed, or viewers can switch). When viewers can switch, it lists the allowed structures (`Org Structures (Limit to)`; none means every structure the viewer can access) and `Allow Physical Structure`, and the call example includes `orgNodeTemplateKey`. `Measure` gives what the cells show: Value, Capture or Validation completion (see `data_computedValues_list`); on a completion template it also gives its completion bands (for example "below 40%: danger-subtle; 40% to 90%: warning-subtle; 90% and up: success-subtle"), with "(defaults)" when the template stores none. `Show Change Requests` (the report grid marks cells with a pending change request) and `Allow Change Requests Toggle` (viewers get a Change Requests switch); both default to false.
+**Returns:** Template configuration including `Filed Under` (the discipline the template is filed under in the template list, `-` when unfiled), `Card` (the gallery card look: icon, colour and image file name; `-` when none), filters (discipline, framework, metric type), the Limit to lists (`Org Nodes (Limit to)`, `Disciplines (Limit to)`, `Frameworks (Limit to)`) and the Default lists (`Default Org Nodes`, `Default Disciplines`, `Default Frameworks`), included metrics, plus `showOnlyRowsWithValues` and `showRowsWithValuesFilter` (viewers can switch between all rows and rows with values), and the allowed grouping levels with `showDataGroupingFilter` (viewers can regroup by those levels in any order; `data_computedValues_list` always uses the default grouping), and `Column Levels`: the grouping levels placed on columns (`-` when every level is on rows). It also prints the `Org Structure` (the default structure; physical when none is set) and `showOrgNodeTemplateFilter` (Fixed, or viewers can switch). When viewers can switch, it lists the allowed structures (`Org Structures (Limit to)`; none means every structure the viewer can access) and `Allow Physical Structure`, and the call example includes `orgNodeTemplateKey`. `Measure` gives what the cells show: Value, Capture or Validation completion (see `data_computedValues_list`); on a completion template it also gives its completion bands (for example "below 40%: danger-subtle; 40% to 90%: warning-subtle; 90% and up: success-subtle"), with "(defaults)" when the template stores none. `Show Change Requests` (the report grid marks cells with a pending change request) and `Allow Change Requests Toggle` (viewers get a Change Requests switch); both default to false.
 
 ---
 
@@ -772,11 +823,11 @@ Get detailed configuration of a specific capture template.
 |-----------|------|----------|-------------|
 | `id` | string (ID) | Yes | Capture template ID |
 
-**Returns:** Template configuration including assigned metrics, the `Org Structure` (physical when none is set; capture templates can't switch it), the Limit to and Default lists for org nodes, disciplines and frameworks (as `templates_reports_get`), and data entry settings: `showRowsWithValuesFilter` (viewers can switch between all rows and rows with values), `showDataGroupingFilter` with the allowed grouping levels (viewers can regroup by those levels in any order), `Column Levels` (the grouping levels placed on columns), `showPendingFilter` (the capture and validation grids offer a "Show pending only" toggle) and `showOnlyPending` (they open showing only values still to capture, or waiting for the viewing user's validation). `data_inputValues_list` does not apply the pending filter. `Show Change Requests` (the grids mark values with a pending change request) and `Allow Change Requests Toggle` (viewers get a Change Requests switch); both default to false.
+**Returns:** Template configuration including `Filed Under` (the discipline the template is filed under in the template list, `-` when unfiled), `Card` (the gallery card look: icon, colour and image file name; `-` when none), assigned metrics, the `Org Structure` (physical when none is set; capture templates can't switch it), the Limit to and Default lists for org nodes, disciplines and frameworks (as `templates_reports_get`), and data entry settings: `showRowsWithValuesFilter` (viewers can switch between all rows and rows with values), `showDataGroupingFilter` with the allowed grouping levels (viewers can regroup by those levels in any order), `Column Levels` (the grouping levels placed on columns), `showPendingFilter` (the capture and validation grids offer a "Show pending only" toggle) and `showOnlyPending` (they open showing only values still to capture, or waiting for the viewing user's validation). `data_inputValues_list` does not apply the pending filter. `Show Change Requests` (the grids mark values with a pending change request) and `Allow Change Requests Toggle` (viewers get a Change Requests switch); both default to false.
 
 ---
 
-## MCP Apps — Visualization (6 tools)
+## MCP Apps — Visualization (7 tools)
 
 > **Date parameter note:** App tools use `startDate`/`endDate` (ISO format dates), unlike data tools which use `timePeriodNames` or `periodType+periodCount`. This is because Apps render visual time ranges, while data tools operate on discrete named periods. **Exceptions:** `apps_chart_render` (ad-hoc visualization) uses neither — data is provided inline. `apps_widget_aiSummary` also uses neither — it takes dashboard and org node IDs only.
 
@@ -852,6 +903,22 @@ the canvas and a donut centre (including Total and Percentage) is a line under t
 
 ---
 
+### `apps_widget_gauge`
+
+Render a gauge as HTML: one metric's value at **one site** on an SVG dial of its ranges. Use when the user wants to SEE where a KPI sits against its ranges. For raw numbers, use `data_computedValues_list` instead. Uses `startDate`/`endDate` (ISO yyyy-MM-dd).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `widgetTemplateId` | string (ID) | Yes | Widget template ID (Gauge type) |
+| `orgNodeIds` | string | Yes | The one org node the gauge reads at; the server refuses more than one ("A gauge shows one site") |
+| `startDate` | string | Yes | Start date (ISO format) |
+| `endDate` | string | Yes | End date (ISO format) |
+| `timePeriodType` | string | No | Period type (default: `month`) |
+
+**Returns:** HTML with the dial and, under it, the value, the name of the range it reads in and the distance to the nearest range edge ("0.03 above 2.00"), so the reading never rests on colour alone. The shape is a Half Dial (180°), an Arc Dial (270°) or Solid (270°, filled to the value, no needle). Each range is an arc in the colour the server sends: the gauge's own ranges as chosen, the metric's or site's ranges in their strong shade or as set (the style's `rangeColours`); with conditional formatting off the arcs are grey. A thin tick marks each range edge. The scale works as an XY chart's value axis: a set minimum or maximum holds, an automatic end takes the value and every range edge, Start at zero pulls a positive low end to 0, and an automatic end past an open outer range ("2.00 and above") leaves room (the style's `rangeRoomPercent`, 10 % by default). A value past a set end pins the needle there and says "Off the scale"; on a log scale range edges at or below 0 are skipped.
+
+---
+
 ### `apps_widget_xyChart`
 
 Render a bar/line/area chart as interactive HTML (Chart.js). Shows trends, time series, multi-metric comparisons. Use when the user wants to SEE a chart. For raw numbers, use `data_computedValues_list` instead. Uses `startDate`/`endDate` (ISO yyyy-MM-dd).
@@ -864,7 +931,7 @@ Render a bar/line/area chart as interactive HTML (Chart.js). Shows trends, time 
 | `endDate` | string | Yes | End date (ISO format) |
 | `timePeriodType` | string | No | Period type (default: `month`) |
 
-**Returns:** HTML with Chart.js bar/line/column chart. An axis with a major step labels every step, as the dashboard does, when that gives at most 50 steps; Chart.js draws no minor ticks between them.
+**Returns:** HTML with Chart.js bar/line/column chart. An axis with a major step labels every step, as the dashboard does, when that gives at most 50 steps; Chart.js draws no minor ticks between them. A bridge (`chartKind` Bridge) draws as floating bars, From bar to To bar, in the colours the server gave each bar; the tooltip shows a step's change, signed. `apps_dashboard_render` draws a bridge widget the same way.
 
 ---
 
@@ -1024,10 +1091,13 @@ Create a new widget template from JSON config. Checks for name collisions — if
 | Field | Type | Notes |
 |-------|------|-------|
 | `name` | string | Template name |
-| `discipline` | `{id: "id"}` | Discipline category |
 | `widgetType` | `{id: int}` | 0=InfoCard, 1=PieChart, 2=XYChart, 4=Table, 6=TextBlock |
 | `dataRangeMode` | `{id: int}` | Data range mode |
 | `metricSelectionMode` | `{id: int}` | Metric selection mode |
+
+Optional `discipline` (`{id: "id"}`) files the widget under a discipline in the widget list (the web editor's
+"Filed under"); without one it is listed under "No discipline". It doesn't limit the widget's metrics. Save replaces
+it, so an update that leaves it out clears it: send back the `discipline` that `templates_widgets_get` returned.
 
 **Additional requirements by widget type:**
 - **PieChart** (`widgetType.id: 1`): Also requires `pieChartWidgetTemplateType` with `id`.
@@ -1094,18 +1164,18 @@ Check a widget template without saving it. Errors are exactly what saving would 
 
 #### `templates_widgets_preview`
 
-Render an info card, text block, pie chart or XY chart widget template without saving it, as HTML, the way the dashboard would show it at the given sites and period, with your data permissions: the same figures, units, labels and band colours as `apps_widget_infoCard` shows once it is saved. A draft row that is not on the saved card yet renders too, and a draft's own bands colour the value. A text block renders its resolved title, subtitle, description and footnote as `apps_widget_textBlock` shows them once saved, so you can check commentary before saving; metric names in its text resolve as save stores them. A pie renders as `apps_widget_pieChart` shows it once saved: its slices (a negative slice is left out of the chart, as the dashboard leaves it out of the ring) and its data warnings (`PieNegativeValuesLeftOut`, `PieManySlices`, `PieNoValues`, `PieMixedUnits`), with its Other slice and half-circle shape. An XY chart renders as `apps_widget_xyChart` shows it once saved: its series on their axes, including axes and series the config adds before they have ids, and the render's notes (`XyNoValues` when no series has a value, `LowContrast` for a series colour that is hard to read on white, `ExcessiveSeriesExpansion` over 40 series). An AI Summary on Metrics I pick (`scope` 2) renders its resolved title, how many metrics it reads, and the insights already generated for those facts. The tool never calls the model, so a draft not generated yet in the widget editor says "Not generated". A section-scope AI Summary needs a dashboard section and previews in the widget editor. Only info cards, text blocks, pies, XY charts and AI Summaries preview here; a table config is refused before the server is asked.
+Render an info card, text block, pie chart, XY chart or gauge widget template without saving it, as HTML, the way the dashboard would show it at the given sites and period, with your data permissions: the same figures, units, labels and band colours as `apps_widget_infoCard` shows once it is saved. A draft row that is not on the saved card yet renders too, and a draft's own bands colour the value. A text block renders its resolved title, subtitle, description and footnote as `apps_widget_textBlock` shows them once saved, so you can check commentary before saving; metric names in its text resolve as save stores them. A pie renders as `apps_widget_pieChart` shows it once saved: its slices (a negative slice is left out of the chart, as the dashboard leaves it out of the ring) and its data warnings (`PieNegativeValuesLeftOut`, `PieManySlices`, `PieNoValues`, `PieMixedUnits`), with its Other slice and half-circle shape. An XY chart renders as `apps_widget_xyChart` shows it once saved: its series on their axes, including axes and series the config adds before they have ids, and the render's notes (`XyNoValues` when no series has a value, `LowContrast` for a series colour that is hard to read on white, `ExcessiveSeriesExpansion` over 40 series). An AI Summary on Metrics I pick (`scope` 2) renders its resolved title, how many metrics it reads, and the insights already generated for those facts. The tool never calls the model, so a draft not generated yet in the widget editor says "Not generated". A section-scope AI Summary needs a dashboard section and previews in the widget editor. A gauge renders as `apps_widget_gauge` shows it once saved: its dial, value, range name, distance and off-scale note, at one site (two or more org nodes get the server's 400, "A gauge shows one site"). Only info cards, text blocks, pies, XY charts, AI Summaries and gauges preview here; a table config is refused before the server is asked.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `config` | string (JSON) | Yes | The info card, pie chart, XY chart or text block config, as posted to `templates_widgets_save` (`widgetType` `{"id":0}`, `{"id":1}`, `{"id":2}` or `{"id":6}`) |
+| `config` | string (JSON) | Yes | The info card, pie chart, XY chart, AI Summary, text block or gauge config, as posted to `templates_widgets_save` (`widgetType` `{"id":0}`, `{"id":1}`, `{"id":2}`, `{"id":3}`, `{"id":6}` or `{"id":7}`) |
 | `orgNodeIds` | string | Yes | Comma-separated org node IDs (from `model_orgNodes_list`) |
 | `startDate` | string | Yes | Start of the period (ISO `yyyy-MM-dd`) |
 | `endDate` | string | Yes | End of the period (ISO `yyyy-MM-dd`) |
 | `timePeriodType` | string | No | `day`, `week`, `month`, `quarter` or `year` (default `month`), the period's type |
 | `dataInterval` | string | No | `day`, `week`, `month`, `quarter` or `year`: the dashboard interval. Left out (as `apps_widget_infoCard` sends none), the widget reads at its own interval; a widget that fixes its interval ignores it |
 
-**Returns:** The card, text block, pie or XY chart as HTML, or the server's refusal: a 403 without Templates.Manage and Reporting.View, a 400 naming each field when the config has an error that stops it rendering (a missing name or period window, or a text block with no text, for example), or a filtered pie whose filters match no metric ("No metrics match this widget's filters."). `POST Templates/WidgetTemplates/Preview`.
+**Returns:** The card, text block, pie, XY chart or gauge as HTML, or the server's refusal: a 403 without Templates.Manage and Reporting.View, a 400 naming each field when the config has an error that stops it rendering (a missing name or period window, or a text block with no text, for example), or a filtered pie whose filters match no metric ("No metrics match this widget's filters."). `POST Templates/WidgetTemplates/Preview`.
 
 ---
 
@@ -1206,6 +1276,10 @@ Get a dashboard template's full structure including all tree items with their ID
 {
   "id": "dash-id",
   "name": "ESG Executive Dashboard",
+  "filedUnder": {"id": "...", "name": "Energy", "path": "Environmental->Energy"},
+  "icon": "fa-solid fa-chart-line",
+  "backgroundColor": "primary",
+  "image": {"type": "image/png", "fileName": "board.png", "data": "<base64, 24 KB or less>"},
   "dashboardStyle": {
     "backgroundColor": "surface-canvas",
     "contentWidth": {"id": 3, "name": "Wide"}
@@ -1352,7 +1426,7 @@ No parameters.
 
 ---
 
-## System (3 tools)
+## System (4 tools)
 
 > Tenant AI settings. Changing them needs the System.Manage permission. These tools never show or set an API key, and never acknowledge DeepSeek's data location; use the tenant's AI settings page or the CLI for those.
 
@@ -1399,6 +1473,24 @@ Show a tenant's AI usage: requests, tokens and failures, grouped by day, feature
 | `groupBy` | string | No | `day` (default), `feature` or `model` |
 
 **Returns:** Totals, then one line per group (`POST System/Tenants/AiConfiguration/Usage`).
+
+### `system_configuration_history_list`
+
+List configuration changes, newest first: who changed which input, calculation, site, discipline, framework node or
+template, when, how (Web, Excel upload, CLI, API key, Integration), and the value before and after. Read-only; needs
+the Configuration History view permission.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `itemType` | string | No | `Input`, `Calculation`, `OrgNode`, `DisciplineNode`, `FrameworkNode`, `SpreadsheetCaptureTemplate`, `SpreadsheetReportTemplate`, `WidgetTemplate` or `DashboardTemplate` |
+| `itemId` | string (ID) | No | Only this item's changes |
+| `since` | string | No | First day (ISO `yyyy-MM-dd`, UTC) |
+| `until` | string | No | Last day (ISO `yyyy-MM-dd`, UTC), included |
+| `limit` | number | No | Rows to return (default 100) |
+| `offset` | number | No | Rows to skip (default 0) |
+
+**Returns:** The total, then one line per change: when, who, type, item (with id), action, field, before, after, how
+(`POST System/ConfigurationHistory/GetGridList`).
 
 ---
 

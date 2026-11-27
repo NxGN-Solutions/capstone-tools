@@ -363,6 +363,7 @@ For standard workflows, **read the recipe first** from `docs/recipes/`. Recipes 
 | Create a calculation | `docs/recipes/configuration/create-calculation.md` |
 | Create a widget | `docs/recipes/configuration/create-widget-template.md` |
 | Style/customize an Info Card | `docs/recipes/configuration/configure-info-card-styles.md` |
+| Show a KPI as a gauge against its ranges | `docs/recipes/configuration/configure-gauge-styles.md` |
 | Build a dashboard | `docs/recipes/configuration/build-dashboard.md` |
 | Export template data to Excel | `docs/recipes/configuration/export-to-excel.md` |
 | Set up a data source | `docs/recipes/configuration/set-up-data-source.md` |

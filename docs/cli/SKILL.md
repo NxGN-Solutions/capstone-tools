@@ -33,7 +33,7 @@ Capstone is a **data management platform** for organizations that need to consol
 | Raw data, submitted value | Input Value | `data input-values` | Actual captured data points |
 | Text response, commentary value | Narrative Value | `data narrative-values` | Draft/submit/validate approved text |
 | Aggregated value, result, computed | Computed Value | `reporting computed-values` | Calculated/rolled-up values |
-| Dashboard chart, visualization | Widget | `reporting widgets` | Info Card, Pie Chart, XY Chart, TextBlock, Table, AI Summary |
+| Dashboard chart, visualization | Widget | `reporting widgets` | Info Card, Pie Chart, XY Chart, TextBlock, Table, AI Summary, Gauge |
 | Chart configuration, widget setup | Widget Template | `templates widget-templates` | Defines widget data and display |
 | Dashboard layout, page configuration | Dashboard Template | `templates dashboard-templates` | Organizes widgets into sections |
 | Data entry form, capture sheet | Capture Template | `templates capture-templates` | Defines data entry structure |
@@ -201,6 +201,7 @@ For standard tasks, use recipes. They encode best practices and reduce errors.
 | "Create a metric for..." | Recipe: create-metric |
 | "Enter this month's data..." | Recipe: enter-data |
 | "Style/customize an Info Card..." | Recipe: configure-info-card-styles (no accents unless the user asks for them) |
+| "Show a KPI against its ranges on a dial..." | Recipe: configure-gauge-styles (one metric, one site) |
 | "List all metrics" | Direct: `cap model metrics list` |
 | "Show org structure" | Direct: `cap masterdata org-nodes list` |
 | "What periods are available?" | Direct: `cap data time-periods list --data-interval month` |
